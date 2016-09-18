@@ -1,0 +1,413 @@
+options {
+	IGNORE_CASE = true;
+	ERROR_REPORTING = true;
+	DEBUG_PARSER = false;
+	STATIC = false;
+}
+
+PARSER_BEGIN(SQFParser)
+
+package cz.zipek.sqflint.parser;
+
+public class SQFParser {
+	public void setTabSize(int size) {
+		jj_input_stream.setTabSize(size);
+	}
+
+	protected void handleName() throws ParseException {
+	}
+
+	protected void recover(ParseException ex, int target) throws ParseException {
+
+	}
+}
+
+PARSER_END(SQFParser)
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+| "\f"
+}
+
+/* COMMENTS */
+
+MORE :
+{
+  "//" : IN_SINGLE_LINE_COMMENT
+|
+  <"/**" ~["/"]> { input_stream.backup(1); } : IN_FORMAL_COMMENT
+|
+  "/*" : IN_MULTI_LINE_COMMENT
+|
+  "#" : IN_SINGLE_LINE_COMMENT
+}
+
+<IN_SINGLE_LINE_COMMENT>
+SPECIAL_TOKEN :
+{
+  <SINGLE_LINE_COMMENT: "\n" | "\r" | "\r\n" > : DEFAULT
+}
+
+<IN_FORMAL_COMMENT>
+SPECIAL_TOKEN :
+{
+  <FORMAL_COMMENT: "*/" > : DEFAULT
+}
+
+<IN_MULTI_LINE_COMMENT>
+SPECIAL_TOKEN :
+{
+  <MULTI_LINE_COMMENT: "*/" > : DEFAULT
+}
+
+<IN_SINGLE_LINE_COMMENT,IN_FORMAL_COMMENT,IN_MULTI_LINE_COMMENT>
+MORE :
+{
+  < ~[] >
+}
+
+
+void CompilationUnit() :
+{}
+{
+	( BlockStatement() )*
+	<EOF>
+}
+
+/* OPERATORS */
+
+TOKEN :
+{
+	< ASSIGN: "=" >    |
+	< GT: ">" >        |
+	< LT: "<" >        |
+	< GTEQ: ">=" > |
+	< LTEQ: "<=" > |
+	< BANG: "!" >      |
+	< BANG2: "not " >  |
+	< EQ: "==" >       |
+	< SC_OR: "||" >    |
+	< SC_AND: "&&" >   |
+	< PLUS: "+" >      |
+	< MINUS: "-" >     |
+	< STAR: "*" >      |
+	< SLASH: "/" >     |
+	< POWER: "^" >     |
+	< REM: "%" >       |
+	< REM2: "mod" > |
+	< CSEL: ">>" >
+}
+
+/* SQF Operators */
+
+/* RESERVED */
+
+TOKEN :
+{
+	< CASE: "case" > |
+	< CATCH: "catch" > |
+	< _DEFAULT: "default" > |
+	< DO: "do" > |
+	< ELSE: "else" > |
+	< FOR: "for" > |
+	< FROM: "from" > |
+	< TO: "to" > |
+	< STEP: "step" > |
+	< GOTO: "goto" > |
+	< IF: "if" > |
+	< THEN: "then" > |
+	< EXIT_WITH: "exitWith" > |
+	< NULL: "objNull" > |
+	< SWITCH: "switch" > |
+	< WHILE: "while" > |
+	< TRUE: "true" > |
+	< FALSE: "false" >
+
+}
+
+/* LITERALS */
+
+TOKEN :
+{
+  < INTEGER_LITERAL:
+        <DECIMAL_LITERAL>
+      | <HEX_LITERAL>
+      | <OCTAL_LITERAL>
+  > |
+  < #DECIMAL_LITERAL: ("-")? ["1"-"9"] (["0"-"9"])* > |
+  < #HEX_LITERAL: ("-")? "0" ["x","X"] (["0"-"9","a"-"f","A"-"F"])+ > |
+  < #OCTAL_LITERAL: ("-")? "0" (["0"-"7"])* > |
+  < FLOATING_POINT_LITERAL:
+        (["0"-"9"])+ "." (["0"-"9"])* (<EXPONENT>)?
+      | "." (["0"-"9"])+ (<EXPONENT>)? 
+      | (["0"-"9"])+ <EXPONENT>
+      | (["0"-"9"])+ (<EXPONENT>)?
+  > |
+  < #EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ > |
+  < STRING_LITERAL:
+      "\""
+      ( (~["\"","\n","\r"]) )*
+      "\""
+  > |
+  < STRING_LITERAL_OTHER:
+      "'"
+      ( (~["\"","\\","\n","\r"]) )*
+      "'"
+  >
+}
+
+/* IDENTIFIERS */
+
+TOKEN :
+{
+  < IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* > |
+  < #LETTER:
+      [
+       "\u0024",
+       "\u0041"-"\u005a",
+       "\u005f",
+       "\u0061"-"\u007a",
+       "\u00c0"-"\u00d6",
+       "\u00d8"-"\u00f6",
+       "\u00f8"-"\u00ff",
+       "\u0100"-"\u1fff",
+       "\u3040"-"\u318f",
+       "\u3300"-"\u337f",
+       "\u3400"-"\u3d2d",
+       "\u4e00"-"\u9fff",
+       "\uf900"-"\ufaff"
+      ]
+  > |
+  < #DIGIT:
+      [
+       "\u0030"-"\u0039",
+       "\u0660"-"\u0669",
+       "\u06f0"-"\u06f9",
+       "\u0966"-"\u096f",
+       "\u09e6"-"\u09ef",
+       "\u0a66"-"\u0a6f",
+       "\u0ae6"-"\u0aef",
+       "\u0b66"-"\u0b6f",
+       "\u0be7"-"\u0bef",
+       "\u0c66"-"\u0c6f",
+       "\u0ce6"-"\u0cef",
+       "\u0d66"-"\u0d6f",
+       "\u0e50"-"\u0e59",
+       "\u0ed0"-"\u0ed9",
+       "\u1040"-"\u1049"
+      ]
+  >
+}
+
+/* SEPARATORS */
+
+TOKEN :
+{
+	< LPAREN: "(" >    |
+	< RPAREN: ")" >    |
+	< LBRACE: "{" >    |
+	< RBRACE: "}" >    |
+	< LBRACKET: "[" >  |
+	< RBRACKET: "]" >  |
+	< COMMA: "," >     |
+	< DOT: "." > |
+	< SEMICOLON: ";" >
+}
+
+
+/*
+
+============ END OF TOKENS =============
+============ START OF LANG =============
+
+*/
+
+
+
+void Literal() :
+{}
+{
+	<INTEGER_LITERAL> | <FLOATING_POINT_LITERAL> |
+	<STRING_LITERAL> |
+	<STRING_LITERAL_OTHER> |
+	BooleanLiteral() |
+	NullLiteral()
+}
+
+void BooleanLiteral() :
+{}
+{
+	"true"  |
+	"false"
+}
+
+void NullLiteral() :
+{}
+{
+	"objNull"
+}
+
+void Operator() :
+{}
+{
+	">>" |
+	"=" |
+	"==" |
+	"!=" |
+	">" |
+	"<" |
+	"+" |
+	"-" |
+	"*" |
+	"%" |
+	"&&" |
+	"||" |
+	"mod" |
+	"^" |
+	">=" |
+	"<=" |
+	"/"
+}
+
+void Name() :
+{
+	handleName();
+}
+{
+	<IDENTIFIER>
+}
+
+void Expression() :
+{}
+{
+	("!" | "not ") Expression() |
+	PrimaryExpression() [ Operator() ] [ Expression() ]
+}
+
+void Array() :
+{}
+{
+	LOOKAHEAD(2) "[" Expression() ( "," Expression() )* "]" |
+	"[" "]"
+}
+
+/*
+void BinaryExpression() :
+{}
+{
+	UnaryExpression() [ Operator() Expression() ]
+}
+
+void UnaryExpression() :
+{}
+{
+	PrimaryExpression() [ Expression() ] |
+	("!" | "not ") PrimaryExpression()
+}
+*/
+
+void PrimaryExpression() :
+{}
+{
+	Literal() |
+	"(" Expression() ")" |
+	Name() |
+	Block() |
+	Array()
+}
+
+void Block() :
+{}
+{
+	LOOKAHEAD(2)
+	"{" "}" |
+	"{" Statement() [ ";" ( BlockStatement() )* ] "}"
+}
+
+void BlockStatement():
+{}
+{
+	try {
+		EmptyStatement() |
+		Statement() ";"
+	} catch(ParseException ex) {
+		recover(ex, SEMICOLON);
+	}
+}
+
+void Statement() :
+{}
+{
+	SwitchStatement() |
+	IfStatement() |
+	WhileStatement() |
+	ForStatement() |
+	StatementExpression()
+}
+
+void EmptyStatement() :
+{}
+{
+  ";"
+}
+
+void StatementExpression() :
+{}
+{
+	Expression()
+	//PrimaryExpression() [ AssignmentOperator() Expression() ]
+}
+
+void SwitchStatement() :
+{}
+{
+	"switch" Expression() "do" "{"
+		( SwitchCase() )*
+		[ SwitchDefault() ]
+	"}"
+}
+
+void SwitchCase() :
+{}
+{
+	SwitchLabel() ( ( ":" Block() ";" ) | ";" )
+}
+
+void SwitchDefault() :
+{}
+{
+	"default" Block() ";"
+}
+
+void SwitchLabel() :
+{}
+{
+	"case" Expression()
+}
+
+// @TODO: exitWith can't have else :(
+void IfStatement() :
+{}
+{
+	"if" "(" Expression() ")" (
+		"then" Block() [ LOOKAHEAD(1) "else" Block() ] |
+		"exitWith" Block()
+	)
+}
+
+void WhileStatement() :
+{}
+{
+	"while" Block() "do" Block()
+}
+
+void ForStatement() :
+{}
+{
+	LOOKAHEAD(2) ( "for" "[" Block() "," Block() "," Block() "]" "do" Block() ) |
+	LOOKAHEAD(2) ( "for" StatementExpression() "from" <INTEGER_LITERAL> "to" <INTEGER_LITERAL> [ "step" <INTEGER_LITERAL> ] "do" Block() )
+}
