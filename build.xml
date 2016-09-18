@@ -78,7 +78,7 @@
 	</target>
 	
 	<target name="-pre-compile">
-		<exec executable="javacc">
+		<exec executable="javacc.bat">
 			<arg value="-OUTPUT_DIRECTORY=src/cz/zipek/sqflint/parser" />
 			<arg file="src/cz/zipek/sqflint/parser/SQFParser.jj" />
 		</exec>
