@@ -5,9 +5,10 @@ AppPublisherURL=http://sqflint.zipek.cz
 AppVersion=1.0
 DefaultDirName={pf}\SQFLint
 UninstallDisplayIcon={app}\sqflint.exe
-OutputDir=dist\
-OutputBaseFilename=sqflint-1.0-install
+OutputDir=dist\packages
+OutputBaseFilename=sqflint-install
 ChangesEnvironment=yes
+SetupIconFile=dist-src\sqflint.ico
 
 [CustomMessages]
 AppAddPath=Add application directory to your environmental path

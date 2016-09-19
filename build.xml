@@ -93,6 +93,7 @@
 		<exec executable="launch4jc">
 			<arg file="build-exe.xml" />
 		</exec>
+		<zip destfile="${dist.dir}/packages/sqflint.zip" basedir="${dist.dir}" />
 		<exec executable="iscc">
 			<arg file="build-installer.iss" />
 		</exec>
