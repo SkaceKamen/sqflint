@@ -90,5 +90,11 @@
 				<include name="*" />
 			</fileset>
 		</copy>
+		<exec executable="launch4jc">
+			<arg file="build-exe.xml" />
+		</exec>
+		<exec executable="iscc">
+			<arg file="build-installer.iss" />
+		</exec>
 	</target>
 </project>
