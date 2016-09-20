@@ -1,4 +1,6 @@
-_center = createcenter east;
+#define CALL(something) something call(BIS_fnc_call)
+
+_center = createcenter(east);
 
 format ["DEBUG (f\common\folk_assignGear.sqf): Unit = %1. Gear template %2 does not exist, used Rifleman instead.",_unit,_typeofunit];
 
