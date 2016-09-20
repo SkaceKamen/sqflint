@@ -4,6 +4,8 @@ import cz.zipek.sqflint.output.JSONOutput;
 import cz.zipek.sqflint.output.OutputFormatter;
 import cz.zipek.sqflint.output.TextOutput;
 import cz.zipek.sqflint.parser.*;
+import cz.zipek.sqflint.preprocessor.SQFInclude;
+import cz.zipek.sqflint.preprocessor.SQFMacro;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,6 +36,9 @@ public class Linter extends SQFParser {
 	private final List<SQFParseException> errors = new ArrayList<>();
 	private final List<Warning> warnings = new ArrayList<>();
 	private final Map<String, SQFVariable> variables = new HashMap<>();
+	
+	private final List<SQFInclude> includes = new ArrayList<>();
+	private final List<SQFMacro> macros = new ArrayList<>();
 	
 	public Linter(InputStream stream) {
 		super(stream);
@@ -271,5 +276,19 @@ public class Linter extends SQFParser {
 	 */
 	public List<Warning> getWarnings() {
 		return warnings;
+	}
+
+	/**
+	 * @return the includes
+	 */
+	public List<SQFInclude> getIncludes() {
+		return includes;
+	}
+
+	/**
+	 * @return the macros
+	 */
+	public List<SQFMacro> getMacros() {
+		return macros;
 	}
 }

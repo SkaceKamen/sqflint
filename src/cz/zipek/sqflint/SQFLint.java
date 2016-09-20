@@ -1,6 +1,7 @@
 package cz.zipek.sqflint;
 
 import cz.zipek.sqflint.linter.Linter;
+import cz.zipek.sqflint.preprocessor.SQFPreprocessor;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -49,13 +50,14 @@ public class SQFLint {
 			linter =  new Linter(System.in);
 		} else if (cmd.getArgs().length == 1) {
 			String filename = cmd.getArgs()[0];
+			
 			try {
 				linter = new Linter(new java.io.FileInputStream(filename));
 			} catch (FileNotFoundException ex) {
 				System.out.println("SQF Parser Version 1.1:  File " + filename + " not found.");
 			}
 		}
-
+		
 		if (linter != null) {
 			linter.setStopOnError(cmd.hasOption("e"));
 			linter.setSkipWarnings(cmd.hasOption("nw"));
