@@ -11,132 +11,134 @@ public interface SQFParserConstants {
   /** End of File. */
   int EOF = 0;
   /** RegularExpression Id. */
-  int SINGLE_LINE_COMMENT = 10;
+  int SINGLE_LINE_COMMENT = 14;
   /** RegularExpression Id. */
-  int FORMAL_COMMENT = 11;
+  int FORMAL_COMMENT = 15;
   /** RegularExpression Id. */
-  int MULTI_LINE_COMMENT = 12;
+  int MULTI_LINE_COMMENT = 16;
   /** RegularExpression Id. */
-  int ASSIGN = 14;
+  int ASSIGN = 18;
   /** RegularExpression Id. */
-  int GT = 15;
+  int GT = 19;
   /** RegularExpression Id. */
-  int LT = 16;
+  int LT = 20;
   /** RegularExpression Id. */
-  int GTEQ = 17;
+  int GTEQ = 21;
   /** RegularExpression Id. */
-  int LTEQ = 18;
+  int LTEQ = 22;
   /** RegularExpression Id. */
-  int BANG = 19;
+  int BANG = 23;
   /** RegularExpression Id. */
-  int BANG2 = 20;
+  int BANG2 = 24;
   /** RegularExpression Id. */
-  int EQ = 21;
+  int EQ = 25;
   /** RegularExpression Id. */
-  int SC_OR = 22;
+  int SC_OR = 26;
   /** RegularExpression Id. */
-  int SC_AND = 23;
+  int SC_AND = 27;
   /** RegularExpression Id. */
-  int PLUS = 24;
+  int PLUS = 28;
   /** RegularExpression Id. */
-  int MINUS = 25;
+  int MINUS = 29;
   /** RegularExpression Id. */
-  int STAR = 26;
+  int STAR = 30;
   /** RegularExpression Id. */
-  int SLASH = 27;
+  int SLASH = 31;
   /** RegularExpression Id. */
-  int POWER = 28;
+  int POWER = 32;
   /** RegularExpression Id. */
-  int REM = 29;
+  int REM = 33;
   /** RegularExpression Id. */
-  int REM2 = 30;
+  int REM2 = 34;
   /** RegularExpression Id. */
-  int CSEL = 31;
+  int CSEL = 35;
   /** RegularExpression Id. */
-  int CASE = 32;
+  int CASE = 36;
   /** RegularExpression Id. */
-  int CATCH = 33;
+  int CATCH = 37;
   /** RegularExpression Id. */
-  int _DEFAULT = 34;
+  int _DEFAULT = 38;
   /** RegularExpression Id. */
-  int DO = 35;
+  int DO = 39;
   /** RegularExpression Id. */
-  int ELSE = 36;
+  int ELSE = 40;
   /** RegularExpression Id. */
-  int FOR = 37;
+  int FOR = 41;
   /** RegularExpression Id. */
-  int FROM = 38;
+  int FROM = 42;
   /** RegularExpression Id. */
-  int TO = 39;
+  int TO = 43;
   /** RegularExpression Id. */
-  int STEP = 40;
+  int STEP = 44;
   /** RegularExpression Id. */
-  int GOTO = 41;
+  int GOTO = 45;
   /** RegularExpression Id. */
-  int IF = 42;
+  int IF = 46;
   /** RegularExpression Id. */
-  int THEN = 43;
+  int THEN = 47;
   /** RegularExpression Id. */
-  int EXIT_WITH = 44;
+  int EXIT_WITH = 48;
   /** RegularExpression Id. */
-  int NULL = 45;
+  int NULL = 49;
   /** RegularExpression Id. */
-  int SWITCH = 46;
+  int SWITCH = 50;
   /** RegularExpression Id. */
-  int WHILE = 47;
+  int WHILE = 51;
   /** RegularExpression Id. */
-  int TRUE = 48;
+  int TRUE = 52;
   /** RegularExpression Id. */
-  int FALSE = 49;
+  int FALSE = 53;
   /** RegularExpression Id. */
-  int INTEGER_LITERAL = 50;
+  int INTEGER_LITERAL = 54;
   /** RegularExpression Id. */
-  int DECIMAL_LITERAL = 51;
+  int DECIMAL_LITERAL = 55;
   /** RegularExpression Id. */
-  int HEX_LITERAL = 52;
+  int HEX_LITERAL = 56;
   /** RegularExpression Id. */
-  int OCTAL_LITERAL = 53;
+  int OCTAL_LITERAL = 57;
   /** RegularExpression Id. */
-  int FLOATING_POINT_LITERAL = 54;
+  int FLOATING_POINT_LITERAL = 58;
   /** RegularExpression Id. */
-  int EXPONENT = 55;
+  int EXPONENT = 59;
   /** RegularExpression Id. */
-  int STRING_LITERAL = 56;
+  int STRING_LITERAL = 60;
   /** RegularExpression Id. */
-  int STRING_LITERAL_OTHER = 57;
+  int STRING_LITERAL_OTHER = 61;
   /** RegularExpression Id. */
-  int IDENTIFIER = 58;
+  int IDENTIFIER = 62;
   /** RegularExpression Id. */
-  int LETTER = 59;
+  int LETTER = 63;
   /** RegularExpression Id. */
-  int DIGIT = 60;
+  int DIGIT = 64;
   /** RegularExpression Id. */
-  int LPAREN = 61;
+  int LPAREN = 65;
   /** RegularExpression Id. */
-  int RPAREN = 62;
+  int RPAREN = 66;
   /** RegularExpression Id. */
-  int LBRACE = 63;
+  int LBRACE = 67;
   /** RegularExpression Id. */
-  int RBRACE = 64;
+  int RBRACE = 68;
   /** RegularExpression Id. */
-  int LBRACKET = 65;
+  int LBRACKET = 69;
   /** RegularExpression Id. */
-  int RBRACKET = 66;
+  int RBRACKET = 70;
   /** RegularExpression Id. */
-  int COMMA = 67;
+  int COMMA = 71;
   /** RegularExpression Id. */
-  int DOT = 68;
+  int DOT = 72;
   /** RegularExpression Id. */
-  int SEMICOLON = 69;
+  int SEMICOLON = 73;
 
   /** Lexical state. */
   int DEFAULT = 0;
   /** Lexical state. */
-  int IN_SINGLE_LINE_COMMENT = 1;
+  int PREPROCESSOR_OUTPUT = 1;
   /** Lexical state. */
-  int IN_FORMAL_COMMENT = 2;
+  int IN_SINGLE_LINE_COMMENT = 2;
   /** Lexical state. */
-  int IN_MULTI_LINE_COMMENT = 3;
+  int IN_FORMAL_COMMENT = 3;
+  /** Lexical state. */
+  int IN_MULTI_LINE_COMMENT = 4;
 
   /** Literal token values. */
   String[] tokenImage = {
@@ -146,14 +148,18 @@ public interface SQFParserConstants {
     "\"\\n\"",
     "\"\\r\"",
     "\"\\f\"",
-    "\"//\"",
-    "<token of kind 7>",
-    "\"/*\"",
     "\"#\"",
+    "\"\\n\"",
+    "\"\\\\\\n\"",
+    "\"\\\\\\r\\n\"",
+    "<token of kind 10>",
+    "\"//\"",
+    "<token of kind 12>",
+    "\"/*\"",
     "<SINGLE_LINE_COMMENT>",
     "\"*/\"",
     "\"*/\"",
-    "<token of kind 13>",
+    "<token of kind 17>",
     "\"=\"",
     "\">\"",
     "\"<\"",
