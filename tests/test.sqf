@@ -22,6 +22,8 @@ getNumber(configFile >> "cfgWeapons" >> _name >> "displayName");
 
 createcenter east 10;
 
+createUnit []
+
 if (_somte) then {
 	diag_log "YES!";
 }

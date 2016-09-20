@@ -2,7 +2,7 @@
 AppName=SQFLint
 AppPublisher=Kamen
 AppPublisherURL=http://sqflint.zipek.cz
-AppVersion=1.0
+AppVersion=0.5
 DefaultDirName={pf}\SQFLint
 UninstallDisplayIcon={app}\sqflint.exe
 OutputDir=dist\packages

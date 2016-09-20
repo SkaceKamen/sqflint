@@ -49,6 +49,13 @@ public class Linter extends SQFParser {
 		
 		try {
 			CompilationUnit();
+		} catch (ParseException e) {
+			if (!(e instanceof SQFParseException)) {
+				getErrors().add(new SQFParseException(e));
+			} else {
+				getErrors().add((SQFParseException)e);
+			}
+		} finally {
 			postParse();
 			
 			OutputFormatter out;
@@ -59,8 +66,6 @@ public class Linter extends SQFParser {
 			}
 			
 			out.print(this);
-		} catch (ParseException e) {
-			System.out.println(e.getMessage());
 		}
 	}
 	
