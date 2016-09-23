@@ -1,7 +1,7 @@
 options {
 	IGNORE_CASE = true;
 	ERROR_REPORTING = true;
-	DEBUG_PARSER = false;
+	DEBUG_PARSER = true;
 	STATIC = false;
 }
 
@@ -17,8 +17,8 @@ public class SQFParser {
 	protected void handleName() throws ParseException {
 	}
 
-	protected void recover(ParseException ex, int target) throws ParseException {
-
+	protected int recover(ParseException ex, int target) throws ParseException {
+		return target;
 	}
 }
 
@@ -80,14 +80,6 @@ SPECIAL_TOKEN :
 MORE :
 {
   < ~[] >
-}
-
-
-void CompilationUnit() :
-{}
-{
-	( BlockStatement() )*
-	<EOF>
 }
 
 /* OPERATORS */
@@ -204,6 +196,19 @@ TOKEN :
 
 */
 
+
+void CompilationUnit() :
+{}
+{
+	try {
+		( BlockStatement() )*
+		<EOF>
+	} catch (ParseException ex) {
+		if (recover(ex, SEMICOLON) != EOF) {
+			CompilationUnit();
+		}
+	}
+}
 
 
 void Literal() :

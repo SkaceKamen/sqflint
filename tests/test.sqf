@@ -1,5 +1,10 @@
 #define CALL(something) something call(BIS_fnc_call)
 
+ _caller = _this select 1;<>;
+_nearstuff = nearestobjects [_lc, ["landvehicle", "camanbase"], 8];qsdasrfd1234adf;'l[;a.d;[sd,c[opsalfksf'
+.]';.'/d'a.d';asd['asdsd;a;sdasd;a[s/';;'d'asd/]asd
+_attachedObjs = [];
+
 _center = createcenter(east);
 
 format ["DEBUG (f\common\folk_assignGear.sqf): Unit = %1. Gear template %2 does not exist, used Rifleman instead.",_unit,_typeofunit];
