@@ -25,10 +25,15 @@ import java.util.regex.Pattern;
  * @author Jan Zípek <jan at zipek.cz>
  */
 public class Linter extends SQFParser {
+	public static final int CODE_OK = 0;
+	public static final int CODE_ERR = 1;
+	
 	private boolean stopOnError = false;
 	private boolean skipWarnings = false;
 	private boolean jsonOutput = false;
 	private boolean outputVariables = false;
+	private boolean exitCodeEnabled = false;
+	private boolean warningAsError = false;
 	
 	private final Map<String, SQFCommand> commands = new HashMap<>();
 	private final Set<String> ignoredVariables = new HashSet<>();
@@ -46,7 +51,7 @@ public class Linter extends SQFParser {
 		ignoredVariables.addAll(Arrays.asList(new String[] { "_this", "_x", "_foreachindex" }));
 	}
 	
-	public void start() throws IOException {
+	public int start() throws IOException {
 		if (jsonOutput)
 			setTabSize(1);
 		
@@ -72,6 +77,13 @@ public class Linter extends SQFParser {
 			
 			out.print(this);
 		}
+		
+		// Always return OK if exit code is disabled
+		if (!exitCodeEnabled)
+			return CODE_OK;
+		
+		// Return ERR code when any error was encountered
+		return (getErrors().size() > 0) ? CODE_ERR : CODE_OK;
 	}
 	
 	protected void postParse() {
@@ -82,7 +94,11 @@ public class Linter extends SQFParser {
 			SQFVariable var = entry.getValue();
 			if (var.isLocal() && var.definitions.isEmpty()) {
 				var.usage.stream().forEach((u) -> {
-					getWarnings().add(new Warning(u, "Possibly undefined variable " + u));
+					if (warningAsError) {
+						getErrors().add(new SQFParseException(u, "Possibly undefined variable " + u));
+					} else {
+						getWarnings().add(new Warning(u, "Possibly undefined variable " + u));
+					}
 				});
 			}
 		});
@@ -293,5 +309,19 @@ public class Linter extends SQFParser {
 	 */
 	public List<SQFMacro> getMacros() {
 		return macros;
+	}
+
+	/**
+	 * @param exitCodeEnabled the exitCodeEnabled to set
+	 */
+	public void setExitCodeEnabled(boolean exitCodeEnabled) {
+		this.exitCodeEnabled = exitCodeEnabled;
+	}
+
+	/**
+	 * @param warningAsError the warningAsError to set
+	 */
+	public void setWarningAsError(boolean warningAsError) {
+		this.warningAsError = warningAsError;
 	}
 }

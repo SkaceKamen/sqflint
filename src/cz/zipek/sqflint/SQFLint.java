@@ -1,7 +1,6 @@
 package cz.zipek.sqflint;
 
 import cz.zipek.sqflint.linter.Linter;
-import cz.zipek.sqflint.preprocessor.SQFPreprocessor;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -29,6 +28,8 @@ public class SQFLint {
 		options.addOption("v", "variables", false, "output variables info (only in json mode)");
 		options.addOption("e", "error", false, "stop on error");
 		options.addOption("nw", "no-warning", false, "skip warnings");
+		options.addOption("we", "warning-as-error", false, "output warnings as errors");
+		options.addOption("oc", "output-code", false, "output ERR return code when any error is encountered");
 		options.addOption("h", "help", false, "");
 		
 		try {
@@ -63,9 +64,11 @@ public class SQFLint {
 			linter.setSkipWarnings(cmd.hasOption("nw"));
 			linter.setJsonOutput(cmd.hasOption("j"));
 			linter.setOutputVariables(cmd.hasOption("v"));
+			linter.setExitCodeEnabled(cmd.hasOption("oc"));
+			linter.setWarningAsError(cmd.hasOption("we"));
 			
 			try {
-				linter.start();
+				System.exit(linter.start());
 			} catch (IOException ex) {
 				Logger.getLogger(SQFLint.class.getName()).log(Level.SEVERE, null, ex);
 			}
