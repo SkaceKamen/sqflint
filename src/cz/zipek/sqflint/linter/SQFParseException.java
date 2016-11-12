@@ -2,6 +2,7 @@ package cz.zipek.sqflint.linter;
 
 import cz.zipek.sqflint.parser.ParseException;
 import cz.zipek.sqflint.parser.Token;
+import cz.zipek.sqflint.parser.TokenMgrError;
 
 /**
  *
@@ -22,6 +23,13 @@ public class SQFParseException extends ParseException {
 		
 		currentToken = ex.currentToken;
 		jsonMessage = buildMessage(ex, false);
+	}
+	
+	public SQFParseException(TokenMgrError ex) {
+		super(ex.getMessage());
+		
+		currentToken = null;
+		jsonMessage = ex.getMessage();
 	}
 	
 	public String getJSONMessage() {

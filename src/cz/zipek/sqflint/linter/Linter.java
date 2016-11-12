@@ -65,6 +65,8 @@ public class Linter extends SQFParser {
 			} else {
 				getErrors().add((SQFParseException)e);
 			}
+		} catch (TokenMgrError e) {
+			getErrors().add(new SQFParseException(e));
 		} finally {
 			postParse();
 			
