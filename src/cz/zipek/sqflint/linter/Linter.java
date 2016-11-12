@@ -1,5 +1,8 @@
 package cz.zipek.sqflint.linter;
 
+import cz.zipek.sqflint.SQFArray;
+import cz.zipek.sqflint.SQFLiteral;
+import cz.zipek.sqflint.SQFUnit;
 import cz.zipek.sqflint.output.JSONOutput;
 import cz.zipek.sqflint.output.OutputFormatter;
 import cz.zipek.sqflint.output.TextOutput;
@@ -88,6 +91,10 @@ public class Linter extends SQFParser {
 		return (getErrors().size() > 0) ? CODE_ERR : CODE_OK;
 	}
 	
+	/**
+	 * Post parse checks, mainly for warnings.
+	 * Currently checks if every used local variable is actually defined.
+	 */
 	protected void postParse() {
 		if (skipWarnings)
 			return;
@@ -107,6 +114,76 @@ public class Linter extends SQFParser {
 	}
 	
 	@Override
+	protected void handleParams(SQFArray contents) throws ParseException {
+		// List each item of params
+		for(SQFUnit item : contents.getUnits()) {
+			// Literal, presumably string = variable ident
+			if (item instanceof SQFLiteral) {
+				handleParamLiteral((SQFLiteral)item);
+			}
+			
+			// Array = param with additional options, variable ident is first
+			if (item instanceof SQFArray) {
+				SQFArray array = (SQFArray)item;
+				if (!array.getUnits().isEmpty()) {
+					SQFUnit subitem = array.getUnits().get(0);
+					if (subitem instanceof SQFLiteral) {
+						handleParamLiteral((SQFLiteral)subitem);
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Checks literal, that is potentionaly variable definition inside
+	 * params command.
+	 * 
+	 * @param literal possible variable definition
+	 * @return if literal was variable definition
+	 */
+	private boolean handleParamLiteral(SQFLiteral literal) {
+		// Only string literals are accepted as variable names
+		if (literal.getContents().kind == STRING_LITERAL_OTHER ||
+			literal.getContents().kind == STRING_LITERAL
+		) {
+			// Load variable name without quotes and case insensitive
+			String ident = literal.getContents().image.toLowerCase();
+			ident = ident.substring(1, ident.length() - 1);
+
+			// Load variable
+			SQFVariable var = getVariable(ident);
+
+			var.usage.add(literal.getContents());
+			var.definitions.add(literal.getContents());
+			var.comments.add(null);
+
+			return true;
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * Loads variable assigned to specified ident.
+	 * If variable isn't registered yet, it will be.
+	 * 
+	 * @param ident
+	 * @return
+	 */
+	private SQFVariable getVariable(String ident) {
+		SQFVariable var;
+		if (!variables.containsKey(ident)) {
+			var = new SQFVariable(ident);
+			variables.put(ident, var);
+		} else {
+			var = variables.get(ident);
+		}
+		
+		return var;
+	}
+	
+	@Override
 	protected void handleName() throws ParseException {
 		// Load current token
 		Token name = getToken(1);
@@ -120,13 +197,7 @@ public class Linter extends SQFParser {
 			SQFCommand cmd = getCommands().get(ident);
 			cmd.test(name, this);
 		} else if (!ignoredVariables.contains(ident)) {
-			SQFVariable var;
-			if (!variables.containsKey(ident)) {
-				var = new SQFVariable(ident);
-				variables.put(ident, var);
-			} else {
-				var = getVariables().get(ident);
-			}
+			SQFVariable var = getVariable(ident);
 			
 			var.usage.add(name);
 
