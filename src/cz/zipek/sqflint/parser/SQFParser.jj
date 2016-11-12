@@ -9,13 +9,15 @@ PARSER_BEGIN(SQFParser)
 
 package cz.zipek.sqflint.parser;
 
+import cz.zipek.sqflint.*;
+
 public class SQFParser {
 	public void setTabSize(int size) {
 		jj_input_stream.setTabSize(size);
 	}
 
-	protected void handleName() throws ParseException {
-	}
+	protected void handleName() throws ParseException {}
+	protected void handleParams(SQFArray contents) throws ParseException {}
 
 	protected int recover(ParseException ex, int target) throws ParseException {
 		return target;
@@ -129,7 +131,8 @@ TOKEN :
 	< SWITCH: "switch" > |
 	< WHILE: "while" > |
 	< TRUE: "true" > |
-	< FALSE: "false" >
+	< FALSE: "false" > |
+	< PARAMS: "params" >
 
 }
 
@@ -211,27 +214,27 @@ void CompilationUnit() :
 }
 
 
-void Literal() :
-{}
+SQFLiteral Literal() :
 {
-	<INTEGER_LITERAL> | <FLOATING_POINT_LITERAL> |
-	<STRING_LITERAL> |
-	<STRING_LITERAL_OTHER> |
-	BooleanLiteral() |
-	NullLiteral()
+	Token contents = null;
+}
+{
+	contents = <INTEGER_LITERAL> { return new SQFLiteral(contents); } |
+	contents = <FLOATING_POINT_LITERAL> { return new SQFLiteral(contents); } |
+	contents = <STRING_LITERAL> { return new SQFLiteral(contents); } |
+	contents = <STRING_LITERAL_OTHER> { return new SQFLiteral(contents); } |
+	contents = BooleanLiteral() { return new SQFLiteral(contents); }
 }
 
-void BooleanLiteral() :
-{}
+Token BooleanLiteral() :
 {
-	"true"  |
-	"false"
+	Token result = null;
 }
-
-void NullLiteral() :
-{}
 {
-	"objNull"
+	result = "true"  |
+	result = "false"
+
+	{ return result; }
 }
 
 void Operator() :
@@ -256,80 +259,88 @@ void Operator() :
 	"/"
 }
 
-void Name() :
+SQFIdentifier Name() :
 {
+	Token token = null;
+
 	handleName();
 }
 {
-	<IDENTIFIER>
+	token = <IDENTIFIER>
+
+	{ return new SQFIdentifier(token); }
 }
 
-void Expression() :
-{}
+SQFUnit Expression() :
 {
-	("!" | "not ") Expression() |
-	PrimaryExpression() [ Operator() ] [ Expression() ]
+	SQFUnit result = null;
 }
-
-void Array() :
-{}
 {
-	LOOKAHEAD(2) "[" Expression() ( "," Expression() )* "]" |
-	"[" "]"
+	("!" | "not ") result = Expression() |
+	result = PrimaryExpression() [ Operator() ] [ result = Expression() ]
+
+	{ return result; }
 }
 
-/*
-void BinaryExpression() :
-{}
+SQFArray Array() :
 {
-	UnaryExpression() [ Operator() Expression() ]
+	SQFArray array = new SQFArray();
+	SQFUnit item = null;
 }
-
-void UnaryExpression() :
-{}
 {
-	PrimaryExpression() [ Expression() ] |
-	("!" | "not ") PrimaryExpression()
+	LOOKAHEAD(2) "[" item = Expression() { array.add(item); } ( "," item = Expression() { array.add(item); } )* "]" { return array; } |
+	"[" "]" 	{ return array; }
 }
-*/
 
-void PrimaryExpression() :
-{}
+SQFUnit PrimaryExpression() :
 {
-	Literal() |
-	"(" Expression() ")" |
-	Name() |
-	Block() |
-	Array()
+	SQFUnit result = null;
+}
+{
+	result = Literal() { return result; }  |
+	"(" result = Expression() ")" { return result; } |
+	result = Name() { return result; } |
+	result = Block() { return result; } |
+	result = Array() { return result; }
 }
 
-void Block() :
-{}
+SQFBlock Block() :
+{
+	SQFBlock result = new SQFBlock();
+	SQFUnit statement = null;
+}
 {
 	LOOKAHEAD(2)
-	"{" "}" |
-	"{" Statement() [ ";" ( BlockStatement() )* ] "}"
+	"{" "}" { return result; } |
+	"{" statement = Statement() { result.add(statement); } [ ";" ( statement = BlockStatement() { result.add(statement); } )* ] "}" { return result; }
 }
 
-void BlockStatement():
-{}
+SQFUnit BlockStatement():
+{
+	SQFUnit result = null;
+}
 {
 	try {
-		EmptyStatement() |
-		Statement() ";"
+		EmptyStatement() { return result; } |
+		result = Statement() ";"
 	} catch(ParseException ex) {
 		recover(ex, SEMICOLON);
 	}
+
+	{ return result; }
 }
 
-void Statement() :
-{}
+SQFUnit Statement() :
 {
-	SwitchStatement() |
-	IfStatement() |
-	WhileStatement() |
-	ForStatement() |
-	StatementExpression()
+	SQFUnit result = null;
+}
+{
+	SwitchStatement() { return result; } |
+	IfStatement() { return result; } |
+	WhileStatement() { return result; } |
+	ForStatement() { return result; } |
+	ParamsStatement() { return result; } |
+	result = StatementExpression() 	{ return result; }
 }
 
 void EmptyStatement() :
@@ -338,11 +349,23 @@ void EmptyStatement() :
   ";"
 }
 
-void StatementExpression() :
-{}
+void ParamsStatement() :
 {
-	Expression()
-	//PrimaryExpression() [ AssignmentOperator() Expression() ]
+	SQFArray contents = null;
+}
+{
+	"params" contents = Array()
+	{
+		handleParams(contents);
+	}
+}
+
+SQFUnit StatementExpression() :
+{
+	SQFUnit result = null;
+}
+{
+	result = Expression() { return result; }
 }
 
 void SwitchStatement() :
