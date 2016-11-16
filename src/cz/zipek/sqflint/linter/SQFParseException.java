@@ -81,7 +81,7 @@ public class SQFParseException extends ParseException {
 		retval += add_escapes(tok.toString());
 		retval += "\"";
 		if (position) {
-			retval += "at line " + currentToken.next.beginLine + ", column " + currentToken.next.beginColumn;
+			retval += " at line " + currentToken.next.beginLine + ", column " + currentToken.next.beginColumn;
 		}
 		retval += "." + line;
 		if (expectedTokenSequences.length == 1) {
