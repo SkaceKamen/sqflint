@@ -1,7 +1,7 @@
 options {
 	IGNORE_CASE = true;
 	ERROR_REPORTING = true;
-	DEBUG_PARSER = true;
+	DEBUG_PARSER = false;
 	STATIC = false;
 }
 
@@ -207,7 +207,7 @@ void CompilationUnit() :
 {}
 {
 	try {
-		( BlockStatement() )*
+		BlockContents()
 		<EOF>
 	} catch (ParseException ex) {
 		if (recover(ex, SEMICOLON) != EOF) {
@@ -306,12 +306,22 @@ SQFUnit PrimaryExpression() :
 SQFBlock Block() :
 {
 	SQFBlock result = new SQFBlock();
-	SQFUnit statement = null;
 }
 {
 	LOOKAHEAD(2)
-	"{" statement = Statement() { result.add(statement); } [ ";" ( statement = BlockStatement() { result.add(statement); } )* ] "}" { return result; } |
+	"{" result = BlockContents() "}" { return result; } |
 	"{" "}" { return result; }
+}
+
+SQFBlock BlockContents():
+{
+	SQFBlock result = new SQFBlock();
+	SQFUnit statement = null;
+}
+{
+	statement = Statement() { result.add(statement); }
+	[ ";" [ statement = Statement() { result.add(statement); } ( statement = BlockStatement() { result.add(statement); } )* [ ";" ] ] ]
+	{ return result; }
 }
 
 SQFUnit BlockStatement():
@@ -320,8 +330,8 @@ SQFUnit BlockStatement():
 }
 {
 	try {
-		EmptyStatement() { return result; } |
-		result = Statement() ";"
+		/*EmptyStatement() { return result; } |*/
+		";" [ result = Statement() ]
 	} catch(ParseException ex) {
 		recover(ex, SEMICOLON);
 	}
