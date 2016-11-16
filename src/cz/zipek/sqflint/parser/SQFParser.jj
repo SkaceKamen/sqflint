@@ -1,7 +1,7 @@
 options {
 	IGNORE_CASE = true;
 	ERROR_REPORTING = true;
-	DEBUG_PARSER = false;
+	DEBUG_PARSER = true;
 	STATIC = false;
 }
 
@@ -9,7 +9,11 @@ PARSER_BEGIN(SQFParser)
 
 package cz.zipek.sqflint.parser;
 
-import cz.zipek.sqflint.*;
+import cz.zipek.sqflint.SQFArray;
+import cz.zipek.sqflint.SQFBlock;
+import cz.zipek.sqflint.SQFIdentifier;
+import cz.zipek.sqflint.SQFLiteral;
+import cz.zipek.sqflint.SQFUnit;
 
 public class SQFParser {
 	public void setTabSize(int size) {
@@ -127,7 +131,6 @@ TOKEN :
 	< IF: "if" > |
 	< THEN: "then" > |
 	< EXIT_WITH: "exitWith" > |
-	< NULL: "objNull" > |
 	< SWITCH: "switch" > |
 	< WHILE: "while" > |
 	< TRUE: "true" > |
@@ -231,10 +234,8 @@ Token BooleanLiteral() :
 	Token result = null;
 }
 {
-	result = "true"  |
-	result = "false"
-
-	{ return result; }
+	result = "true" { return result; }  |
+	result = "false" { return result; }
 }
 
 void Operator() :
@@ -276,10 +277,8 @@ SQFUnit Expression() :
 	SQFUnit result = null;
 }
 {
-	("!" | "not ") result = Expression() |
-	result = PrimaryExpression() [ Operator() ] [ result = Expression() ]
-
-	{ return result; }
+	("!" | "not ") result = Expression() { return result; } |
+	result = PrimaryExpression() [ Operator() ] [ result = Expression() ] { return result; }
 }
 
 SQFArray Array() :
@@ -311,8 +310,8 @@ SQFBlock Block() :
 }
 {
 	LOOKAHEAD(2)
-	"{" "}" { return result; } |
-	"{" statement = Statement() { result.add(statement); } [ ";" ( statement = BlockStatement() { result.add(statement); } )* ] "}" { return result; }
+	"{" statement = Statement() { result.add(statement); } [ ";" ( statement = BlockStatement() { result.add(statement); } )* ] "}" { return result; } |
+	"{" "}" { return result; }
 }
 
 SQFUnit BlockStatement():
@@ -335,6 +334,7 @@ SQFUnit Statement() :
 	SQFUnit result = null;
 }
 {
+	LOOKAHEAD(3)
 	SwitchStatement() { return result; } |
 	IfStatement() { return result; } |
 	WhileStatement() { return result; } |
@@ -399,7 +399,7 @@ void SwitchLabel() :
 void IfStatement() :
 {}
 {
-	"if" "(" Expression() ")" (
+	"if" Expression() (
 		"then" Block() [ LOOKAHEAD(1) "else" Block() ] |
 		"exitWith" Block()
 	)
@@ -415,5 +415,5 @@ void ForStatement() :
 {}
 {
 	LOOKAHEAD(2) ( "for" "[" Block() "," Block() "," Block() "]" "do" Block() ) |
-	LOOKAHEAD(2) ( "for" StatementExpression() "from" <INTEGER_LITERAL> "to" <INTEGER_LITERAL> [ "step" <INTEGER_LITERAL> ] "do" Block() )
+	LOOKAHEAD(2) ( "for" StatementExpression() "from" Expression() "to" Expression() [ "step" Expression() ] "do" Block() )
 }
