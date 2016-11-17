@@ -6,7 +6,10 @@ import cz.zipek.sqflint.SQFUnit;
 import cz.zipek.sqflint.output.JSONOutput;
 import cz.zipek.sqflint.output.OutputFormatter;
 import cz.zipek.sqflint.output.TextOutput;
-import cz.zipek.sqflint.parser.*;
+import cz.zipek.sqflint.parser.ParseException;
+import cz.zipek.sqflint.parser.SQFParser;
+import cz.zipek.sqflint.parser.Token;
+import cz.zipek.sqflint.parser.TokenMgrError;
 import cz.zipek.sqflint.preprocessor.SQFInclude;
 import cz.zipek.sqflint.preprocessor.SQFMacro;
 import java.io.BufferedReader;
@@ -62,14 +65,15 @@ public class Linter extends SQFParser {
 		
 		try {
 			CompilationUnit();
-		} catch (ParseException e) {
-			if (!(e instanceof SQFParseException)) {
-				getErrors().add(new SQFParseException(e));
-			} else {
+		} catch (ParseException | TokenMgrError  e) {
+			if (e instanceof SQFParseException) {
 				getErrors().add((SQFParseException)e);
+				//getErrors().add(new SQFParseException(e));
+			} else if (e instanceof ParseException) {
+				getErrors().add(new SQFParseException((ParseException)e));
+			} else if (e instanceof TokenMgrError) {
+				getErrors().add(new SQFParseException((TokenMgrError)e));
 			}
-		} catch (TokenMgrError e) {
-			getErrors().add(new SQFParseException(e));
 		} finally {
 			postParse();
 			
@@ -235,12 +239,20 @@ public class Linter extends SQFParser {
 		if (stopOnError) {
 			throw ex;
 		}
+				
+		// Skip token with error
+		getNextToken();
 		
-		// Try to move to next token of specified kind
+		// Scan until we reach recovery point or EOF
+		// We need to start AT recovery point, so only peek, don't consume
+		// Only consume when it isn't recovery point
 		Token t;
-		do {
-			t = getNextToken ();
-		} while (t.kind != EOF && t.kind != recoveryPoint);
+		while(true) {
+			t = getToken(1);
+			if (t.kind == recoveryPoint || t.kind == EOF)
+				break;
+			getNextToken();
+		}
 		
 		return t.kind;
 	}

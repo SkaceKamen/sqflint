@@ -160,12 +160,12 @@ TOKEN :
   < #EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ > |
   < STRING_LITERAL:
       "\""
-      ( "\"\"" | (~["\"","\n","\r"]) )*
+      ( "\"\"" | (~["\""]) )*
       "\""
   > |
   < STRING_LITERAL_OTHER:
       "'"
-      ( (~["\'","\\","\n","\r"]) )*
+      ( (~["\'","\\"]) )*
       "'"
   >
 }
@@ -329,6 +329,7 @@ SQFUnit BlockStatement():
 	SQFUnit result = null;
 }
 {
+	// @TODO: Fact that statement begins with ";" breaks the recovery
 	try {
 		/*EmptyStatement() { return result; } |*/
 		";" [ result = Statement() ]
@@ -344,13 +345,19 @@ SQFUnit Statement() :
 	SQFUnit result = null;
 }
 {
-	LOOKAHEAD(3)
-	SwitchStatement() { return result; } |
-	IfStatement() { return result; } |
-	WhileStatement() { return result; } |
-	ForStatement() { return result; } |
-	ParamsStatement() { return result; } |
-	result = StatementExpression() 	{ return result; }
+	try {
+		LOOKAHEAD(3)
+		SwitchStatement() { return result; } |
+		IfStatement() { return result; } |
+		WhileStatement() { return result; } |
+		ForStatement() { return result; } |
+		ParamsStatement() { return result; } |
+		result = StatementExpression() 	{ return result; }
+	} catch(ParseException ex) {
+		recover(ex, SEMICOLON);
+	} finally {
+		return null;
+	}
 }
 
 void EmptyStatement() :
