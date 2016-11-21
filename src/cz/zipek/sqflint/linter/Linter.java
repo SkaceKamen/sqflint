@@ -227,7 +227,7 @@ public class Linter extends SQFParser {
 	 * @throws cz.zipek.sqflint.parser.ParseException 
 	 */
 	@Override
-	protected int recover(ParseException ex, int recoveryPoint) throws ParseException {
+	protected int recover(ParseException ex, int recoveryPoint, boolean skip) throws ParseException {
 		// Add to list of encountered errors
 		if (!(ex instanceof SQFParseException)) {
 			getErrors().add(new SQFParseException(ex));
@@ -239,7 +239,7 @@ public class Linter extends SQFParser {
 		if (stopOnError) {
 			throw ex;
 		}
-				
+	
 		// Skip token with error
 		getNextToken();
 		
@@ -249,8 +249,10 @@ public class Linter extends SQFParser {
 		Token t;
 		while(true) {
 			t = getToken(1);
-			if (t.kind == recoveryPoint || t.kind == EOF)
+			if (t.kind == recoveryPoint || t.kind == EOF) {
+				if (skip) getNextToken();
 				break;
+			}
 			getNextToken();
 		}
 		

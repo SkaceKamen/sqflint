@@ -24,6 +24,10 @@ public class SQFParser {
 	protected void handleParams(SQFArray contents) throws ParseException {}
 
 	protected int recover(ParseException ex, int target) throws ParseException {
+		return recover(ex, target, false);
+	}
+
+	protected int recover(ParseException ex, int target, boolean skip) throws ParseException {
 		return target;
 	}
 }
@@ -210,7 +214,7 @@ void CompilationUnit() :
 		BlockContents()
 		<EOF>
 	} catch (ParseException ex) {
-		if (recover(ex, SEMICOLON) != EOF) {
+		if (recover(ex, SEMICOLON, true) != EOF) {
 			CompilationUnit();
 		}
 	}
@@ -320,7 +324,7 @@ SQFBlock BlockContents():
 }
 {
 	statement = Statement() { result.add(statement); }
-	[ ";" [ statement = Statement() { result.add(statement); } ( statement = BlockStatement() { result.add(statement); } )* [ ";" ] ] ]
+	( ";" [ statement = Statement() { result.add(statement); }  ] )*
 	{ return result; }
 }
 
