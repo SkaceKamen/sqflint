@@ -9,13 +9,7 @@ PARSER_BEGIN(SQFParser)
 
 package cz.zipek.sqflint.parser;
 
-import cz.zipek.sqflint.SQFArray;
-import cz.zipek.sqflint.SQFBlock;
-import cz.zipek.sqflint.SQFIdentifier;
-import cz.zipek.sqflint.SQFLiteral;
-import cz.zipek.sqflint.SQFUnit;
-import cz.zipek.sqflint.SQFExpression;
-import cz.zipek.sqflint.SQFIfStatement;
+import cz.zipek.sqflint.sqf.*;
 
 public class SQFParser {
 	public void setTabSize(int size) {
@@ -140,8 +134,8 @@ TOKEN :
 	< SWITCH: "switch" > |
 	< WHILE: "while" > |
 	< TRUE: "true" > |
-	< FALSE: "false" > |
-	< PARAMS: "params" >
+	< FALSE: "false" > /*|
+	< PARAMS: "params" >*/
 
 }
 
@@ -234,8 +228,8 @@ SQFLiteral Literal() :
 {
 	contents = <INTEGER_LITERAL> { return new SQFLiteral(contents); } |
 	contents = <FLOATING_POINT_LITERAL> { return new SQFLiteral(contents); } |
-	contents = <STRING_LITERAL> { return new SQFLiteral(contents); } |
-	contents = <STRING_LITERAL_OTHER> { return new SQFLiteral(contents); } |
+	contents = <STRING_LITERAL> { return new SQFString(contents); } |
+	contents = <STRING_LITERAL_OTHER> { return new SQFString(contents); } |
 	contents = BooleanLiteral() { return new SQFLiteral(contents); }
 }
 
@@ -315,7 +309,7 @@ SQFUnit PrimaryExpression(SQFExpression left) :
 SQFArray Array() :
 {
 	SQFArray array = new SQFArray();
-	SQFUnit item = null;
+	SQFExpression item = null;
 }
 {
 	LOOKAHEAD(2) "[" item = Expression(null) { array.add(item); } ( "," item = Expression(null) { array.add(item); } )* "]" { return array; } |
@@ -350,11 +344,11 @@ SQFUnit Statement() :
 {
 	try {
 		LOOKAHEAD(3)
-		SwitchStatement() { return result; } |
+		result = SwitchStatement() { return result; } |
 		result = IfStatement() { return result; } |
-		WhileStatement() { return result; } |
-		ForStatement() { return result; } |
-		ParamsStatement() { return result; } |
+		result = WhileStatement() { return result; } |
+		result = ForStatement() { return result; } |
+		//ParamsStatement() { return result; } |
 		result = StatementExpression() 	{ return result; }
 	} catch(ParseException ex) {
 		recover(ex, SEMICOLON);
@@ -388,34 +382,42 @@ SQFUnit StatementExpression() :
 	result = Expression(null) { return result; }
 }
 
-void SwitchStatement() :
-{}
+SQFSwitchStatement SwitchStatement() :
 {
-	"switch" Expression(null) "do" "{"
-		( SwitchCase() )*
-		[ SwitchDefault() ]
-	"}"
+	SQFSwitchStatement result = new SQFSwitchStatement();
+	SQFExpression exp = null;
+	SQFCaseStatement cs = null;
+	SQFBlock def = null;
+}
+{
+	"switch" exp = Expression(null) { result.setExpression(exp); } "do" "{"
+		( cs = SwitchCase() { result.add(cs); } )*
+		[ def = SwitchDefault() { result.setDefault(def); } ]
+	"}" { return result; }
 }
 
-void SwitchCase() :
-{}
+SQFCaseStatement SwitchCase() :
 {
-	SwitchLabel() ( ( ":" Block() ";" ) | ";" )
+	SQFExpression exp = null;
+	SQFBlock block = null;
+}
+{
+	exp = SwitchLabel() ( ( ":" block = Block() ";" ) | ";" )
+	{ return new SQFCaseStatement(exp, block); }
 }
 
-void SwitchDefault() :
-{}
+SQFBlock SwitchDefault() :
+{ SQFBlock result = null; }
 {
-	"default" Block() ";"
+	"default" result = Block() ";" { return result; }
 }
 
-void SwitchLabel() :
-{}
+SQFExpression SwitchLabel() :
+{ SQFExpression result = null; }
 {
-	"case" Expression(null)
+	"case" result = Expression(null) { return result; }
 }
 
-// @TODO: exitWith can't have else :(
 SQFIfStatement IfStatement() :
 {
 	SQFExpression cond = null;
@@ -429,15 +431,26 @@ SQFIfStatement IfStatement() :
 	) { return new SQFIfStatement(cond, trueBlock, falseBlock); }
 }
 
-void WhileStatement() :
-{}
+SQFWhileStatement WhileStatement() :
 {
-	"while" Block() "do" Block()
+	SQFBlock cond = null;
+	SQFBlock block = null;
+}
+{
+	"while" cond = Block() "do" block = Block()
+	{ return new SQFWhileStatement(cond, block); }
 }
 
-void ForStatement() :
-{}
+SQFForStatement ForStatement() :
 {
-	LOOKAHEAD(2) ( "for" "[" Block() "," Block() "," Block() "]" "do" Block() ) |
-	LOOKAHEAD(2) ( "for" StatementExpression() "from" Expression(null) "to" Expression(null) [ "step" Expression(null) ] "do" Block() )
+	SQFBlock init = null, cond = null, stepBlock = null, block = null;
+	SQFExpression variable = null, from = null, to = null, step = null;
+}
+{
+	LOOKAHEAD(2) ( "for" "[" init = Block() "," cond = Block() "," stepBlock = Block() "]" "do" block = Block() ) {
+		return new SQFForArrayStatement(init, cond, stepBlock, block);
+	} |
+	LOOKAHEAD(2) ( "for" variable = Expression(null) "from" from = Expression(null) "to" to = Expression(null) [ "step" step = Expression(null) ] "do" block = Block() ) {
+		return new SQFForExpressionStatement(variable, from, to, step, block);
+	}
 }

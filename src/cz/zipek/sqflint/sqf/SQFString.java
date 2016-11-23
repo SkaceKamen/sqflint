@@ -21,23 +21,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package cz.zipek.sqflint;
+package cz.zipek.sqflint.sqf;
 
-import java.util.ArrayList;
-import java.util.List;
+import cz.zipek.sqflint.parser.Token;
 
 /**
  *
  * @author Jan Zípek <jan at zipek.cz>
  */
-public class SQFBlock extends SQFUnit {
-	private final List<SQFUnit> statements = new ArrayList<>();
+public class SQFString extends SQFLiteral {
+	private String contents;
 	
-	public void add(SQFUnit statement) {
-		statements.add(statement);
+	public SQFString(Token contents) {
+		super(contents);
+		
+		this.contents = contents.toString().substring(1, contents.toString().length() - 1);
 	}
 	
-	public List<SQFUnit> getStatements() {
-		return statements;
+	public String getStringContents() {
+		return contents;
 	}
 }

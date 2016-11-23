@@ -21,25 +21,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package cz.zipek.sqflint;
+package cz.zipek.sqflint.sqf;
 
-import cz.zipek.sqflint.parser.Token;
+import cz.zipek.sqflint.linter.Linter;
 
 /**
  *
  * @author Jan Zípek <jan at zipek.cz>
  */
-public class SQFLiteral extends SQFUnit {
-	private final Token contents;
-	
-	public SQFLiteral(Token contents) {
-		this.contents = contents;
+public class SQFCaseStatement extends SQFUnit {
+	private SQFExpression condition;
+	private SQFBlock block;
+
+	public SQFCaseStatement(SQFExpression condition, SQFBlock block) {
+		this.condition = condition;
+		this.block = block;
 	}
 
-	/**
-	 * @return the contents
-	 */
-	public Token getContents() {
-		return contents;
+	@Override
+	public void analyze(Linter source, SQFBlock context) {
+		if (condition != null) condition.analyze(source, context);
+		if (block != null) block.analyze(source, context);
 	}
 }

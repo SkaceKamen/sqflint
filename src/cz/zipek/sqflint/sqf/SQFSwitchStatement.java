@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2016 kamen.
+ * Copyright 2016 Jan Zípek <jan at zipek.cz>.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,20 +21,42 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package cz.zipek.sqflint;
+package cz.zipek.sqflint.sqf;
+
+import cz.zipek.sqflint.linter.Linter;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
- * @author kamen
+ * @author Jan Zípek <jan at zipek.cz>
  */
-public class SQFIfStatement extends SQFUnit {
-	private SQFExpression condition;
-	private SQFBlock trueBlock;
-	private SQFBlock falseBlock;
+public class SQFSwitchStatement extends SQFUnit {
+	private final List<SQFCaseStatement> cases = new ArrayList<>();
+	private SQFExpression expression;
+	private SQFBlock defaultBlock;
+
+	public void setExpression(SQFExpression exp) {
+		expression = exp;
+	}
 	
-	public SQFIfStatement(SQFExpression condition, SQFBlock t, SQFBlock f) {
-		this.condition = condition;
-		trueBlock = t;
-		falseBlock = f;
+	public void setDefault(SQFBlock blo) {
+		defaultBlock = blo;
+	}
+	
+	public SQFSwitchStatement add(SQFCaseStatement c) {
+		cases.add(c);
+		return this;
+	}
+
+	@Override
+	public void analyze(Linter source, SQFBlock context) {
+		if (expression != null) expression.analyze(source, context);
+		
+		for(SQFCaseStatement c : cases) {
+			c.analyze(source, context);
+		}
+		
+		if (defaultBlock != null) defaultBlock.analyze(source, context);
 	}
 }

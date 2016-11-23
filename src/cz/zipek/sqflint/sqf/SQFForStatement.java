@@ -1,3 +1,5 @@
+package cz.zipek.sqflint.sqf;
+
 /*
  * The MIT License
  *
@@ -21,12 +23,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package cz.zipek.sqflint;
 
 /**
  *
  * @author Jan Zípek <jan at zipek.cz>
  */
-public class SQFUnit {
-	
+public class SQFForStatement extends SQFUnit {
+	protected SQFBlock block;
+
+	/**
+	 * @return the block
+	 */
+	public SQFBlock getBlock() {
+		return block;
+	}
 }

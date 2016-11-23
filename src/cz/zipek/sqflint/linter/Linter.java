@@ -1,9 +1,6 @@
 package cz.zipek.sqflint.linter;
 
-import cz.zipek.sqflint.SQFArray;
-import cz.zipek.sqflint.SQFBlock;
-import cz.zipek.sqflint.SQFLiteral;
-import cz.zipek.sqflint.SQFUnit;
+import cz.zipek.sqflint.sqf.SQFBlock;
 import cz.zipek.sqflint.output.JSONOutput;
 import cz.zipek.sqflint.output.OutputFormatter;
 import cz.zipek.sqflint.output.TextOutput;
@@ -13,6 +10,8 @@ import cz.zipek.sqflint.parser.Token;
 import cz.zipek.sqflint.parser.TokenMgrError;
 import cz.zipek.sqflint.preprocessor.SQFInclude;
 import cz.zipek.sqflint.preprocessor.SQFMacro;
+import cz.zipek.sqflint.sqf.operators.Operator;
+import cz.zipek.sqflint.sqf.operators.ParamsOperator;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,10 +51,14 @@ public class Linter extends SQFParser {
 	private final List<SQFInclude> includes = new ArrayList<>();
 	private final List<SQFMacro> macros = new ArrayList<>();
 	
+	private final Map<String, Operator> operators = new HashMap<>();
+	
 	public Linter(InputStream stream) {
 		super(stream);
 		
 		ignoredVariables.addAll(Arrays.asList(new String[] { "_this", "_x", "_foreachindex" }));
+		
+		operators.put("params", new ParamsOperator());
 	}
 	
 	public int start() throws IOException {
@@ -78,6 +81,10 @@ public class Linter extends SQFParser {
 				getErrors().add(new SQFParseException((TokenMgrError)e));
 			}
 		} finally {
+			if (block != null) {
+				block.analyze(this, null);
+			}
+			
 			postParse();
 			
 			OutputFormatter out;
@@ -120,57 +127,6 @@ public class Linter extends SQFParser {
 		});
 	}
 	
-	@Override
-	protected void handleParams(SQFArray contents) throws ParseException {
-		// List each item of params
-		for(SQFUnit item : contents.getUnits()) {
-			// Literal, presumably string = variable ident
-			if (item instanceof SQFLiteral) {
-				handleParamLiteral((SQFLiteral)item);
-			}
-			
-			// Array = param with additional options, variable ident is first
-			if (item instanceof SQFArray) {
-				SQFArray array = (SQFArray)item;
-				if (!array.getUnits().isEmpty()) {
-					SQFUnit subitem = array.getUnits().get(0);
-					if (subitem instanceof SQFLiteral) {
-						handleParamLiteral((SQFLiteral)subitem);
-					}
-				}
-			}
-		}
-	}
-	
-	/**
-	 * Checks literal, that is potentionaly variable definition inside
-	 * params command.
-	 * 
-	 * @param literal possible variable definition
-	 * @return if literal was variable definition
-	 */
-	private boolean handleParamLiteral(SQFLiteral literal) {
-		// Only string literals are accepted as variable names
-		if (literal.getContents().kind == STRING_LITERAL_OTHER ||
-			literal.getContents().kind == STRING_LITERAL
-		) {
-			// Load variable name without quotes and case insensitive
-			String ident = literal.getContents().image.toLowerCase();
-			ident = ident.substring(1, ident.length() - 1);
-
-			// Load variable
-			SQFVariable var = getVariable(ident);
-
-			var.usage.add(literal.getContents());
-			var.definitions.add(literal.getContents());
-			var.comments.add(null);
-
-			return true;
-		}
-		
-		return false;
-	}
-	
 	/**
 	 * Loads variable assigned to specified ident.
 	 * If variable isn't registered yet, it will be.
@@ -178,7 +134,7 @@ public class Linter extends SQFParser {
 	 * @param ident
 	 * @return
 	 */
-	private SQFVariable getVariable(String ident) {
+	public SQFVariable getVariable(String ident) {
 		SQFVariable var;
 		if (!variables.containsKey(ident)) {
 			var = new SQFVariable(ident);
@@ -413,5 +369,12 @@ public class Linter extends SQFParser {
 	 */
 	public void setWarningAsError(boolean warningAsError) {
 		this.warningAsError = warningAsError;
+	}
+
+	/**
+	 * @return the operators
+	 */
+	public Map<String, Operator> getOperators() {
+		return operators;
 	}
 }

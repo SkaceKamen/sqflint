@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2016 kamen.
+ * Copyright 2016 Jan Zípek <jan at zipek.cz>.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,35 +21,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package cz.zipek.sqflint;
+package cz.zipek.sqflint.sqf;
+
+import cz.zipek.sqflint.parser.Token;
 
 /**
  *
- * @author kamen
+ * @author Jan Zípek <jan at zipek.cz>
  */
-public class SQFExpression extends SQFUnit {
-	private SQFUnit main;
-	private SQFExpression left;
-	private SQFExpression right;
-	private SQFLiteral operator;
+public class SQFIdentifier extends SQFUnit {
+	private final Token contents;
 	
-	public SQFExpression setOperator(SQFLiteral lit) {
-		operator = lit;
-		return this;
+	public SQFIdentifier(Token contents) {
+		this.contents = contents;
 	}
 	
-	public SQFExpression setMain(SQFUnit expr) {
-		main = expr;
-		return this;
-	}
-	
-	public SQFExpression setLeft(SQFExpression expr) {
-		left = expr;
-		return this;
-	}
-	
-	public SQFExpression setRight(SQFExpression expr) {
-		right = expr;
-		return this;
+	public Token getToken() {
+		return contents;
 	}
 }

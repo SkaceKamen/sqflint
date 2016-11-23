@@ -21,18 +21,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package cz.zipek.sqflint;
-
-import cz.zipek.sqflint.parser.Token;
+package cz.zipek.sqflint.sqf;
 
 /**
  *
  * @author Jan Zípek <jan at zipek.cz>
  */
-public class SQFIdentifier extends SQFUnit {
-	private final Token contents;
+public class SQFWhileStatement extends SQFUnit {
+	private final SQFBlock condition;
+	private final SQFBlock block;
 	
-	public SQFIdentifier(Token contents) {
-		this.contents = contents;
+	public SQFWhileStatement(SQFBlock cond, SQFBlock bl) {
+		condition = cond;
+		block = bl;
 	}
 }
