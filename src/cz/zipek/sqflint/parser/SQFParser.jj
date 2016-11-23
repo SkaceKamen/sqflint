@@ -347,37 +347,12 @@ SQFUnit Statement() :
 		result = IfStatement() { return result; } |
 		result = WhileStatement() { return result; } |
 		result = ForStatement() { return result; } |
-		result = StatementExpression() 	{ return result; }
+		result = Expression(null) { return result; }
 	} catch(ParseException ex) {
 		recover(ex, SEMICOLON);
 	} finally {
 		return result;
 	}
-}
-
-void EmptyStatement() :
-{}
-{
-  ";"
-}
-
-void ParamsStatement() :
-{
-	SQFArray contents = null;
-}
-{
-	"params" contents = Array()
-	{
-		handleParams(contents);
-	}
-}
-
-SQFUnit StatementExpression() :
-{
-	SQFUnit result = null;
-}
-{
-	result = Expression(null) { return result; }
 }
 
 SQFSwitchStatement SwitchStatement() :
