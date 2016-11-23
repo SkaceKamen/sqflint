@@ -134,8 +134,7 @@ TOKEN :
 	< SWITCH: "switch" > |
 	< WHILE: "while" > |
 	< TRUE: "true" > |
-	< FALSE: "false" > /*|
-	< PARAMS: "params" >*/
+	< FALSE: "false" >
 
 }
 
@@ -348,7 +347,6 @@ SQFUnit Statement() :
 		result = IfStatement() { return result; } |
 		result = WhileStatement() { return result; } |
 		result = ForStatement() { return result; } |
-		//ParamsStatement() { return result; } |
 		result = StatementExpression() 	{ return result; }
 	} catch(ParseException ex) {
 		recover(ex, SEMICOLON);
