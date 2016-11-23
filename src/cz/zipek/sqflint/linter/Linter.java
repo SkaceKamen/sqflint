@@ -1,6 +1,7 @@
 package cz.zipek.sqflint.linter;
 
 import cz.zipek.sqflint.SQFArray;
+import cz.zipek.sqflint.SQFBlock;
 import cz.zipek.sqflint.SQFLiteral;
 import cz.zipek.sqflint.SQFUnit;
 import cz.zipek.sqflint.output.JSONOutput;
@@ -63,8 +64,10 @@ public class Linter extends SQFParser {
 		
 		loadCommands();
 		
+		SQFBlock block = null;
+		
 		try {
-			CompilationUnit();
+			block = CompilationUnit();
 		} catch (ParseException | TokenMgrError  e) {
 			if (e instanceof SQFParseException) {
 				getErrors().add((SQFParseException)e);

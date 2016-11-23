@@ -14,6 +14,8 @@ import cz.zipek.sqflint.SQFBlock;
 import cz.zipek.sqflint.SQFIdentifier;
 import cz.zipek.sqflint.SQFLiteral;
 import cz.zipek.sqflint.SQFUnit;
+import cz.zipek.sqflint.SQFExpression;
+import cz.zipek.sqflint.SQFIfStatement;
 
 public class SQFParser {
 	public void setTabSize(int size) {
@@ -207,16 +209,20 @@ TOKEN :
 */
 
 
-void CompilationUnit() :
-{}
+SQFBlock CompilationUnit() :
+{
+	SQFBlock result = new SQFBlock();
+}
 {
 	try {
-		BlockContents()
+		result = BlockContents()
 		<EOF>
 	} catch (ParseException ex) {
 		if (recover(ex, SEMICOLON, true) != EOF) {
-			CompilationUnit();
+			result = CompilationUnit();
 		}
+	} finally {
+		return result;
 	}
 }
 
@@ -242,26 +248,26 @@ Token BooleanLiteral() :
 	result = "false" { return result; }
 }
 
-void Operator() :
-{}
+Token Operator() :
+{ Token result = null; }
 {
-	">>" |
-	"=" |
-	"==" |
-	"!=" |
-	">" |
-	"<" |
-	"+" |
-	"-" |
-	"*" |
-	"%" |
-	"&&" |
-	"||" |
-	"mod" |
-	"^" |
-	">=" |
-	"<=" |
-	"/"
+	result = ">>" { return result; } |
+	result = "=" { return result; } |
+	result = "==" { return result; } |
+	result = "!=" { return result; } |
+	result = ">" { return result; } |
+	result = "<" { return result; } |
+	result = "+" { return result; } |
+	result = "-" { return result; } |
+	result = "*" { return result; } |
+	result = "%" { return result; } |
+	result = "&&" { return result; } |
+	result = "||" { return result; } |
+	result = "mod" { return result; } |
+	result = "^" { return result; } |
+	result = ">=" { return result; } |
+	result = "<=" { return result; } |
+	result = "/" { return result; }
 }
 
 SQFIdentifier Name() :
@@ -276,13 +282,34 @@ SQFIdentifier Name() :
 	{ return new SQFIdentifier(token); }
 }
 
-SQFUnit Expression() :
+SQFExpression Expression(SQFExpression left) :
+{
+	SQFExpression result = new SQFExpression();
+	SQFUnit main = null;
+	SQFExpression right = null;
+	SQFLiteral op = null;
+	Token opLit = null;
+
+	result.setLeft(left);
+}
+{
+	(opLit = "!" | opLit = "not ") right = Expression(result) { return result.setMain(new SQFLiteral(opLit)).setRight(right); } |
+	main = PrimaryExpression(left) [ opLit = Operator() ] [ right = Expression(result) ] {
+		if (opLit != null) { op = new SQFLiteral(opLit); }
+		return result.setMain(main).setRight(right).setOperator(op);
+	}
+}
+
+SQFUnit PrimaryExpression(SQFExpression left) :
 {
 	SQFUnit result = null;
 }
 {
-	("!" | "not ") result = Expression() { return result; } |
-	result = PrimaryExpression() [ Operator() ] [ result = Expression() ] { return result; }
+	result = Literal() { return result; }  |
+	"(" result = Expression(left) ")" { return result; } |
+	result = Name() { return result; } |
+	result = Block() { return result; } |
+	result = Array() { return result; }
 }
 
 SQFArray Array() :
@@ -291,20 +318,8 @@ SQFArray Array() :
 	SQFUnit item = null;
 }
 {
-	LOOKAHEAD(2) "[" item = Expression() { array.add(item); } ( "," item = Expression() { array.add(item); } )* "]" { return array; } |
+	LOOKAHEAD(2) "[" item = Expression(null) { array.add(item); } ( "," item = Expression(null) { array.add(item); } )* "]" { return array; } |
 	"[" "]" 	{ return array; }
-}
-
-SQFUnit PrimaryExpression() :
-{
-	SQFUnit result = null;
-}
-{
-	result = Literal() { return result; }  |
-	"(" result = Expression() ")" { return result; } |
-	result = Name() { return result; } |
-	result = Block() { return result; } |
-	result = Array() { return result; }
 }
 
 SQFBlock Block() :
@@ -328,22 +343,6 @@ SQFBlock BlockContents():
 	{ return result; }
 }
 
-SQFUnit BlockStatement():
-{
-	SQFUnit result = null;
-}
-{
-	// @TODO: Fact that statement begins with ";" breaks the recovery
-	try {
-		/*EmptyStatement() { return result; } |*/
-		";" [ result = Statement() ]
-	} catch(ParseException ex) {
-		recover(ex, SEMICOLON);
-	}
-
-	{ return result; }
-}
-
 SQFUnit Statement() :
 {
 	SQFUnit result = null;
@@ -352,7 +351,7 @@ SQFUnit Statement() :
 	try {
 		LOOKAHEAD(3)
 		SwitchStatement() { return result; } |
-		IfStatement() { return result; } |
+		result = IfStatement() { return result; } |
 		WhileStatement() { return result; } |
 		ForStatement() { return result; } |
 		ParamsStatement() { return result; } |
@@ -360,7 +359,7 @@ SQFUnit Statement() :
 	} catch(ParseException ex) {
 		recover(ex, SEMICOLON);
 	} finally {
-		return null;
+		return result;
 	}
 }
 
@@ -386,13 +385,13 @@ SQFUnit StatementExpression() :
 	SQFUnit result = null;
 }
 {
-	result = Expression() { return result; }
+	result = Expression(null) { return result; }
 }
 
 void SwitchStatement() :
 {}
 {
-	"switch" Expression() "do" "{"
+	"switch" Expression(null) "do" "{"
 		( SwitchCase() )*
 		[ SwitchDefault() ]
 	"}"
@@ -413,17 +412,21 @@ void SwitchDefault() :
 void SwitchLabel() :
 {}
 {
-	"case" Expression()
+	"case" Expression(null)
 }
 
 // @TODO: exitWith can't have else :(
-void IfStatement() :
-{}
+SQFIfStatement IfStatement() :
 {
-	"if" Expression() (
-		"then" Block() [ LOOKAHEAD(1) "else" Block() ] |
-		"exitWith" Block()
-	)
+	SQFExpression cond = null;
+	SQFBlock trueBlock = null;
+	SQFBlock falseBlock = null;
+}
+{
+	"if" cond = Expression(null) (
+		"then" trueBlock = Block() [ LOOKAHEAD(1) "else" falseBlock = Block() ] |
+		"exitWith" trueBlock = Block()
+	) { return new SQFIfStatement(cond, trueBlock, falseBlock); }
 }
 
 void WhileStatement() :
@@ -436,5 +439,5 @@ void ForStatement() :
 {}
 {
 	LOOKAHEAD(2) ( "for" "[" Block() "," Block() "," Block() "]" "do" Block() ) |
-	LOOKAHEAD(2) ( "for" StatementExpression() "from" Expression() "to" Expression() [ "step" Expression() ] "do" Block() )
+	LOOKAHEAD(2) ( "for" StatementExpression() "from" Expression(null) "to" Expression(null) [ "step" Expression(null) ] "do" Block() )
 }

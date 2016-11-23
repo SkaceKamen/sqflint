@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2016 Jan Zípek <jan at zipek.cz>.
+ * Copyright 2016 kamen.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,21 +23,18 @@
  */
 package cz.zipek.sqflint;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  *
- * @author Jan Zípek <jan at zipek.cz>
+ * @author kamen
  */
-public class SQFBlock extends SQFUnit {
-	private final List<SQFUnit> statements = new ArrayList<>();
+public class SQFIfStatement extends SQFUnit {
+	private SQFExpression condition;
+	private SQFBlock trueBlock;
+	private SQFBlock falseBlock;
 	
-	public void add(SQFUnit statement) {
-		statements.add(statement);
-	}
-	
-	public List<SQFUnit> getStatements() {
-		return statements;
+	public SQFIfStatement(SQFExpression condition, SQFBlock t, SQFBlock f) {
+		this.condition = condition;
+		trueBlock = t;
+		falseBlock = f;
 	}
 }
