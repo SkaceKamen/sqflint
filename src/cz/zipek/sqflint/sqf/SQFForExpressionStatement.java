@@ -80,7 +80,7 @@ public class SQFForExpressionStatement extends SQFForStatement {
 			SQFString lit = (SQFString)getVariable().getMain();
 			String ident = lit.getStringContents()
 					.toLowerCase();
-			
+
 			SQFVariable var = source.getVariable(ident);
 			var.usage.add(lit.getContents());
 			var.definitions.add(lit.getContents());

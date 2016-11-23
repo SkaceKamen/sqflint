@@ -21,27 +21,36 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package cz.zipek.sqflint.sqf;
+package cz.zipek.sqflint.sqf.operators;
 
 import cz.zipek.sqflint.linter.Linter;
+import cz.zipek.sqflint.linter.Warning;
+import cz.zipek.sqflint.parser.Token;
+import cz.zipek.sqflint.sqf.SQFBlock;
+import cz.zipek.sqflint.sqf.SQFExpression;
+import cz.zipek.sqflint.sqf.SQFLiteral;
+import cz.zipek.sqflint.sqf.SQFString;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 /**
  *
  * @author Jan Zípek <jan at zipek.cz>
  */
-public class SQFWhileStatement extends SQFUnit {
-	private final SQFBlock condition;
-	private final SQFBlock block;
-	
-	public SQFWhileStatement(SQFBlock cond, SQFBlock bl) {
-		condition = cond;
-		block = bl;
-	}
-
+public class ExecVMOperator extends Operator {
 	@Override
-	public void analyze(Linter source, SQFBlock context) {
-		if (condition != null) condition.analyze(source, context);
-		if (block != null) block.analyze(source, context);
+	public void analyze(Linter source, SQFBlock context, SQFExpression expression) {
+		// Check for existence of loaded file, if allowed
+		if (source.isCheckPaths() && source.getRootPath() != null) {
+			if (expression.getRight() != null
+					&& expression.getRight().getMain() != null
+					&& expression.getRight().getMain() instanceof SQFString
+			) {
+				SQFString param = (SQFString)expression.getRight().getMain();
+				if (!Files.exists(Paths.get(source.getRootPath(), param.getStringContents()))) {
+					source.getWarnings().add(new Warning(param.getContents(), "File '" + param.getStringContents() + "' doesn't exists."));
+				}
+			}
+		}
 	}
-
 }

@@ -101,5 +101,10 @@ public class SQFExpression extends SQFUnit {
 				source.getOperators().get(ident).analyze(source, context, this);
 			}
 		}
+		
+		// We're going left to right
+		if (right != null) {
+			right.analyze(source, context);
+		}
 	}
 }

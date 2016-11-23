@@ -10,6 +10,7 @@ import cz.zipek.sqflint.parser.Token;
 import cz.zipek.sqflint.parser.TokenMgrError;
 import cz.zipek.sqflint.preprocessor.SQFInclude;
 import cz.zipek.sqflint.preprocessor.SQFMacro;
+import cz.zipek.sqflint.sqf.operators.ExecVMOperator;
 import cz.zipek.sqflint.sqf.operators.Operator;
 import cz.zipek.sqflint.sqf.operators.ParamsOperator;
 import java.io.BufferedReader;
@@ -40,6 +41,8 @@ public class Linter extends SQFParser {
 	private boolean outputVariables = false;
 	private boolean exitCodeEnabled = false;
 	private boolean warningAsError = false;
+	private boolean checkPaths = false;
+	private String rootPath = null;
 	
 	private final Map<String, SQFCommand> commands = new HashMap<>();
 	private final Set<String> ignoredVariables = new HashSet<>();
@@ -59,6 +62,7 @@ public class Linter extends SQFParser {
 		ignoredVariables.addAll(Arrays.asList(new String[] { "_this", "_x", "_foreachindex" }));
 		
 		operators.put("params", new ParamsOperator());
+		operators.put("execvm", new ExecVMOperator());
 	}
 	
 	public int start() throws IOException {
@@ -376,5 +380,33 @@ public class Linter extends SQFParser {
 	 */
 	public Map<String, Operator> getOperators() {
 		return operators;
+	}
+
+	/**
+	 * @return the checkPaths
+	 */
+	public boolean isCheckPaths() {
+		return checkPaths;
+	}
+
+	/**
+	 * @param checkPaths the checkPaths to set
+	 */
+	public void setCheckPaths(boolean checkPaths) {
+		this.checkPaths = checkPaths;
+	}
+
+	/**
+	 * @return the rootPath
+	 */
+	public String getRootPath() {
+		return rootPath;
+	}
+
+	/**
+	 * @param rootPath the rootPath to set
+	 */
+	public void setRootPath(String rootPath) {
+		this.rootPath = rootPath;
 	}
 }

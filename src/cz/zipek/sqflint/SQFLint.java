@@ -1,8 +1,10 @@
 package cz.zipek.sqflint;
 
 import cz.zipek.sqflint.linter.Linter;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.cli.CommandLine;
@@ -30,6 +32,8 @@ public class SQFLint {
 		options.addOption("nw", "no-warning", false, "skip warnings");
 		options.addOption("we", "warning-as-error", false, "output warnings as errors");
 		options.addOption("oc", "output-code", false, "output ERR return code when any error is encountered");
+		options.addOption("cp", "check-paths", false, "check for path existence for exevm and preprocessfile");
+		options.addOption("r", "root", true, "root for path checking (path to file is used if file is specified)");
 		options.addOption("h", "help", false, "");
 		
 		try {
@@ -51,9 +55,11 @@ public class SQFLint {
 			linter =  new Linter(System.in);
 		} else if (cmd.getArgs().length == 1) {
 			String filename = cmd.getArgs()[0];
+			String root = Paths.get(filename).toAbsolutePath().getParent().toString();
 			
 			try {
 				linter = new Linter(new java.io.FileInputStream(filename));
+				linter.setRootPath(root);
 			} catch (FileNotFoundException ex) {
 				System.out.println("SQF Parser Version 1.1:  File " + filename + " not found.");
 			}
@@ -66,6 +72,11 @@ public class SQFLint {
 			linter.setOutputVariables(cmd.hasOption("v"));
 			linter.setExitCodeEnabled(cmd.hasOption("oc"));
 			linter.setWarningAsError(cmd.hasOption("we"));
+			linter.setCheckPaths(cmd.hasOption("cp"));
+			
+			if (cmd.hasOption("r")) {
+				linter.setRootPath(cmd.getOptionValue("r"));
+			}
 			
 			try {
 				System.exit(linter.start());
