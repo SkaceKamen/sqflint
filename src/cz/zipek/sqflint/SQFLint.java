@@ -1,9 +1,10 @@
 package cz.zipek.sqflint;
 
 import cz.zipek.sqflint.linter.Linter;
-import java.io.File;
-import java.io.FileNotFoundException;
+import cz.zipek.sqflint.preprocessor.SQFPreprocessor;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -49,23 +50,34 @@ public class SQFLint {
 			return;
 		}
 		
+		SQFPreprocessor preprocessor = new SQFPreprocessor();
 		Linter linter = null;
+		String contents = null;
+		String root = null;
 
 		if (cmd.getArgs().length == 0) {
-			linter =  new Linter(System.in);
+			try {
+				contents = preprocessor.process(System.in);
+			} catch (Exception ex) {
+				Logger.getLogger(SQFLint.class.getName()).log(Level.SEVERE, null, ex);
+				return;
+			}
 		} else if (cmd.getArgs().length == 1) {
 			String filename = cmd.getArgs()[0];
-			String root = Paths.get(filename).toAbsolutePath().getParent().toString();
+			root = Paths.get(filename).toAbsolutePath().getParent().toString();
 			
 			try {
-				linter = new Linter(new java.io.FileInputStream(filename));
-				linter.setRootPath(root);
-			} catch (FileNotFoundException ex) {
+				contents = preprocessor.process(new java.io.FileInputStream(filename));
+			} catch (Exception ex) {
 				System.out.println("SQF Parser Version 1.1:  File " + filename + " not found.");
+				return;
 			}
 		}
 		
-		if (linter != null) {
+		if (contents != null) {
+			linter = new Linter(new ByteArrayInputStream(contents.getBytes(StandardCharsets.UTF_8)));
+			linter.setRootPath(root);
+			
 			linter.setStopOnError(cmd.hasOption("e"));
 			linter.setSkipWarnings(cmd.hasOption("nw"));
 			linter.setJsonOutput(cmd.hasOption("j"));
@@ -73,11 +85,11 @@ public class SQFLint {
 			linter.setExitCodeEnabled(cmd.hasOption("oc"));
 			linter.setWarningAsError(cmd.hasOption("we"));
 			linter.setCheckPaths(cmd.hasOption("cp"));
-			
+
 			if (cmd.hasOption("r")) {
 				linter.setRootPath(cmd.getOptionValue("r"));
 			}
-			
+
 			try {
 				System.exit(linter.start());
 			} catch (IOException ex) {

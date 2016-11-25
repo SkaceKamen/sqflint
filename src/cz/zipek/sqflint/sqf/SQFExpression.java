@@ -24,7 +24,9 @@
 package cz.zipek.sqflint.sqf;
 
 import cz.zipek.sqflint.linter.Linter;
-import cz.zipek.sqflint.linter.SQFVariable;
+import cz.zipek.sqflint.linter.SQFParseException;
+import cz.zipek.sqflint.parser.ParseException;
+import cz.zipek.sqflint.parser.Token;
 
 /**
  *
@@ -83,6 +85,28 @@ public class SQFExpression extends SQFUnit {
 	public SQFLiteral getOperator() {
 		return operator;
 	}
+	
+	public Token getToken() {
+		if (main != null && main instanceof SQFIdentifier) {
+			// Load main part of this expression
+			SQFIdentifier token = (SQFIdentifier)main;
+			return token.getToken();
+		}
+		return null;
+	}
+	
+	public String getIdentifier() {
+		if (main != null && main instanceof SQFIdentifier) {
+			// Load main part of this expression
+			SQFIdentifier token = (SQFIdentifier)main;
+			return token.getToken().image.toLowerCase();
+		}
+		return null;
+	}
+	
+	public boolean isCommand(Linter source) {
+		return (getIdentifier() != null && source.getCommands().containsKey(getIdentifier()));
+	}
 
 	@Override
 	public void analyze(Linter source, SQFBlock context) {
@@ -99,6 +123,16 @@ public class SQFExpression extends SQFUnit {
 			
 			if (source.getOperators().containsKey(ident)) {
 				source.getOperators().get(ident).analyze(source, context, this);
+			}
+		}
+		
+		// Check right side for some cases
+		if (!isCommand(source)) {
+			if (right != null && right.getToken() != null && !right.isCommand(source)) {
+				source.getErrors().add(new SQFParseException(new SQFParseException(right.getToken(), "Unexpected " + right.getToken().toString())));
+			}
+			if (right != null && right.main != null && right.main instanceof SQFArray) {
+				// source.getErrors().add(new SQFParseException(new SQFParseException(getToken(), "Unexpected " + getToken().toString())));
 			}
 		}
 		
