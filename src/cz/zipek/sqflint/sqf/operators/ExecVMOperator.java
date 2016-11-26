@@ -47,7 +47,11 @@ public class ExecVMOperator extends Operator {
 					&& expression.getRight().getMain() instanceof SQFString
 			) {
 				SQFString param = (SQFString)expression.getRight().getMain();
-				if (!Files.exists(Paths.get(source.getRootPath(), param.getStringContents()))) {
+				String path = param.getStringContents();
+				
+				// Don't check absolute paths (referring addons and internal arma files)
+				// @TODO: Create list of internal files?
+				if (path.charAt(0) != '/' && !Files.exists(Paths.get(source.getRootPath(), path))) {
 					source.getWarnings().add(new Warning(param.getContents(), "File '" + param.getStringContents() + "' doesn't exists."));
 				}
 			}
