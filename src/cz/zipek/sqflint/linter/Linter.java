@@ -10,6 +10,7 @@ import cz.zipek.sqflint.parser.Token;
 import cz.zipek.sqflint.parser.TokenMgrError;
 import cz.zipek.sqflint.preprocessor.SQFInclude;
 import cz.zipek.sqflint.preprocessor.SQFMacro;
+import cz.zipek.sqflint.preprocessor.SQFPreprocessor;
 import cz.zipek.sqflint.sqf.operators.ExecVMOperator;
 import cz.zipek.sqflint.sqf.operators.Operator;
 import cz.zipek.sqflint.sqf.operators.ParamsOperator;
@@ -55,6 +56,8 @@ public class Linter extends SQFParser {
 	private final List<SQFMacro> macros = new ArrayList<>();
 	
 	private final Map<String, Operator> operators = new HashMap<>();
+	
+	private SQFPreprocessor preprocessor;
 	
 	public Linter(InputStream stream) {
 		super(stream);
@@ -120,13 +123,15 @@ public class Linter extends SQFParser {
 		variables.entrySet().stream().forEach((entry) -> {
 			SQFVariable var = entry.getValue();
 			if (var.isLocal() && var.definitions.isEmpty()) {
-				var.usage.stream().forEach((u) -> {
-					if (warningAsError) {
-						getErrors().add(new SQFParseException(u, "Possibly undefined variable " + u));
-					} else {
-						getWarnings().add(new Warning(u, "Possibly undefined variable " + u));
-					}
-				});
+				if (!preprocessor.getMacros().containsKey(var.name.toLowerCase())) {
+					var.usage.stream().forEach((u) -> {
+						if (warningAsError) {
+							getErrors().add(new SQFParseException(u, "Possibly undefined variable " + u));
+						} else {
+							getWarnings().add(new Warning(u, "Possibly undefined variable " + u));
+						}
+					});
+				}
 			}
 		});
 	}
@@ -408,5 +413,19 @@ public class Linter extends SQFParser {
 	 */
 	public void setRootPath(String rootPath) {
 		this.rootPath = rootPath;
+	}
+
+	/**
+	 * @param preprocessor 
+	 */
+	public void setPreprocessor(SQFPreprocessor preprocessor) {
+		this.preprocessor = preprocessor;
+	}
+
+	/**
+	 * @return the preprocessor
+	 */
+	public SQFPreprocessor getPreprocessor() {
+		return preprocessor;
 	}
 }

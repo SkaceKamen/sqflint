@@ -24,36 +24,31 @@
 package cz.zipek.sqflint.preprocessor;
 
 import cz.zipek.sqflint.parser.Token;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *
  * @author Jan Zípek <jan at zipek.cz>
  */
-public class SQFMacro {
-	private final String name;
-	private final List<SQFMacroDefinition> definitions = new ArrayList<>();
-	
-	public SQFMacro(String name) {
-		this.name = name;
-	}
+public class SQFMacroDefinition {
+	private final Token token;
+	private final String value;
 
-	public void addDefinition(Token token, String value) {
-		definitions.add(new SQFMacroDefinition(token, value));
-	}
-	
-	/**
-	 * @return the name
-	 */
-	public String getName() {
-		return name;
+	public SQFMacroDefinition(Token token, String value) {
+		this.token = token;
+		this.value = value;
 	}
 
 	/**
-	 * @return the definitions
+	 * @return the token
 	 */
-	public List<SQFMacroDefinition> getDefinitions() {
-		return definitions;
+	public Token getToken() {
+		return token;
+	}
+
+	/**
+	 * @return the value
+	 */
+	public String getValue() {
+		return value;
 	}
 }

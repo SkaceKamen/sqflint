@@ -3,6 +3,7 @@ package cz.zipek.sqflint.output;
 import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.linter.SQFVariable;
 import cz.zipek.sqflint.parser.Token;
+import cz.zipek.sqflint.preprocessor.SQFMacro;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.json.JSONArray;
@@ -83,6 +84,34 @@ public class JSONOutput implements OutputFormatter {
 					var.put("comment", comment);
 
 					System.out.println(var.toString());
+				} catch (JSONException ex) {
+					Logger.getLogger(JSONOutput.class.getName()).log(Level.SEVERE, null, ex);
+				}
+			});
+			
+			// Print macros info
+			linter.getPreprocessor().getMacros().entrySet().stream().forEach((entry) -> {
+				try {
+					SQFMacro macro = entry.getValue();
+					
+					JSONArray definitions = new JSONArray();
+					macro.getDefinitions().stream().forEach((item) -> {
+						try {
+							JSONObject def = new JSONObject();
+							def.put("range", getRange(item.getToken()));
+							def.put("value", item.getValue());
+							definitions.put(def);
+						} catch (JSONException ex) {
+							Logger.getLogger(JSONOutput.class.getName()).log(Level.SEVERE, null, ex);
+						}
+					});
+					
+					JSONObject info = new JSONObject();
+					info.put("type", "macro");
+					info.put("macro", macro.getName());
+					info.put("definitions", definitions);
+					
+					System.out.println(info.toString());
 				} catch (JSONException ex) {
 					Logger.getLogger(JSONOutput.class.getName()).log(Level.SEVERE, null, ex);
 				}

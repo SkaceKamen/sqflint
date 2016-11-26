@@ -23,11 +23,15 @@
  */
 package cz.zipek.sqflint.preprocessor;
 
+import cz.zipek.sqflint.linter.Linter;
+import cz.zipek.sqflint.parser.Token;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -36,7 +40,7 @@ import java.util.stream.Collectors;
  * @author Jan Zípek <jan at zipek.cz>
  */
 public class SQFPreprocessor {
-	private List<SQFMacro> macros = new ArrayList<>();
+	private Map<String, SQFMacro> macros = new HashMap<>();
 	private List<SQFInclude> includes = new ArrayList<>();
 	
 	public SQFPreprocessor() {
@@ -50,22 +54,37 @@ public class SQFPreprocessor {
 	public String process(String input) throws Exception {
 		String[] lines = input.replace("\r", "").split("\n");
 		String output = input;
+		int lineIndex = 0;
+		
+		Pattern whitespaceAtStart = Pattern.compile("^\\s*");
+		Pattern doubleWhitespace = Pattern.compile("\\s{1,}");
 		
 		for(String line : lines) {
 			if (line.length() > 0 && line.charAt(0) == '#') {
+				// Remove whitespaces at beginning
+				line = whitespaceAtStart.matcher(line).replaceAll("");
+				
+				// Parse the line
 				String word = readUntil(line, 1, ' ');
-				String values = readUntil(line, 1 + word.length(), '\n', true);
+				String values = readUntil(line, 2 + word.length(), '\n', true);
+				
 				switch(word.toLowerCase()) {
 					case "define":
-						Pattern wht = Pattern.compile("\\s{1,}");
-						String[] parts = wht.matcher(values).replaceAll(" ").split(" ");
-						String ident = parts[0];
-						String value = "";
-						for(int i = 1; i < parts.length; i++) {
-							value += parts[i] + " ";
+						String ident = readUntil(values, 0, ' ');
+						String value = values.substring(ident.length() + 1).trim();
+
+						Token token = new Token(Linter.STRING_LITERAL);
+						token.beginLine = lineIndex;
+						token.endLine = lineIndex;
+						token.beginColumn = 0;
+						token.endColumn = values.length();
+						
+						if (!macros.containsKey(ident.toLowerCase())) {
+							macros.put(ident.toLowerCase(), new SQFMacro(ident));
 						}
-						value = value.trim();
-						getMacros().add(new SQFMacro(ident, value));
+						
+						macros.get(ident.toLowerCase()).addDefinition(token, value);
+						
 						break;
 					case "include":
 						getIncludes().add(new SQFInclude(values.trim()));
@@ -76,6 +95,7 @@ public class SQFPreprocessor {
 					case "else": break;
 				}
 			}
+			lineIndex++;
 		}
 		
 		return output;
@@ -102,7 +122,7 @@ public class SQFPreprocessor {
 	/**
 	 * @return the macros
 	 */
-	public List<SQFMacro> getMacros() {
+	public Map<String, SQFMacro> getMacros() {
 		return macros;
 	}
 

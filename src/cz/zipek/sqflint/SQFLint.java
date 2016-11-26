@@ -77,6 +77,7 @@ public class SQFLint {
 		if (contents != null) {
 			linter = new Linter(new ByteArrayInputStream(contents.getBytes(StandardCharsets.UTF_8)));
 			linter.setRootPath(root);
+			linter.setPreprocessor(preprocessor);
 			
 			linter.setStopOnError(cmd.hasOption("e"));
 			linter.setSkipWarnings(cmd.hasOption("nw"));
