@@ -51,23 +51,35 @@ public class SQFLint {
 		}
 		
 		SQFPreprocessor preprocessor = new SQFPreprocessor();
-		Linter linter = null;
+		Linter linter;
 		String contents = null;
 		String root = null;
 
+		if (cmd.hasOption("r")) {
+			root = cmd.getOptionValue("r");
+		}
+		
 		if (cmd.getArgs().length == 0) {
 			try {
-				contents = preprocessor.process(System.in);
+				String filename = null;
+				if (root != null) {
+					filename = Paths.get(root).resolve("file.sqf").toString();
+				}
+				
+				contents = preprocessor.process(System.in, root);
 			} catch (Exception ex) {
 				Logger.getLogger(SQFLint.class.getName()).log(Level.SEVERE, null, ex);
 				return;
 			}
 		} else if (cmd.getArgs().length == 1) {
 			String filename = cmd.getArgs()[0];
-			root = Paths.get(filename).toAbsolutePath().getParent().toString();
+			
+			if (root == null) {
+				root = Paths.get(filename).toAbsolutePath().getParent().toString();
+			}
 			
 			try {
-				contents = preprocessor.process(new java.io.FileInputStream(filename));
+				contents = preprocessor.process(new java.io.FileInputStream(filename), filename);
 			} catch (Exception ex) {
 				System.out.println("SQF Parser Version 1.1:  File " + filename + " not found.");
 				return;
@@ -86,10 +98,6 @@ public class SQFLint {
 			linter.setExitCodeEnabled(cmd.hasOption("oc"));
 			linter.setWarningAsError(cmd.hasOption("we"));
 			linter.setCheckPaths(cmd.hasOption("cp"));
-
-			if (cmd.hasOption("r")) {
-				linter.setRootPath(cmd.getOptionValue("r"));
-			}
 
 			try {
 				System.exit(linter.start());

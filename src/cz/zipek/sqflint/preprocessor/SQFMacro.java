@@ -34,9 +34,11 @@ import java.util.List;
 public class SQFMacro {
 	private final String name;
 	private final List<SQFMacroDefinition> definitions = new ArrayList<>();
+	private final String source;
 	
-	public SQFMacro(String name) {
+	public SQFMacro(String name, String source) {
 		this.name = name;
+		this.source = source;
 	}
 
 	public void addDefinition(Token token, String value) {
@@ -55,5 +57,12 @@ public class SQFMacro {
 	 */
 	public List<SQFMacroDefinition> getDefinitions() {
 		return definitions;
+	}
+
+	/**
+	 * @return the source
+	 */
+	public String getSource() {
+		return source;
 	}
 }

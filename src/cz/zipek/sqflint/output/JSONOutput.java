@@ -89,6 +89,20 @@ public class JSONOutput implements OutputFormatter {
 				}
 			});
 			
+			// Print includes
+			linter.getPreprocessor().getIncludes().stream().forEach((entry) -> {
+				try {
+					JSONObject info = new JSONObject();
+					info.put("type", "include");
+					info.put("include", entry.getFile());
+					info.put("from", entry.getSource());
+					
+					System.out.println(info.toString());
+				} catch (JSONException ex) {
+					Logger.getLogger(JSONOutput.class.getName()).log(Level.SEVERE, null, ex);
+				}
+			});
+			
 			// Print macros info
 			linter.getPreprocessor().getMacros().entrySet().stream().forEach((entry) -> {
 				try {

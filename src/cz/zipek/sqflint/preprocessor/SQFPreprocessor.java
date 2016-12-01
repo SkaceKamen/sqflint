@@ -26,8 +26,12 @@ package cz.zipek.sqflint.preprocessor;
 import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.parser.Token;
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,18 +44,20 @@ import java.util.stream.Collectors;
  * @author Jan Zípek <jan at zipek.cz>
  */
 public class SQFPreprocessor {
-	private Map<String, SQFMacro> macros = new HashMap<>();
-	private List<SQFInclude> includes = new ArrayList<>();
+	private final Map<String, SQFMacro> macros = new HashMap<>();
+	private final List<SQFInclude> includes = new ArrayList<>();
 	
 	public SQFPreprocessor() {
 		
 	}
 	
-	public String process(InputStream stream) throws Exception {
-		return process(new BufferedReader(new InputStreamReader(stream)).lines().collect(Collectors.joining("\n")));
+	public String process(InputStream stream, String source) throws Exception {
+		return process(new BufferedReader(new InputStreamReader(stream)).lines().collect(Collectors.joining("\n")), source);
 	}
 	
-	public String process(String input) throws Exception {
+	public String process(String input, String source) throws Exception {
+		Path root = Paths.get(source).toAbsolutePath().getParent();
+		
 		String[] lines = input.replace("\r", "").split("\n");
 		String output = input;
 		int lineIndex = 0;
@@ -80,14 +86,23 @@ public class SQFPreprocessor {
 						token.endColumn = values.length();
 						
 						if (!macros.containsKey(ident.toLowerCase())) {
-							macros.put(ident.toLowerCase(), new SQFMacro(ident));
+							macros.put(ident.toLowerCase(), new SQFMacro(ident, source));
 						}
 						
 						macros.get(ident.toLowerCase()).addDefinition(token, value);
 						
 						break;
 					case "include":
-						getIncludes().add(new SQFInclude(values.trim()));
+						String filename = values.trim();
+						SQFInclude include = new SQFInclude(filename.substring(1, filename.length() - 1), source);
+						Path path = root.resolve(include.getFile());
+						
+						getIncludes().add(include);
+						
+						if (Files.exists(path)) {
+							process(new FileInputStream(path.toString()), path.toString());
+						}
+						
 						break;
 					case "ifdef": break;
 					case "ifndef": break;

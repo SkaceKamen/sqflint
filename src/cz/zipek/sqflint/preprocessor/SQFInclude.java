@@ -29,9 +29,11 @@ package cz.zipek.sqflint.preprocessor;
  */
 public class SQFInclude {
 	private final String file;
+	private final String source;
 	
-	public SQFInclude(String file) {
+	public SQFInclude(String file, String source) {
 		this.file = file;
+		this.source = source;
 	}
 
 	/**
@@ -39,5 +41,12 @@ public class SQFInclude {
 	 */
 	public String getFile() {
 		return file;
+	}
+
+	/**
+	 * @return the source
+	 */
+	public String getSource() {
+		return source;
 	}
 }
