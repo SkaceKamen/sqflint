@@ -128,8 +128,8 @@ public class SQFExpression extends SQFUnit {
 		
 		// Check right side for some cases
 		if (!isCommand(source)) {
-			if (right != null && right.getToken() != null && !right.isCommand(source)) {
-				source.getErrors().add(new SQFParseException(new SQFParseException(right.getToken(), "Unexpected " + right.getToken().toString())));
+			if (right != null && right.getToken() != null && !right.isCommand(source) && getOperator() == null) {
+				// source.getErrors().add(new SQFParseException(new SQFParseException(right.getToken(), "Unexpected " + right.getToken().toString())));
 			}
 			if (right != null && right.main != null && right.main instanceof SQFArray) {
 				// source.getErrors().add(new SQFParseException(new SQFParseException(getToken(), "Unexpected " + getToken().toString())));

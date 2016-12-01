@@ -119,7 +119,6 @@ TOKEN :
 TOKEN :
 {
 	< CASE: "case" > |
-	< CATCH: "catch" > |
 	< _DEFAULT: "default" > |
 	< DO: "do" > |
 	< ELSE: "else" > |
@@ -134,7 +133,9 @@ TOKEN :
 	< SWITCH: "switch" > |
 	< WHILE: "while" > |
 	< TRUE: "true" > |
-	< FALSE: "false" >
+	< FALSE: "false" > |
+	< TRY: "try" > |
+	< CATCH: "catch" >
 
 }
 
@@ -229,7 +230,8 @@ SQFLiteral Literal() :
 	contents = <FLOATING_POINT_LITERAL> { return new SQFLiteral(contents); } |
 	contents = <STRING_LITERAL> { return new SQFString(contents); } |
 	contents = <STRING_LITERAL_OTHER> { return new SQFString(contents); } |
-	contents = BooleanLiteral() { return new SQFLiteral(contents); }
+	contents = BooleanLiteral() { return new SQFLiteral(contents); }/* |
+	contents = "throw" { return new SQFLiteral(contents); }*/
 }
 
 Token BooleanLiteral() :
@@ -347,12 +349,23 @@ SQFUnit Statement() :
 		result = IfStatement() { return result; } |
 		result = WhileStatement() { return result; } |
 		result = ForStatement() { return result; } |
+		result = TryStatement() { return result; } |
 		result = Expression(null) { return result; }
 	} catch(ParseException ex) {
 		recover(ex, SEMICOLON);
 	} finally {
 		return result;
 	}
+}
+
+SQFTryStatement TryStatement() :
+{
+	SQFBlock tryBlock = null;
+	SQFBlock catchBlock = null;
+}
+{
+	"try" tryBlock = Block() "catch" catchBlock = Block()
+	{ return new SQFTryStatement(tryBlock, catchBlock); }
 }
 
 SQFSwitchStatement SwitchStatement() :
@@ -391,6 +404,12 @@ SQFExpression SwitchLabel() :
 	"case" result = Expression(null) { return result; }
 }
 
+/**
+ * @TODO: Throw is parsed as part of if expression. This is because there is no 
+ *        clear distinction between condition end and action beginning.
+ *        Throw is then expected at end of the if, but can be in middle of it,
+ *        which confuses compiler.
+ */
 SQFIfStatement IfStatement() :
 {
 	SQFExpression cond = null;
@@ -398,10 +417,10 @@ SQFIfStatement IfStatement() :
 	SQFBlock falseBlock = null;
 }
 {
-	"if" cond = Expression(null) (
+	"if" cond = Expression(null) [
 		"then" trueBlock = Block() [ LOOKAHEAD(1) "else" falseBlock = Block() ] |
 		"exitWith" trueBlock = Block()
-	) { return new SQFIfStatement(cond, trueBlock, falseBlock); }
+	] { return new SQFIfStatement(cond, trueBlock, falseBlock); }
 }
 
 SQFWhileStatement WhileStatement() :

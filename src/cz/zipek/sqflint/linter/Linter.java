@@ -62,7 +62,7 @@ public class Linter extends SQFParser {
 	public Linter(InputStream stream) {
 		super(stream);
 		
-		ignoredVariables.addAll(Arrays.asList(new String[] { "_this", "_x", "_foreachindex" }));
+		ignoredVariables.addAll(Arrays.asList(new String[] { "_this", "_x", "_foreachindex", "_exception" }));
 		
 		operators.put("params", new ParamsOperator());
 		operators.put("execvm", new ExecVMOperator());
