@@ -24,8 +24,6 @@
 package cz.zipek.sqflint.sqf;
 
 import cz.zipek.sqflint.linter.Linter;
-import cz.zipek.sqflint.linter.SQFParseException;
-import cz.zipek.sqflint.parser.ParseException;
 import cz.zipek.sqflint.parser.Token;
 
 /**
@@ -36,12 +34,6 @@ public class SQFExpression extends SQFUnit {
 	private SQFUnit main;
 	private SQFExpression left;
 	private SQFExpression right;
-	private SQFLiteral operator;
-	
-	public SQFExpression setOperator(SQFLiteral lit) {
-		operator = lit;
-		return this;
-	}
 	
 	public SQFExpression setMain(SQFUnit expr) {
 		main = expr;
@@ -79,13 +71,6 @@ public class SQFExpression extends SQFUnit {
 		return right;
 	}
 
-	/**
-	 * @return the operator
-	 */
-	public SQFLiteral getOperator() {
-		return operator;
-	}
-	
 	public Token getToken() {
 		if (main != null && main instanceof SQFIdentifier) {
 			// Load main part of this expression
@@ -128,7 +113,7 @@ public class SQFExpression extends SQFUnit {
 		
 		// Check right side for some cases
 		if (!isCommand(source)) {
-			if (right != null && right.getToken() != null && !right.isCommand(source) && getOperator() == null) {
+			if (right != null && right.getToken() != null && !right.isCommand(source)) {
 				// source.getErrors().add(new SQFParseException(new SQFParseException(right.getToken(), "Unexpected " + right.getToken().toString())));
 			}
 			if (right != null && right.main != null && right.main instanceof SQFArray) {
