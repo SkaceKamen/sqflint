@@ -25,6 +25,8 @@ package cz.zipek.sqflint.sqf;
 
 import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.linter.SQFVariable;
+import cz.zipek.sqflint.parser.SQFParser;
+import cz.zipek.sqflint.parser.Token;
 
 /**
  *
@@ -82,8 +84,15 @@ public class SQFForExpressionStatement extends SQFForStatement {
 					.toLowerCase();
 
 			SQFVariable var = source.getVariable(ident);
-			var.usage.add(lit.getContents());
-			var.definitions.add(lit.getContents());
+			
+			Token unquoted = new Token(SQFParser.IDENTIFIER, lit.getStringContents());
+			unquoted.beginLine = lit.getContents().beginLine;
+			unquoted.endLine = lit.getContents().endLine;
+			unquoted.beginColumn = lit.getContents().beginColumn + 1;
+			unquoted.endColumn = lit.getContents().endColumn - 1;
+			
+			var.usage.add(unquoted);
+			var.definitions.add(unquoted);
 			var.comments.add(null);
 		}
 		

@@ -31,9 +31,15 @@ import cz.zipek.sqflint.parser.Token;
  * @author kamen
  */
 public class SQFExpression extends SQFUnit {	
+	private Token token;
+	
 	private SQFUnit main;
 	private SQFExpression left;
 	private SQFExpression right;
+	
+	public SQFExpression(Token token) {
+		this.token = token;
+	}
 	
 	public SQFExpression setMain(SQFUnit expr) {
 		main = expr;
@@ -51,9 +57,15 @@ public class SQFExpression extends SQFUnit {
 	}
 
 	/**
-	 * @return the main
+	 * @return contents of expression
 	 */
 	public SQFUnit getMain() {
+		if (main instanceof SQFExpression &&
+			((SQFExpression)main).getLeft() == null &&
+			((SQFExpression)main).getRight() == null) {
+			return ((SQFExpression)main).getMain();
+		}
+		
 		return main;
 	}
 
@@ -72,12 +84,16 @@ public class SQFExpression extends SQFUnit {
 	}
 
 	public Token getToken() {
+		return token;
+		
+		/*
 		if (main != null && main instanceof SQFIdentifier) {
 			// Load main part of this expression
 			SQFIdentifier token = (SQFIdentifier)main;
 			return token.getToken();
 		}
 		return null;
+		*/
 	}
 	
 	public String getIdentifier() {
@@ -91,6 +107,14 @@ public class SQFExpression extends SQFUnit {
 	
 	public boolean isCommand(Linter source) {
 		return (getIdentifier() != null && source.getCommands().containsKey(getIdentifier()));
+	}
+	
+	public boolean isVariable(Linter source) {
+		return (getIdentifier() != null && !isCommand(source));
+	}
+	
+	public boolean isOperator() {
+		return main != null && main instanceof SQFOperator;
 	}
 
 	@Override

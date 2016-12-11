@@ -25,6 +25,8 @@ package cz.zipek.sqflint.sqf.operators;
 
 import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.linter.SQFVariable;
+import cz.zipek.sqflint.parser.SQFParser;
+import cz.zipek.sqflint.parser.Token;
 import cz.zipek.sqflint.sqf.SQFArray;
 import cz.zipek.sqflint.sqf.SQFBlock;
 import cz.zipek.sqflint.sqf.SQFExpression;
@@ -82,9 +84,16 @@ public class ParamsOperator extends Operator {
 
 		// Load variable
 		SQFVariable var = source.getVariable(ident);
-
-		var.usage.add(literal.getContents());
-		var.definitions.add(literal.getContents());
+		
+		// Actual variable name token (without quotes)
+		Token unquoted = new Token(SQFParser.IDENTIFIER, literal.getStringContents());
+		unquoted.beginLine = literal.getContents().beginLine;
+		unquoted.endLine = literal.getContents().endLine;
+		unquoted.beginColumn = literal.getContents().beginColumn + 1;
+		unquoted.endColumn = literal.getContents().endColumn - 1;
+		
+		var.usage.add(unquoted);
+		var.definitions.add(unquoted);
 		var.comments.add(null);
 
 		return true;

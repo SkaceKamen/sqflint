@@ -21,7 +21,12 @@ public class JSONOutput implements OutputFormatter {
 		// Print errors
 		linter.getErrors().stream().forEach((e) -> {
 			try {
-				JSONObject error = getRange(e.currentToken.next);
+				Token pos = e.currentToken;
+				if (e.currentToken.next != null) {
+					pos = e.currentToken.next;
+				}
+				
+				JSONObject error = getRange(pos);
 				error.put("type", "error");
 				error.put("message", e.getJSONMessage());
 

@@ -16,6 +16,10 @@ public class SQFParseException extends ParseException {
 		super(message);
 		currentToken = token;
 		jsonMessage = message;
+		
+		if (token == null) {
+			throw new IllegalArgumentException("Token can't be null.");
+		}
 	}
 	
 	public SQFParseException(ParseException ex) {

@@ -1,5 +1,6 @@
 package cz.zipek.sqflint.linter;
 
+import cz.zipek.sqflint.linter.SQFCommand.Type;
 import cz.zipek.sqflint.sqf.SQFBlock;
 import cz.zipek.sqflint.output.JSONOutput;
 import cz.zipek.sqflint.output.OutputFormatter;
@@ -11,9 +12,13 @@ import cz.zipek.sqflint.parser.TokenMgrError;
 import cz.zipek.sqflint.preprocessor.SQFInclude;
 import cz.zipek.sqflint.preprocessor.SQFMacro;
 import cz.zipek.sqflint.preprocessor.SQFPreprocessor;
-import cz.zipek.sqflint.sqf.operators.ExecVMOperator;
+import cz.zipek.sqflint.sqf.operators.ExitWithOperator;
+import cz.zipek.sqflint.sqf.operators.GenericOperator;
+import cz.zipek.sqflint.sqf.operators.IfOperator;
 import cz.zipek.sqflint.sqf.operators.Operator;
 import cz.zipek.sqflint.sqf.operators.ParamsOperator;
+import cz.zipek.sqflint.sqf.operators.PathLoader;
+import cz.zipek.sqflint.sqf.operators.ThenOperator;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -65,7 +70,13 @@ public class Linter extends SQFParser {
 		ignoredVariables.addAll(Arrays.asList(new String[] { "_this", "_x", "_foreachindex", "_exception" }));
 		
 		operators.put("params", new ParamsOperator());
-		operators.put("execvm", new ExecVMOperator());
+		operators.put("execvm", new PathLoader());
+		operators.put("preprocessfile", new PathLoader());
+		operators.put("preprocessfilelinenumbers", new PathLoader());
+		operators.put("loadfile", new PathLoader());
+		operators.put("if", new IfOperator());
+		operators.put("then", new ThenOperator());
+		operators.put("exitwith", new ExitWithOperator());
 	}
 	
 	public int start() throws IOException {
@@ -164,13 +175,14 @@ public class Linter extends SQFParser {
 		String ident = name.toString().toLowerCase();
 		
 		// If name is exisiting command, do some tests
-		// Otherwise, handle variable
+		// Otherwise, if not macro or ignored variable, handle variable
 		if (getCommands().containsKey(ident)) {
 			SQFCommand cmd = getCommands().get(ident);
 			cmd.test(name, this);
-		} else if (!ignoredVariables.contains(ident)) {
+		} else if (!preprocessor.getMacros().containsKey(ident)
+				&& !ignoredVariables.contains(ident)) {
 			SQFVariable var = getVariable(ident);
-			
+
 			var.usage.add(name);
 
 			if (getToken(2).kind == ASSIGN) {
@@ -234,7 +246,7 @@ public class Linter extends SQFParser {
 	 */
 	protected void loadCommands() throws IOException {
 		// Binary commands
-		Pattern bre = Pattern.compile("(?i)b:([a-z,]*) ([a-z0-9_]*) ([a-z0-9,]*)");
+		Pattern bre = Pattern.compile("(?i)b:([a-z0-9,]*) ([a-z0-9_]*) ([a-z0-9,]*)");
 		// Unary commands
 		Pattern ure = Pattern.compile("(?i)u:([a-z0-9_]*) ([a-z0-9,]*)");
 		// Noargs commands
@@ -249,18 +261,25 @@ public class Linter extends SQFParser {
 		while((line = reader.readLine()) != null) {
 			String ident = null;
 			SQFCommand.Type type = null;
+			String[] left = null;
+			String[] right = null;
 			
 			// Try to match one if the command regexp
 			Matcher m = bre.matcher(line);
 			if (m.find()) {
 				ident = m.group(2).toLowerCase();
 				type = SQFCommand.Type.Binary;
+				
+				left = m.group(1).split(",");
+				right = m.group(3).split(",");
 			}
 			
 			m = ure.matcher(line);
 			if (m.find()) {
 				ident = m.group(1).toLowerCase();
 				type = SQFCommand.Type.Unary;
+				
+				right = m.group(2).split(",");
 			}
 			
 			m = nre.matcher(line);
@@ -271,8 +290,44 @@ public class Linter extends SQFParser {
 			
 			if (ident != null) {
 				getCommands().put(ident, new SQFCommand(ident, type));
+				
+				if (!operators.containsKey(ident)) {
+					operators.put(ident, new GenericOperator(ident));
+				}
+				
+				Operator op = operators.get(ident);
+				if (op instanceof GenericOperator) {					
+					GenericOperator genop = (GenericOperator)op;
+					for(GenericOperator.Type ttype : convertToTypes(left)) {
+						genop.addLeft(ttype);
+					}
+					for(GenericOperator.Type ttype : convertToTypes(right)) {
+						genop.addRight(ttype);
+					}
+				}
 			}
 		}
+	}
+	
+	private GenericOperator.Type[] convertToTypes(String[] values) {
+		if (values == null) {
+			return new GenericOperator.Type[0];
+		}
+		
+		Set<GenericOperator.Type> types = new HashSet<>();
+		for(String tname : values) {
+			GenericOperator.Type ttype;
+			
+			try {
+				ttype = GenericOperator.Type.valueOf(tname.toUpperCase());
+			} catch(IllegalArgumentException e) {
+				ttype = GenericOperator.Type.ANY;
+			}
+			
+			types.add(ttype);
+		}
+		
+		return types.toArray(new GenericOperator.Type[0]);
 	}
 	
 	/**

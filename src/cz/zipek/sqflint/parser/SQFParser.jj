@@ -121,15 +121,15 @@ TOKEN :
 	< CASE: "case" > |
 	< _DEFAULT: "default" > |
 	< DO: "do" > |
-	< ELSE: "else" > |
+	/*< ELSE: "else" > |*/
 	< FOR: "for" > |
 	< FROM: "from" > |
 	< TO: "to" > |
 	< STEP: "step" > |
 	< GOTO: "goto" > |
-	< IF: "if" > |
+	/*< IF: "if" > |
 	< THEN: "then" > |
-	< EXIT_WITH: "exitWith" > |
+	< EXIT_WITH: "exitWith" > |*/
 	< SWITCH: "switch" > |
 	< WHILE: "while" > |
 	< TRUE: "true" > |
@@ -279,7 +279,7 @@ SQFIdentifier Name() :
 
 SQFExpression Expression(SQFExpression left) :
 {
-	SQFExpression result = new SQFExpression();
+	SQFExpression result = new SQFExpression(getToken(0));
 	SQFUnit main = null;
 	SQFExpression right = null;
 	Token opLit = null;
@@ -287,7 +287,7 @@ SQFExpression Expression(SQFExpression left) :
 	result.setLeft(left);
 }
 {
-	(opLit = "!" | opLit = "not " | opLit = Operator()) right = Expression(result) { return result.setMain(new SQFLiteral(opLit)).setRight(right); } |
+	(opLit = "!" | opLit = "not " | opLit = Operator()) right = Expression(result) { return result.setMain(new SQFOperator(opLit)).setRight(right); } |
 	main = PrimaryExpression(left) [ right = Expression(result) ] { return result.setMain(main).setRight(right); }
 }
 
@@ -297,7 +297,7 @@ SQFUnit PrimaryExpression(SQFExpression left) :
 }
 {
 	result = Literal() { return result; }  |
-	"(" result = Expression(left) ")" { return result; } |
+	"(" result = Expression(null) ")" { return result; } |
 	result = Name() { return result; } |
 	result = Block() { return result; } |
 	result = Array() { return result; }
@@ -342,7 +342,7 @@ SQFUnit Statement() :
 	try {
 		LOOKAHEAD(3)
 		result = SwitchStatement() { return result; } |
-		result = IfStatement() { return result; } |
+		// result = IfStatement() { return result; } |
 		result = WhileStatement() { return result; } |
 		result = ForStatement() { return result; } |
 		result = TryStatement() { return result; } |

@@ -21,27 +21,36 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package cz.zipek.sqflint.sqf;
+package cz.zipek.sqflint.sqf.operators;
 
-import cz.zipek.sqflint.parser.Token;
+import cz.zipek.sqflint.linter.Linter;
+import cz.zipek.sqflint.linter.SQFParseException;
+import cz.zipek.sqflint.sqf.SQFBlock;
+import cz.zipek.sqflint.sqf.SQFExpression;
 
 /**
  *
  * @author Jan Zípek <jan at zipek.cz>
  */
-public class SQFIdentifier extends SQFUnit {
-	private final Token contents;
-	
-	public SQFIdentifier(Token contents) {
-		this.contents = contents;
-	}
-	
-	public Token getToken() {
-		return contents;
-	}
+public class ThenOperator extends Operator {
 
 	@Override
-	public String toString() {
-		return "Identifier(" + contents.image + ")";
+	public void analyze(Linter source, SQFBlock context, SQFExpression expression) {
+		// Expect argument
+		if (expression.getRight() == null) {
+			source.getErrors().add(new SQFParseException(expression.getToken(), "Expected block after then."));
+		}
+		
+		// Expect only block
+		if (!(expression.getRight().getMain() instanceof SQFBlock)) {
+			source.getErrors().add(new SQFParseException(expression.getRight().getToken(), "Expected block after then."));
+		}
+		
+		// Expect else or nothing after block
+		if (expression.getRight().getRight() != null &&
+			!expression.getRight().getRight().getIdentifier().equalsIgnoreCase("else")) {
+			source.getErrors().add(new SQFParseException(expression.getRight().getRight().getToken(), "Expected else or nothing."));
+		}
 	}
+	
 }

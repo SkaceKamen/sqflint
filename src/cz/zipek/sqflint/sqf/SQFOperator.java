@@ -29,19 +29,16 @@ import cz.zipek.sqflint.parser.Token;
  *
  * @author Jan Zípek <jan at zipek.cz>
  */
-public class SQFIdentifier extends SQFUnit {
-	private final Token contents;
+public class SQFOperator extends SQFLiteral {
+	private final String contents;
 	
-	public SQFIdentifier(Token contents) {
-		this.contents = contents;
+	public SQFOperator(Token contents) {
+		super(contents);
+		
+		this.contents = contents.toString();
 	}
 	
-	public Token getToken() {
+	public String getStringContents() {
 		return contents;
-	}
-
-	@Override
-	public String toString() {
-		return "Identifier(" + contents.image + ")";
 	}
 }

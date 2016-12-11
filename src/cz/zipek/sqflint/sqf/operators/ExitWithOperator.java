@@ -24,37 +24,32 @@
 package cz.zipek.sqflint.sqf.operators;
 
 import cz.zipek.sqflint.linter.Linter;
-import cz.zipek.sqflint.linter.Warning;
-import cz.zipek.sqflint.parser.Token;
+import cz.zipek.sqflint.linter.SQFParseException;
 import cz.zipek.sqflint.sqf.SQFBlock;
 import cz.zipek.sqflint.sqf.SQFExpression;
-import cz.zipek.sqflint.sqf.SQFLiteral;
-import cz.zipek.sqflint.sqf.SQFString;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 /**
  *
  * @author Jan Zípek <jan at zipek.cz>
  */
-public class ExecVMOperator extends Operator {
+public class ExitWithOperator extends Operator {
+
 	@Override
 	public void analyze(Linter source, SQFBlock context, SQFExpression expression) {
-		// Check for existence of loaded file, if allowed
-		if (source.isCheckPaths() && source.getRootPath() != null) {
-			if (expression.getRight() != null
-					&& expression.getRight().getMain() != null
-					&& expression.getRight().getMain() instanceof SQFString
-			) {
-				SQFString param = (SQFString)expression.getRight().getMain();
-				String path = param.getStringContents();
-				
-				// Don't check absolute paths (referring addons and internal arma files)
-				// @TODO: Create list of internal files?
-				if (path.charAt(0) != '/' && !Files.exists(Paths.get(source.getRootPath(), path))) {
-					source.getWarnings().add(new Warning(param.getContents(), "File '" + param.getStringContents() + "' doesn't exists."));
-				}
-			}
+		// Expect argument
+		if (expression.getRight() == null) {
+			source.getErrors().add(new SQFParseException(expression.getToken(), "Expected block after exitWith."));
+		}
+		
+		// Expect only block
+		if (!(expression.getRight().getMain() instanceof SQFBlock)) {
+			source.getErrors().add(new SQFParseException(expression.getRight().getToken(), "Expected block after exitWith."));
+		}
+		
+		// Expect nothing (and be dissapointed anyway)
+		if (expression.getRight().getRight() != null) {
+			source.getErrors().add(new SQFParseException(expression.getRight().getRight().getToken(), "Expected nothing after exitWith code."));
 		}
 	}
+	
 }
