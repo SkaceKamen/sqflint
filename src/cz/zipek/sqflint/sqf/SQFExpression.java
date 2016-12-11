@@ -106,7 +106,7 @@ public class SQFExpression extends SQFUnit {
 	}
 	
 	public boolean isCommand(Linter source) {
-		return (getIdentifier() != null && source.getCommands().containsKey(getIdentifier()));
+		return (getIdentifier() != null && source.getOperators().containsKey(getIdentifier()));
 	}
 	
 	public boolean isVariable(Linter source) {

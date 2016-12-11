@@ -1,6 +1,5 @@
 package cz.zipek.sqflint.linter;
 
-import cz.zipek.sqflint.linter.SQFCommand.Type;
 import cz.zipek.sqflint.sqf.SQFBlock;
 import cz.zipek.sqflint.output.JSONOutput;
 import cz.zipek.sqflint.output.OutputFormatter;
@@ -50,7 +49,6 @@ public class Linter extends SQFParser {
 	private boolean checkPaths = false;
 	private String rootPath = null;
 	
-	private final Map<String, SQFCommand> commands = new HashMap<>();
 	private final Set<String> ignoredVariables = new HashSet<>();
 	
 	private final List<SQFParseException> errors = new ArrayList<>();
@@ -174,13 +172,11 @@ public class Linter extends SQFParser {
 		// Convert to ident (SQF is case insensitivie)
 		String ident = name.toString().toLowerCase();
 		
-		// If name is exisiting command, do some tests
-		// Otherwise, if not macro or ignored variable, handle variable
-		if (getCommands().containsKey(ident)) {
-			SQFCommand cmd = getCommands().get(ident);
-			cmd.test(name, this);
-		} else if (!preprocessor.getMacros().containsKey(ident)
-				&& !ignoredVariables.contains(ident)) {
+		// Otherwise, if not macro, command or ignored variable, handle variable
+		if (!operators.containsKey(ident)
+			&& !preprocessor.getMacros().containsKey(ident)
+			&& !ignoredVariables.contains(ident)
+		) {
 			SQFVariable var = getVariable(ident);
 
 			var.usage.add(name);
@@ -203,6 +199,7 @@ public class Linter extends SQFParser {
 	 * 
 	 * @param ex
 	 * @param recoveryPoint 
+	 * @param skip 
 	 * @return recovery point (EOF or recoveryPoint)
 	 * @throws cz.zipek.sqflint.parser.ParseException 
 	 */
@@ -260,7 +257,6 @@ public class Linter extends SQFParser {
 		String line;
 		while((line = reader.readLine()) != null) {
 			String ident = null;
-			SQFCommand.Type type = null;
 			String[] left = null;
 			String[] right = null;
 			
@@ -268,7 +264,6 @@ public class Linter extends SQFParser {
 			Matcher m = bre.matcher(line);
 			if (m.find()) {
 				ident = m.group(2).toLowerCase();
-				type = SQFCommand.Type.Binary;
 				
 				left = m.group(1).split(",");
 				right = m.group(3).split(",");
@@ -277,7 +272,6 @@ public class Linter extends SQFParser {
 			m = ure.matcher(line);
 			if (m.find()) {
 				ident = m.group(1).toLowerCase();
-				type = SQFCommand.Type.Unary;
 				
 				right = m.group(2).split(",");
 			}
@@ -285,12 +279,9 @@ public class Linter extends SQFParser {
 			m = nre.matcher(line);
 			if (m.find()) {
 				ident = m.group(1).toLowerCase();
-				type = SQFCommand.Type.Noargs;
 			}
 			
 			if (ident != null) {
-				getCommands().put(ident, new SQFCommand(ident, type));
-				
 				if (!operators.containsKey(ident)) {
 					operators.put(ident, new GenericOperator(ident));
 				}
@@ -309,6 +300,11 @@ public class Linter extends SQFParser {
 		}
 	}
 	
+	/**
+	 * Converts string type definitions to enums.
+	 * @param values
+	 * @return 
+	 */
 	private GenericOperator.Type[] convertToTypes(String[] values) {
 		if (values == null) {
 			return new GenericOperator.Type[0];
@@ -356,13 +352,6 @@ public class Linter extends SQFParser {
 	 */
 	public boolean isSkipWarnings() {
 		return skipWarnings;
-	}
-
-	/**
-	 * @return the commands
-	 */
-	public Map<String, SQFCommand> getCommands() {
-		return commands;
 	}
 
 	/**
