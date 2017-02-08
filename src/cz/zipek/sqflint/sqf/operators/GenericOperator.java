@@ -33,7 +33,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
+ * Generic operator which has its definition loaded from commands dump.
+ * Only checks if left/right side exists and has correct type.
+ * 
  * @author Jan Zípek <jan at zipek.cz>
  */
 public class GenericOperator extends Operator {
@@ -45,10 +47,21 @@ public class GenericOperator extends Operator {
 	private final List<Type> left;
 	private final List<Type> right;
 
+	private boolean leftEmpty;
+	private boolean rightEmpty;
+	
 	public GenericOperator(String name) {
 		this.name = name;
 		this.left = new ArrayList<>();
 		this.right = new ArrayList<>();
+	}
+	
+	public void allowLeftEmpty(boolean allow) {
+		this.leftEmpty = allow;
+	}
+	
+	public void allowRightEmpty(boolean allow) {
+		this.rightEmpty = allow;
 	}
 	
 	public void addLeft(Type type) {
@@ -58,13 +71,20 @@ public class GenericOperator extends Operator {
 	public void addRight(Type type) {
 		right.add(type);
 	}
+	
+	private boolean isOfType(SQFUnit unit, Type type) {
+		if (type == Type.ANY)
+			return true;
+		// @TODO: Type checking
+		return true;
+	}
 
 	@Override
 	public void analyze(Linter source, SQFBlock context, SQFExpression expression) {
 		// Prepare arrays for both sides
 		Side[] sides = new Side[] {
-			new Side(expression.getLeft(), "left", left),
-			new Side(expression.getRight(), "right", right)
+			new Side(expression.getLeft(), "left", left, leftEmpty),
+			new Side(expression.getRight(), "right", right, rightEmpty)
 		};
 		
 		// Analyze both sides in loop
@@ -74,30 +94,28 @@ public class GenericOperator extends Operator {
 			List<Type> values = item.values;
 			
 			if (values == null || values.isEmpty()) {
+				/*
 				if (side != null && !side.isOperator() && !sideName.equals("left")) {
-					System.out.println("Side: '" + side.getToken().toString() + "'");
-					
 					source.getErrors().add(new SQFParseException(
 						expression.getToken(),
 						String.format("%s doesn't expect %s argument.", name, sideName)
 					));
 				}
+				*/
 			} else {
-				if (side == null || side.isOperator()) {
-					source.getErrors().add(new SQFParseException(
-						expression.getToken(),
-						String.format("Expected %s argument for %s", sideName, name)
-					));
+				if (side == null || (side.isOperator() && !side.isSignOperator())) {
+					if (!item.optional) {
+						source.getErrors().add(new SQFParseException(
+							expression.getToken(),
+							String.format("Expected %s argument for %s.", sideName, name)
+						));
+					}
 				} else if (!side.isVariable(source)) {
 					boolean match = false;
 					SQFUnit main = side.getMain();
 
-					// @TODO: More type checking
 					for(Type type : values) {
-						if (type == Type.ANY ||
-							(type == Type.CODE && main instanceof SQFBlock) ||
-							(type == Type.ARRAY && main instanceof SQFArray)
-						) {
+						if (isOfType(main, type)) {
 							match = true;
 							break;
 						}
@@ -142,11 +160,13 @@ public class GenericOperator extends Operator {
 		public final SQFExpression unit;
 		public final String name;
 		public final List<Type> values;
+		public final boolean optional;
 
-		public Side(SQFExpression unit, String name, List<Type> values) {
+		public Side(SQFExpression unit, String name, List<Type> values, boolean optional) {
 			this.unit = unit;
 			this.name = name;
 			this.values = values;
+			this.optional = optional;
 		}
 	}
 }

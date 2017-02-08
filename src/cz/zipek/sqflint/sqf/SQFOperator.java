@@ -41,4 +41,9 @@ public class SQFOperator extends SQFLiteral {
 	public String getStringContents() {
 		return contents;
 	}
+	
+	@Override
+	public String toString() {
+		return getStringContents();
+	}
 }
