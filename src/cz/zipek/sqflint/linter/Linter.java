@@ -126,23 +126,43 @@ public class Linter extends SQFParser {
 	 * Currently checks if every used local variable is actually defined.
 	 */
 	protected void postParse() {
-		if (skipWarnings)
-			return;
+		if (skipWarnings) return;
 		
 		variables.entrySet().stream().forEach((entry) -> {
 			SQFVariable var = entry.getValue();
-			if (var.isLocal() && var.definitions.isEmpty()) {
-				if (!preprocessor.getMacros().containsKey(var.name.toLowerCase())) {
+			if (var.isLocal()
+					&& !preprocessor.getMacros().containsKey(var.name.toLowerCase())) {
+				if (var.definitions.isEmpty()) {
 					var.usage.stream().forEach((u) -> {
-						if (warningAsError) {
-							getErrors().add(new SQFParseException(u, "Possibly undefined variable " + u));
-						} else {
-							getWarnings().add(new Warning(u, "Possibly undefined variable " + u));
+						addUndefinedMessage(u);
+					});
+				} else {
+					Token first = var.definitions.get(0);
+					var.usage.stream().forEach((u) -> {
+						if (u == first) return;
+						
+						if (u.beginLine < first.beginLine ||
+								(u.beginLine == first.beginLine &&
+									u.beginColumn < first.beginColumn)) {
+							addUndefinedMessage(u);
 						}
 					});
 				}
 			}
 		});
+	}
+	
+	/**
+	 * Adds undefined message for specified token.
+	 * 
+	 * @param token token of undefined variable
+	 */
+	protected void addUndefinedMessage(Token token) {
+		if (warningAsError) {
+			getErrors().add(new SQFParseException(token, "Possibly undefined variable " + token));
+		} else {
+			getWarnings().add(new Warning(token, "Possibly undefined variable " + token));
+		}
 	}
 	
 	/**
@@ -294,6 +314,14 @@ public class Linter extends SQFParser {
 					}
 					for(GenericOperator.Type ttype : convertToTypes(right)) {
 						genop.addRight(ttype);
+					}
+					
+					if (left == null) {
+						genop.allowLeftEmpty(true);
+					}
+					
+					if (right == null) {
+						genop.allowRightEmpty(true);
 					}
 				}
 			}
