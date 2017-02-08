@@ -41,8 +41,8 @@ public class SQFMacro {
 		this.source = source;
 	}
 
-	public void addDefinition(Token token, String value) {
-		definitions.add(new SQFMacroDefinition(token, value));
+	public void addDefinition(String filename, Token token, String value) {
+		definitions.add(new SQFMacroDefinition(filename, token, value));
 	}
 	
 	/**

@@ -51,11 +51,12 @@ public class SQFPreprocessor {
 		
 	}
 	
-	public String process(InputStream stream, String source) throws Exception {
-		return process(new BufferedReader(new InputStreamReader(stream)).lines().collect(Collectors.joining("\n")), source);
+	public String process(InputStream stream, String source, boolean include_filename) throws Exception {
+		return process(new BufferedReader(new InputStreamReader(stream)).lines().collect(Collectors.joining("\n")), source, include_filename);
 	}
 	
-	public String process(String input, String source) throws Exception {
+	
+	public String process(String input, String source, boolean include_filename) throws Exception {
 		Path root = Paths.get(source).toAbsolutePath().getParent();
 		
 		String[] lines = input.replace("\r", "").split("\n");
@@ -80,16 +81,20 @@ public class SQFPreprocessor {
 						String value = values.substring(ident.length() + 1).trim();
 
 						Token token = new Token(Linter.STRING_LITERAL);
-						token.beginLine = lineIndex;
-						token.endLine = lineIndex;
-						token.beginColumn = 0;
-						token.endColumn = values.length();
+						token.beginLine = lineIndex + 1;
+						token.endLine = lineIndex + 1;
+						token.beginColumn = 1;
+						token.endColumn = values.length() + 1;
 						
 						if (!macros.containsKey(ident.toLowerCase())) {
 							macros.put(ident.toLowerCase(), new SQFMacro(ident, source));
 						}
 						
-						macros.get(ident.toLowerCase()).addDefinition(token, value);
+						macros.get(ident.toLowerCase()).addDefinition(
+							include_filename ? source : null,
+							token,
+							value
+						);
 						
 						break;
 					case "include":
@@ -100,7 +105,7 @@ public class SQFPreprocessor {
 						getIncludes().add(include);
 						
 						if (Files.exists(path)) {
-							process(new FileInputStream(path.toString()), path.toString());
+							process(new FileInputStream(path.toString()), path.toString(), true);
 						}
 						
 						break;

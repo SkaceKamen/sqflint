@@ -66,7 +66,7 @@ public class SQFLint {
 					filename = Paths.get(root).resolve("file.sqf").toString();
 				}
 				
-				contents = preprocessor.process(System.in, root);
+				contents = preprocessor.process(System.in, filename, false);
 			} catch (Exception ex) {
 				Logger.getLogger(SQFLint.class.getName()).log(Level.SEVERE, null, ex);
 				return;
@@ -79,7 +79,7 @@ public class SQFLint {
 			}
 			
 			try {
-				contents = preprocessor.process(new java.io.FileInputStream(filename), filename);
+				contents = preprocessor.process(new java.io.FileInputStream(filename), filename, true);
 			} catch (Exception ex) {
 				System.out.println("SQF Parser Version 1.1:  File " + filename + " not found.");
 				return;

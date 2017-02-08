@@ -119,6 +119,7 @@ public class JSONOutput implements OutputFormatter {
 							JSONObject def = new JSONObject();
 							def.put("range", getRange(item.getToken()));
 							def.put("value", item.getValue());
+							def.put("filename", item.getFilename());
 							definitions.put(def);
 						} catch (JSONException ex) {
 							Logger.getLogger(JSONOutput.class.getName()).log(Level.SEVERE, null, ex);

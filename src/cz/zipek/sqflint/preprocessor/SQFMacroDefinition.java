@@ -30,10 +30,12 @@ import cz.zipek.sqflint.parser.Token;
  * @author Jan Zípek <jan at zipek.cz>
  */
 public class SQFMacroDefinition {
+	private final String filename;
 	private final Token token;
 	private final String value;
 
-	public SQFMacroDefinition(Token token, String value) {
+	public SQFMacroDefinition(String filename, Token token, String value) {
+		this.filename = filename;
 		this.token = token;
 		this.value = value;
 	}
@@ -50,5 +52,12 @@ public class SQFMacroDefinition {
 	 */
 	public String getValue() {
 		return value;
+	}
+
+	/**
+	 * @return the filename
+	 */
+	public String getFilename() {
+		return filename;
 	}
 }
