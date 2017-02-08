@@ -12,6 +12,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
 /**
@@ -26,7 +27,7 @@ public class SQFLint {
 		Options options = new Options();
 		CommandLineParser cmdParser = new DefaultParser();
 		CommandLine cmd;
-
+		
 		options.addOption("j", "json", false, "output json");
 		options.addOption("v", "variables", false, "output variables info (only in json mode)");
 		options.addOption("e", "error", false, "stop on error");
@@ -36,6 +37,7 @@ public class SQFLint {
 		options.addOption("cp", "check-paths", false, "check for path existence for exevm and preprocessfile");
 		options.addOption("r", "root", true, "root for path checking (path to file is used if file is specified)");
 		options.addOption("h", "help", false, "");
+		options.addOption("iv", "ignore-variables", true, "ignored variables are treated as internal command");
 		
 		try {
 			cmd = cmdParser.parse(options, args);
@@ -54,9 +56,14 @@ public class SQFLint {
 		Linter linter;
 		String contents = null;
 		String root = null;
+		String[] ignoredVariables = new String[0];
 
 		if (cmd.hasOption("r")) {
 			root = cmd.getOptionValue("r");
+		}
+		
+		if (cmd.hasOption("iv")) {
+			ignoredVariables = cmd.getOptionValues("iv");
 		}
 		
 		if (cmd.getArgs().length == 0) {
@@ -90,6 +97,7 @@ public class SQFLint {
 			linter = new Linter(new ByteArrayInputStream(contents.getBytes(StandardCharsets.UTF_8)));
 			linter.setRootPath(root);
 			linter.setPreprocessor(preprocessor);
+			linter.addIgnoredVariables(ignoredVariables);
 			
 			linter.setStopOnError(cmd.hasOption("e"));
 			linter.setSkipWarnings(cmd.hasOption("nw"));

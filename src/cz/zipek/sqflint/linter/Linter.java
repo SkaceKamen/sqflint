@@ -50,6 +50,7 @@ public class Linter extends SQFParser {
 	private String rootPath = null;
 	
 	private final Set<String> ignoredVariables = new HashSet<>();
+	private final Set<String> skippedVariables = new HashSet<>();
 	
 	private final List<SQFParseException> errors = new ArrayList<>();
 	private final List<Warning> warnings = new ArrayList<>();
@@ -122,6 +123,16 @@ public class Linter extends SQFParser {
 	}
 	
 	/**
+	 * Adds list of variables to be ignored by definition checker.
+	 * @param vars 
+	 */
+	public void addIgnoredVariables(String[] vars) {
+		for(String var : vars) {
+			skippedVariables.add(var.toLowerCase());
+		}
+	}
+	
+	/**
 	 * Post parse checks, mainly for warnings.
 	 * Currently checks if every used local variable is actually defined.
 	 */
@@ -131,6 +142,7 @@ public class Linter extends SQFParser {
 		variables.entrySet().stream().forEach((entry) -> {
 			SQFVariable var = entry.getValue();
 			if (var.isLocal()
+					&& !skippedVariables.contains(var.name.toLowerCase())
 					&& !preprocessor.getMacros().containsKey(var.name.toLowerCase())) {
 				if (var.definitions.isEmpty()) {
 					var.usage.stream().forEach((u) -> {
