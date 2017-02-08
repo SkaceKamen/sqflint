@@ -37,6 +37,7 @@ import java.util.List;
 public class IfOperator extends Operator {
 	
 	private static final List<String> expected = Arrays.asList("then", "exitwith", "throw");
+	private static final List<String> negations = Arrays.asList("!", "not");
 	
 	@Override
 	public void analyze(Linter source, SQFBlock context, SQFExpression expression) {
@@ -44,6 +45,13 @@ public class IfOperator extends Operator {
 		if (expression.getRight() == null) {
 			source.getErrors().add(new SQFParseException(expression.getToken(), "Missing condition after if."));
 			return;
+		}
+	
+		// Skip !/not operator
+		if (expression.getRight() != null &&
+			expression.getRight().isOperator() &&
+			negations.contains(expression.getRight().getMain().toString())) {
+			expression = expression.getRight();
 		}
 		
 		/* 
@@ -57,13 +65,14 @@ public class IfOperator extends Operator {
 			
 			But that is very bad practice and will not by tolerated.
 		*/
-		if (expression.getRight().getRight() == null) {
+		if (expression.getRight() == null ||
+			expression.getRight().getRight() == null) {
 			source.getErrors().add(new SQFParseException(expression.getRight().getToken(), "Missing if operation after condition."));
+			return;
 		}
 		
 		// Only then, exitWith and throw can be used after if
-		if (expression.getRight().getRight() == null ||
-			!expression.getRight().getRight().isCommand(source) ||
+		if (!expression.getRight().getRight().isCommand(source) ||
 			!expected.contains(expression.getRight().getRight().getIdentifier().toLowerCase())
 		) {
 			source.getErrors().add(new SQFParseException(expression.getRight().getRight().getToken(), "Expected then, exitWith or throw."));

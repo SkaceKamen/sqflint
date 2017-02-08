@@ -25,6 +25,8 @@ package cz.zipek.sqflint.sqf;
 
 import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.parser.Token;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  *
@@ -36,6 +38,8 @@ public class SQFExpression extends SQFUnit {
 	private SQFUnit main;
 	private SQFExpression left;
 	private SQFExpression right;
+	
+	private final List<String> signOperators = Arrays.asList("+", "-");
 	
 	public SQFExpression(Token token) {
 		this.token = token;
@@ -115,6 +119,10 @@ public class SQFExpression extends SQFUnit {
 	
 	public boolean isOperator() {
 		return main != null && main instanceof SQFOperator;
+	}
+	
+	public boolean isSignOperator() {
+		return isOperator() && signOperators.contains(main.toString());
 	}
 
 	@Override
