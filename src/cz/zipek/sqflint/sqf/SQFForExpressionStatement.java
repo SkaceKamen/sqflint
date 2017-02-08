@@ -76,6 +76,7 @@ public class SQFForExpressionStatement extends SQFForStatement {
 
 	@Override
 	public void analyze(Linter source, SQFBlock context) {
+		// For can define new variable, catch it
 		if (getVariable() != null
 				&& getVariable().getMain() != null
 				&& getVariable().getMain() instanceof SQFString) {
