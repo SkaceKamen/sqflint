@@ -2,6 +2,9 @@
 Provides basic syntax error checking for SQF language.
 
 ## Requirements
+* JRE 1.8
+
+## Development requirements
 * JDK 1.8
 * javacc 6.0
  - javacc is used to build parser
