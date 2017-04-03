@@ -40,6 +40,7 @@ public class Linter extends SQFParser {
 	public static final int CODE_OK = 0;
 	public static final int CODE_ERR = 1;
 	
+	private OutputFormatter outputFormatter = new TextOutput();
 	private boolean stopOnError = false;
 	private boolean skipWarnings = false;
 	private boolean jsonOutput = false;
@@ -103,15 +104,7 @@ public class Linter extends SQFParser {
 			}
 			
 			postParse();
-			
-			OutputFormatter out;
-			if (jsonOutput) {
-				out = new JSONOutput();
-			} else {
-				out = new TextOutput();
-			}
-			
-			out.print(this);
+			outputFormatter.print(this);
 		}
 		
 		// Always return OK if exit code is disabled
@@ -511,5 +504,19 @@ public class Linter extends SQFParser {
 	 */
 	public SQFPreprocessor getPreprocessor() {
 		return preprocessor;
+	}
+
+	/**
+	 * @return the outputFormatter
+	 */
+	public OutputFormatter getOutputFormatter() {
+		return outputFormatter;
+	}
+
+	/**
+	 * @param outputFormatter the outputFormatter to set
+	 */
+	public void setOutputFormatter(OutputFormatter outputFormatter) {
+		this.outputFormatter = outputFormatter;
 	}
 }

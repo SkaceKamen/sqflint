@@ -1,6 +1,7 @@
 package cz.zipek.sqflint;
 
 import cz.zipek.sqflint.linter.Linter;
+import cz.zipek.sqflint.output.JSONOutput;
 import cz.zipek.sqflint.preprocessor.SQFPreprocessor;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -99,9 +100,12 @@ public class SQFLint {
 			linter.setPreprocessor(preprocessor);
 			linter.addIgnoredVariables(ignoredVariables);
 			
+			if (cmd.hasOption("j")) {
+				linter.setOutputFormatter(new JSONOutput());
+			}
+			
 			linter.setStopOnError(cmd.hasOption("e"));
 			linter.setSkipWarnings(cmd.hasOption("nw"));
-			linter.setJsonOutput(cmd.hasOption("j"));
 			linter.setOutputVariables(cmd.hasOption("v"));
 			linter.setExitCodeEnabled(cmd.hasOption("oc"));
 			linter.setWarningAsError(cmd.hasOption("we"));
