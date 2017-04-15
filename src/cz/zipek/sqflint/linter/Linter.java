@@ -80,8 +80,7 @@ public class Linter extends SQFParser {
 	}
 	
 	public int start() throws IOException {
-		if (jsonOutput)
-			setTabSize(1);
+		setTabSize(1);
 		
 		loadCommands();
 		
