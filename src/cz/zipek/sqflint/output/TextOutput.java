@@ -10,7 +10,7 @@ public class TextOutput implements OutputFormatter {
 	
 	@Override
 	public void print(Linter linter) {		
-		if (linter.isOutputVariables()) {
+		if (linter.getOptions().isOutputVariables()) {
 			System.err.println("You can't output variables info in text mode.");
 		}
 		

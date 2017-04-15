@@ -13,7 +13,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
 /**
@@ -39,6 +38,7 @@ public class SQFLint {
 		options.addOption("r", "root", true, "root for path checking (path to file is used if file is specified)");
 		options.addOption("h", "help", false, "");
 		options.addOption("iv", "ignore-variables", true, "ignored variables are treated as internal command");
+		options.addOption("s", "server", false, "run as server");
 		
 		try {
 			cmd = cmdParser.parse(options, args);
@@ -67,55 +67,77 @@ public class SQFLint {
 			ignoredVariables = cmd.getOptionValues("iv");
 		}
 		
-		if (cmd.getArgs().length == 0) {
-			try {
-				String filename = null;
-				if (root != null) {
-					filename = Paths.get(root).resolve("file.sqf").toString();
-				}
-				
-				contents = preprocessor.process(System.in, filename, false);
-			} catch (Exception ex) {
-				Logger.getLogger(SQFLint.class.getName()).log(Level.SEVERE, null, ex);
-				return;
-			}
-		} else if (cmd.getArgs().length == 1) {
-			String filename = cmd.getArgs()[0];
-			
-			if (root == null) {
-				root = Paths.get(filename).toAbsolutePath().getParent().toString();
-			}
-			
-			try {
-				contents = preprocessor.process(new java.io.FileInputStream(filename), filename, true);
-			} catch (Exception ex) {
-				System.out.println("SQF Parser Version 1.1:  File " + filename + " not found.");
-				return;
-			}
+		cz.zipek.sqflint.linter.Options linterOptions;
+		try {
+			linterOptions = new cz.zipek.sqflint.linter.Options();
+		} catch (IOException ex) {
+			Logger.getLogger(SQFLint.class.getName()).log(Level.SEVERE, null, ex);
+			return;
 		}
-		
-		if (contents != null) {
-			linter = new Linter(new ByteArrayInputStream(contents.getBytes(StandardCharsets.UTF_8)));
-			linter.setRootPath(root);
-			linter.setPreprocessor(preprocessor);
-			linter.addIgnoredVariables(ignoredVariables);
-			
-			if (cmd.hasOption("j")) {
-				linter.setOutputFormatter(new JSONOutput());
-			}
-			
-			linter.setStopOnError(cmd.hasOption("e"));
-			linter.setSkipWarnings(cmd.hasOption("nw"));
-			linter.setOutputVariables(cmd.hasOption("v"));
-			linter.setExitCodeEnabled(cmd.hasOption("oc"));
-			linter.setWarningAsError(cmd.hasOption("we"));
-			linter.setCheckPaths(cmd.hasOption("cp"));
 
-			try {
-				System.exit(linter.start());
-			} catch (IOException ex) {
-				Logger.getLogger(SQFLint.class.getName()).log(Level.SEVERE, null, ex);
+		linterOptions.setRootPath(root);
+		linterOptions.addIgnoredVariables(ignoredVariables);
+
+		if (cmd.hasOption("j")) {
+			linterOptions.setOutputFormatter(new JSONOutput());
+		}
+
+		linterOptions.setStopOnError(cmd.hasOption("e"));
+		linterOptions.setSkipWarnings(cmd.hasOption("nw"));
+		linterOptions.setOutputVariables(cmd.hasOption("v"));
+		linterOptions.setExitCodeEnabled(cmd.hasOption("oc"));
+		linterOptions.setWarningAsError(cmd.hasOption("we"));
+		linterOptions.setCheckPaths(cmd.hasOption("cp"));
+		
+		if (!cmd.hasOption("s")) {
+			if (cmd.getArgs().length == 0) {
+				try {
+					String filename = null;
+					if (root != null) {
+						filename = Paths.get(root).resolve("file.sqf").toString();
+					}
+
+					contents = preprocessor.process(System.in, filename, false);
+				} catch (Exception ex) {
+					Logger.getLogger(SQFLint.class.getName()).log(Level.SEVERE, null, ex);
+					return;
+				}
+			} else if (cmd.getArgs().length == 1) {
+				String filename = cmd.getArgs()[0];
+
+				if (root == null) {
+					root = Paths.get(filename).toAbsolutePath().getParent().toString();
+				}
+
+				try {
+					contents = preprocessor.process(new java.io.FileInputStream(filename), filename, true);
+				} catch (Exception ex) {
+					System.out.println("SQF Parser Version 1.1:  File " + filename + " not found.");
+					return;
+				}
 			}
+			
+			linterOptions.setRootPath(root);
+
+			if (contents != null) {
+				linter = new Linter(
+					new ByteArrayInputStream(
+						contents.getBytes(StandardCharsets.UTF_8)
+					),
+					linterOptions
+				);
+
+				linter.setPreprocessor(preprocessor);
+
+				try {
+					System.exit(linter.start());
+				} catch (IOException ex) {
+					Logger.getLogger(SQFLint.class.getName()).log(Level.SEVERE, null, ex);
+				}
+			}
+		} else {
+			SQFLintServer server = new SQFLintServer(linterOptions);
+			server.start();
 		}
 	}
 	

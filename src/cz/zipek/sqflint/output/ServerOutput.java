@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2016 Jan Zípek <jan at zipek.cz>.
+ * Copyright 2017 Jan Zípek <jan at zipek.cz>.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,38 +21,44 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package cz.zipek.sqflint.sqf.operators;
+package cz.zipek.sqflint.output;
 
 import cz.zipek.sqflint.linter.Linter;
-import cz.zipek.sqflint.linter.Warning;
-import cz.zipek.sqflint.sqf.SQFBlock;
-import cz.zipek.sqflint.sqf.SQFExpression;
-import cz.zipek.sqflint.sqf.SQFString;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.json.JSONException;
+import org.json.JSONStringer;
+import org.json.JSONWriter;
 
 /**
  *
  * @author Jan Zípek <jan at zipek.cz>
  */
-public class PathLoader extends Operator {
+public class ServerOutput extends JSONOutput {
+	private final String filename;
+	private final String id;
+	
+	public ServerOutput(String id, String filename) {
+		this.id = id;
+		this.filename = filename;
+	}
+	
 	@Override
-	public void analyze(Linter source, SQFBlock context, SQFExpression expression) {
-		// Check for existence of loaded file, if allowed
-		if (source.getOptions().isCheckPaths() && source.getOptions().getRootPath() != null) {
-			if (expression.getRight() != null
-					&& expression.getRight().getMain() != null
-					&& expression.getRight().getMain() instanceof SQFString
-			) {
-				SQFString param = (SQFString)expression.getRight().getMain();
-				String path = param.getStringContents();
-				
-				// Don't check absolute paths (referring addons and internal arma files)
-				// @TODO: Create list of internal files?
-				if (path.charAt(0) != '/' && !Files.exists(Paths.get(source.getOptions().getRootPath(), path))) {
-					source.getWarnings().add(new Warning(param.getContents(), "File '" + param.getStringContents() + "' doesn't exists."));
-				}
-			}
+	public void print(Linter linter) {
+		try {
+			System.out.println(
+				new JSONStringer()
+					.object()
+						.key("id")
+						.value(this.id)
+						.key("filename")
+						.value(this.filename)
+						.key("messages")
+						.value(build(linter))
+					.endObject()
+			);
+		} catch (JSONException ex) {
+			Logger.getLogger(ServerOutput.class.getName()).log(Level.SEVERE, null, ex);
 		}
 	}
 }

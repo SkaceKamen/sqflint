@@ -74,13 +74,13 @@ public class LinterTest {
 			input,
 			"file",
 			true
-		)));
+		)), new Options());
 		// Assign preprocessor for futher usage
 		linter.setPreprocessor(preprocessor);
 		// No stdout output should be created
-		linter.setOutputFormatter(new VoidOutput());
+		linter.getOptions().setOutputFormatter(new VoidOutput());
 		// Some empty data
-		linter.setRootPath("./");
+		linter.getOptions().setRootPath("./");
 		
 		return linter;
 	}

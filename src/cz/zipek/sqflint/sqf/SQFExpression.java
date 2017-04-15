@@ -110,7 +110,7 @@ public class SQFExpression extends SQFUnit {
 	}
 	
 	public boolean isCommand(Linter source) {
-		return (getIdentifier() != null && source.getOperators().containsKey(getIdentifier()));
+		return (getIdentifier() != null && source.getOptions().getOperators().containsKey(getIdentifier()));
 	}
 	
 	public boolean isVariable(Linter source) {
@@ -138,8 +138,8 @@ public class SQFExpression extends SQFUnit {
 			SQFIdentifier token = (SQFIdentifier)main;
 			String ident = token.getToken().image.toLowerCase();
 			
-			if (source.getOperators().containsKey(ident)) {
-				source.getOperators().get(ident).analyze(source, context, this);
+			if (source.getOptions().getOperators().containsKey(ident)) {
+				source.getOptions().getOperators().get(ident).analyze(source, context, this);
 			}
 		}
 		

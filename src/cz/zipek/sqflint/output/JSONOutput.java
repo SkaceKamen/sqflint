@@ -4,6 +4,8 @@ import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.linter.SQFVariable;
 import cz.zipek.sqflint.parser.Token;
 import cz.zipek.sqflint.preprocessor.SQFMacro;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.json.JSONArray;
@@ -14,10 +16,10 @@ import org.json.JSONObject;
  *
  * @author Jan Zípek <jan at zipek.cz>
  */
-public class JSONOutput implements OutputFormatter {
-
-	@Override
-	public void print(Linter linter) {		
+public class JSONOutput implements OutputFormatter {	
+	protected List<JSONObject> build(Linter linter) {
+		List<JSONObject> result = new ArrayList<>();
+		
 		// Print errors
 		linter.getErrors().stream().forEach((e) -> {
 			try {
@@ -30,7 +32,7 @@ public class JSONOutput implements OutputFormatter {
 				error.put("type", "error");
 				error.put("message", e.getJSONMessage());
 
-				System.out.println(error.toString());
+				result.add(error);
 			} catch (JSONException ex) {
 				Logger.getLogger(JSONOutput.class.getName()).log(Level.SEVERE, null, ex);
 			}
@@ -43,13 +45,13 @@ public class JSONOutput implements OutputFormatter {
 				error.put("type", "warning");
 				error.put("message", e.getMessage());
 				
-				System.out.println(error.toString());
+				result.add(error);
 			} catch (JSONException ex) {
 				Logger.getLogger(JSONOutput.class.getName()).log(Level.SEVERE, null, ex);
 			}
 		});
 		
-		if (linter.isOutputVariables()) {
+		if (linter.getOptions().isOutputVariables()) {
 			// Print variables info
 			linter.getVariables().entrySet().stream().forEach((entry) -> {
 				try {
@@ -88,7 +90,7 @@ public class JSONOutput implements OutputFormatter {
 					var.put("definitions", definitions);
 					var.put("comment", comment);
 
-					System.out.println(var.toString());
+					result.add(var);
 				} catch (JSONException ex) {
 					Logger.getLogger(JSONOutput.class.getName()).log(Level.SEVERE, null, ex);
 				}
@@ -102,7 +104,7 @@ public class JSONOutput implements OutputFormatter {
 					info.put("include", entry.getFile());
 					info.put("from", entry.getSource());
 					
-					System.out.println(info.toString());
+					result.add(info);
 				} catch (JSONException ex) {
 					Logger.getLogger(JSONOutput.class.getName()).log(Level.SEVERE, null, ex);
 				}
@@ -131,12 +133,21 @@ public class JSONOutput implements OutputFormatter {
 					info.put("macro", macro.getName());
 					info.put("definitions", definitions);
 					
-					System.out.println(info.toString());
+					result.add(info);
 				} catch (JSONException ex) {
 					Logger.getLogger(JSONOutput.class.getName()).log(Level.SEVERE, null, ex);
 				}
 			});
 		}
+		
+		return result;
+	}
+	
+	@Override
+	public void print(Linter linter) {		
+		build(linter).stream().forEach((item) -> {
+			System.out.println(item.toString());
+		});
 	}
 	
 	/**

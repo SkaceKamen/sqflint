@@ -1,0 +1,4 @@
+{ "file": "test.sqf", "contents": "_test = _kamen;" }
+{ "file": "test2.sqf", "contents": "_supertest = _superkamen;" }
+{ "file": "test3.sqf", "contents": "_nothing = 1;" }
+{ "type": "exit" }
