@@ -33,12 +33,16 @@ import java.util.List;
  */
 public class SQFMacro {
 	private final String name;
+	private final String arguments;
 	private final List<SQFMacroDefinition> definitions = new ArrayList<>();
 	private final String source;
+	private final int line;
 	
-	public SQFMacro(String name, String source) {
+	public SQFMacro(String name, String arguments, String source, int line) {
 		this.name = name;
+		this.arguments = arguments;
 		this.source = source;
+		this.line = line;
 	}
 
 	public void addDefinition(String filename, Token token, String value) {
@@ -64,5 +68,19 @@ public class SQFMacro {
 	 */
 	public String getSource() {
 		return source;
+	}
+
+	/**
+	 * @return the arguments
+	 */
+	public String getArguments() {
+		return arguments;
+	}
+
+	/**
+	 * @return the line
+	 */
+	public int getLine() {
+		return line;
 	}
 }

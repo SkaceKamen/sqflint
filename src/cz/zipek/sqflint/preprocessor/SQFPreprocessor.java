@@ -23,6 +23,7 @@
  */
 package cz.zipek.sqflint.preprocessor;
 
+import cz.zipek.sqflint.SQFLint;
 import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.parser.Token;
 import java.io.BufferedReader;
@@ -33,9 +34,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -47,6 +52,8 @@ public class SQFPreprocessor {
 	private final Map<String, SQFMacro> macros = new HashMap<>();
 	private final List<SQFInclude> includes = new ArrayList<>();
 	
+	private final List<SQFMacro> sortedMacros = new ArrayList<>();
+
 	public SQFPreprocessor() {
 		
 	}
@@ -65,35 +72,56 @@ public class SQFPreprocessor {
 		
 		Pattern whitespaceAtStart = Pattern.compile("^\\s*");
 		Pattern doubleWhitespace = Pattern.compile("\\s{1,}");
+		Pattern comments = Pattern.compile("(\\/\\*[^*]*\\*\\/)|(\\/\\/.*)");
 		
-		for(String line : lines) {
+		for (String line : lines) {
 			// Remove whitespaces at beginning
-			line = whitespaceAtStart.matcher(line).replaceAll("");
-			if (line.length() > 0 && line.charAt(0) == '#') {
+			String lineUpdated = whitespaceAtStart
+					.matcher(line)
+					.replaceAll("");
+			
+			// Remove comments
+			lineUpdated = comments
+					.matcher(lineUpdated)
+					.replaceAll("");
+		
+			if (lineUpdated.length() > 0 && lineUpdated.charAt(0) == '#') {
 				// Parse the line
-				String word = readUntil(line, 1, ' ');
-				String values = readUntil(line, 2 + word.length(), '\n', true);
+				String word = readUntil(lineUpdated, 1, ' ');
+				String values = readUntil(lineUpdated, 2 + word.length(), '\n', true);
 				
 				switch(word.toLowerCase()) {
 					case "define":
 						String ident = readUntil(values, 0, ' ');
 						String value = null;
+						String arguments = null;
 						
+						// Only load value if there is any
 						if (values.length() > ident.length() + 1) {
 							value = values.substring(ident.length() + 1).trim();
 						}
-
+						
+						// Parse argumented macro
+						if (ident.indexOf('(') >= 0) {
+							arguments = ident.substring(ident.indexOf('(') + 1);
+							if (arguments.indexOf(')') >= 0) {
+								arguments = arguments.substring(0, arguments.indexOf(')'));
+							}
+							ident = ident.substring(0, ident.indexOf('('));
+						}
+						
 						Token token = new Token(Linter.STRING_LITERAL);
 						token.beginLine = lineIndex + 1;
 						token.endLine = lineIndex + 1;
 						token.beginColumn = 1;
 						token.endColumn = values.length() + 1;
 						
-						if (!macros.containsKey(ident.toLowerCase())) {
-							macros.put(ident.toLowerCase(), new SQFMacro(ident, source));
+						if (!macros.containsKey(ident)) {
+							macros.put(ident, new SQFMacro(ident, arguments, source, lineIndex));
+							sortedMacros.add(macros.get(ident));
 						}
 						
-						macros.get(ident.toLowerCase()).addDefinition(
+						macros.get(ident).addDefinition(
 							include_filename ? source : null,
 							token,
 							value
@@ -117,11 +145,145 @@ public class SQFPreprocessor {
 					case "undef": break;
 					case "else": break;
 				}
+			} else {
+				try {
+					sortedMacros.sort((a, b) -> b.getName().length() - a.getName().length());
+					
+					while (true) {
+						boolean replaced = false;
+						for (SQFMacro macro : sortedMacros) {
+							if (line.contains(macro.getName())) {
+								line = replaceMacro(line, macro);
+								replaced = true;
+								break;
+							}
+						}
+						
+						if (!replaced) break;
+					}
+				} catch (Exception ex) {
+					Logger.getLogger(SQFLint.class.getName()).log(Level.SEVERE, "Failed to parse line " + lineIndex + " of " + source, ex);
+					System.exit(1);
+				}
+				
+				// System.out.println("#" + lineIndex + "\t" + line);
 			}
-			lineIndex++;
+			
+			lines[lineIndex++] = line;
 		}
 		
-		return output;
+		return String.join("\n", lines);
+	}
+	
+	private int walkToEnd(String input) {
+		int index = 0;
+		int bracket = 0;
+		
+		while (index < input.length()) {
+			if (input.charAt(index) == '(') {
+				bracket++;
+			} else if (input.charAt(index) == ')') {
+				bracket--;
+			}
+
+			if (bracket < 0) {
+				return index;
+			}
+			
+			index++;
+		}
+		return -1;
+	}
+	
+	private String replaceMacro(String line, SQFMacro macro) {
+		int index = line.indexOf(macro.getName());
+		String value = null;
+		
+		if (!macro.getDefinitions().isEmpty()) {
+			value = macro.getDefinitions().get(macro.getDefinitions().size() - 1).getValue();
+		}
+		
+		if (value == null) {
+			value = "";
+		}
+		
+		if (macro.getArguments() == null) {
+			/*
+			System.out.println("At line: '" + line + "'");
+			System.out.println("MACRO: " + macro.getName());
+			System.out.println("VALUE: " + value);
+			*/
+			
+			line = line.substring(0, index) + value + line.substring(index + macro.getName().length());
+		} else {
+			String[] arguments = macro.getArguments().split(",");
+			String values = line.substring(line.indexOf('(', index) + 1);
+			
+			/*if (values.indexOf(')') >= 0) {
+				values = values.substring(0, values.indexOf(')'));
+			}*/
+			int endIndex = walkToEnd(values);
+			if (endIndex != -1) {
+				values = values.substring(0, endIndex);
+			} else {
+				values = "";
+			}
+			
+			String[] args = values.split(",");
+			
+			// This is completely wrong, but #YOLO
+			// (I actually don't want to spend much time on this, because #YOLO)
+			// This works somewhat, so deal with it
+			for (int i = 0; i < arguments.length && i < args.length; i++) {
+				String argName = arguments[i].trim();
+				String argValue = args[i].trim();
+				String noletter = "([^a-zA-Z#])";
+				
+				// @TODO: There has to be other way :O
+				value = value.replaceAll("##" + argName + "##", argValue);
+				
+				value = value.replaceAll("^" + argName + "##", argValue);
+				value = value.replaceAll(noletter + argName + "##", "$1" + argValue);
+				
+				value = value.replaceAll("##" + argName + "$", argValue);
+				value = value.replaceAll("##" + argName + noletter, argValue + "$1");
+				
+				value = value.replaceAll("#" + argName + "$", '"' + argValue + '"');
+				value = value.replaceAll("#" + argName + noletter, '"' + argValue + "\"$1");
+				
+				value = value.replaceAll("^" + argName + "$", argValue);
+				value = value.replaceAll("^" + argName + noletter, argValue + "$1");
+				value = value.replaceAll(noletter + argName + "$", "$1" + argValue);
+				value = value.replaceAll(noletter + argName + noletter, "$1" + argValue + "$2");
+			}
+			
+			value = value.replaceAll("##", "");
+
+			/*
+			System.out.println("At line: '" + line + "'");
+			System.out.println("MACRO: '" + macro.getName() + "'");
+			System.out.println("ARGS: '" + macro.getArguments() + "'");
+			System.out.println("VALS: '" + values + "'");
+			System.out.println("REPLACE: " + value);
+			*/
+			
+			String left = line.substring(0, index);
+			String right = "";
+			int rightIndex = index + macro.getName().length() + values.length() + 2;
+			
+			if (rightIndex < line.length()) {
+				right = line.substring(rightIndex);
+			}
+			
+			/*
+			System.out.println("LEFT: " + left);
+			System.out.println("RIGHT: " + right);
+			*/
+			
+			line = left + value + right;
+		}
+		
+		return line;
 	}
 	
 	private String readUntil(String input, int from, char exit) {
