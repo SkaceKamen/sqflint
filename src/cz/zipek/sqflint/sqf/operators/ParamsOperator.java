@@ -83,7 +83,7 @@ public class ParamsOperator extends Operator {
 		String ident = literal.getStringContents().toLowerCase();
 
 		// Load variable
-		SQFVariable var = source.getVariable(ident);
+		SQFVariable var = source.getVariable(ident, literal.getStringContents());
 		
 		// Actual variable name token (without quotes)
 		Token unquoted = new Token(SQFParser.IDENTIFIER, literal.getStringContents());

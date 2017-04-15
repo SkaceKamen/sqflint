@@ -112,7 +112,7 @@ public class SQFLint {
 				try {
 					contents = preprocessor.process(new java.io.FileInputStream(filename), filename, true);
 				} catch (Exception ex) {
-					System.out.println("SQF Parser Version 1.1:  File " + filename + " not found.");
+					Logger.getLogger(SQFLint.class.getName()).log(Level.SEVERE, null, ex);
 					return;
 				}
 			}

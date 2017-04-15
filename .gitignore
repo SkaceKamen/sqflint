@@ -1,4 +1,5 @@
 nbproject/private
 build/
 dist/
+tests/
 src/cz/zipek/sqflint/parser/*.java

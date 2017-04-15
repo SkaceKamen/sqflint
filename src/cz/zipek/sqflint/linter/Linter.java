@@ -123,12 +123,13 @@ public class Linter extends SQFParser {
 	 * If variable isn't registered yet, it will be.
 	 * 
 	 * @param ident
+	 * @param name
 	 * @return
 	 */
-	public SQFVariable getVariable(String ident) {
+	public SQFVariable getVariable(String ident, String name) {
 		SQFVariable var;
 		if (!variables.containsKey(ident)) {
-			var = new SQFVariable(ident);
+			var = new SQFVariable(name);
 			variables.put(ident, var);
 		} else {
 			var = variables.get(ident);
@@ -150,7 +151,7 @@ public class Linter extends SQFParser {
 			&& !preprocessor.getMacros().containsKey(ident)
 			&& !options.getIgnoredVariables().contains(ident)
 		) {
-			SQFVariable var = getVariable(ident);
+			SQFVariable var = getVariable(ident, name.toString());
 
 			var.usage.add(name);
 

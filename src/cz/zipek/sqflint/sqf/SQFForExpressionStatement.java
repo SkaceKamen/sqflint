@@ -84,7 +84,7 @@ public class SQFForExpressionStatement extends SQFForStatement {
 			String ident = lit.getStringContents()
 					.toLowerCase();
 
-			SQFVariable var = source.getVariable(ident);
+			SQFVariable var = source.getVariable(ident, lit.getStringContents());
 			
 			Token unquoted = new Token(SQFParser.IDENTIFIER, lit.getStringContents());
 			unquoted.beginLine = lit.getContents().beginLine;
