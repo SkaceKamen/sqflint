@@ -33,13 +33,13 @@ import java.util.List;
  * @author kamen
  */
 public class SQFExpression extends SQFUnit {	
-	private Token token;
+	private final Token token;
 	
 	private SQFUnit main;
 	private SQFExpression left;
 	private SQFExpression right;
 	
-	private final List<String> signOperators = Arrays.asList("+", "-");
+	private final List<String> signOperators = Arrays.asList("+", "-", "!");
 	
 	public SQFExpression(Token token) {
 		this.token = token;

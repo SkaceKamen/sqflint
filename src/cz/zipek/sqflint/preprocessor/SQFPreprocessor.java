@@ -67,10 +67,9 @@ public class SQFPreprocessor {
 		Pattern doubleWhitespace = Pattern.compile("\\s{1,}");
 		
 		for(String line : lines) {
+			// Remove whitespaces at beginning
+			line = whitespaceAtStart.matcher(line).replaceAll("");
 			if (line.length() > 0 && line.charAt(0) == '#') {
-				// Remove whitespaces at beginning
-				line = whitespaceAtStart.matcher(line).replaceAll("");
-				
 				// Parse the line
 				String word = readUntil(line, 1, ' ');
 				String values = readUntil(line, 2 + word.length(), '\n', true);
@@ -78,7 +77,11 @@ public class SQFPreprocessor {
 				switch(word.toLowerCase()) {
 					case "define":
 						String ident = readUntil(values, 0, ' ');
-						String value = values.substring(ident.length() + 1).trim();
+						String value = null;
+						
+						if (values.length() > ident.length() + 1) {
+							value = values.substring(ident.length() + 1).trim();
+						}
 
 						Token token = new Token(Linter.STRING_LITERAL);
 						token.beginLine = lineIndex + 1;

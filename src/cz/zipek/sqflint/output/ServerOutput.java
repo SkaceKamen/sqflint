@@ -28,7 +28,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.json.JSONException;
 import org.json.JSONStringer;
-import org.json.JSONWriter;
 
 /**
  *
@@ -36,10 +35,8 @@ import org.json.JSONWriter;
  */
 public class ServerOutput extends JSONOutput {
 	private final String filename;
-	private final String id;
 	
-	public ServerOutput(String id, String filename) {
-		this.id = id;
+	public ServerOutput(String filename) {
 		this.filename = filename;
 	}
 	
@@ -49,14 +46,13 @@ public class ServerOutput extends JSONOutput {
 			System.out.println(
 				new JSONStringer()
 					.object()
-						.key("id")
-						.value(this.id)
-						.key("filename")
+						.key("file")
 						.value(this.filename)
 						.key("messages")
 						.value(build(linter))
 					.endObject()
 			);
+			System.out.flush();
 		} catch (JSONException ex) {
 			Logger.getLogger(ServerOutput.class.getName()).log(Level.SEVERE, null, ex);
 		}

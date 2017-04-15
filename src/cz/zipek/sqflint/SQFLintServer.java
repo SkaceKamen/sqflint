@@ -38,6 +38,7 @@ import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -85,6 +86,10 @@ public class SQFLintServer {
 				linter = parseFile(filePath);
 			}
 			
+			if (message.has("options")) {
+				this.applyOptions(message.getJSONObject("options"));
+			}
+			
 			linter.start();			
 		} catch (JSONException ex) {
 			Logger.getLogger(SQFLintServer.class.getName()).log(Level.SEVERE, null, ex);
@@ -95,23 +100,49 @@ public class SQFLintServer {
 		return true;
 	}
 	
+	private void applyOptions(JSONObject data) {
+		try {
+			if (data.has("checkPaths")) {
+				options.setCheckPaths(data.getBoolean("checkPaths"));
+			}
+			
+			if (data.has("pathsRoot")) {
+				options.setRootPath(data.getString("pathsRoot"));
+			}
+			
+			if (data.has("ignoredVariables")) {
+				JSONArray vars = data.getJSONArray("ignoredVariables");
+				for (int i = 0; i < vars.length(); i++) {
+					options.getSkippedVariables().add(vars.getString(i));
+				}
+			}
+		} catch (JSONException ex) {
+			Logger.getLogger(SQFLintServer.class.getName()).log(Level.SEVERE, null, ex);
+		}
+	}
+	
 	public Linter parseFile(String path) throws Exception {
 		return parse(new BufferedReader(new InputStreamReader(new FileInputStream(path))).lines().collect(Collectors.joining("\n")), path);
 	}
 	
 	public Linter parse(String fileContents, String filePath) throws Exception {
 		// Apply file specific options
-		this.options.setOutputFormatter(new ServerOutput("", filePath));
-		this.options.setRootPath(Paths.get(filePath).toAbsolutePath().getParent().toString());
+		options.setOutputFormatter(new ServerOutput(filePath));
+		options.setRootPath(Paths.get(filePath).toAbsolutePath().getParent().toString());
+		options.getSkippedVariables().clear();
 
 		// Preprocessor may be required
 		SQFPreprocessor preprocessor = new SQFPreprocessor();
+		
 		// Create linter from preprocessed input
-		return new Linter(stringToStream(preprocessor.process(
+		Linter linter = new Linter(stringToStream(preprocessor.process(
 			fileContents,
 			filePath,
 			true
-		)), this.options);
+		)), options);
+		linter.setPreprocessor(preprocessor);
+		
+		return linter;
 	}
 	
 	/**

@@ -25,7 +25,6 @@ package cz.zipek.sqflint.sqf.operators;
 
 import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.linter.SQFParseException;
-import cz.zipek.sqflint.sqf.SQFArray;
 import cz.zipek.sqflint.sqf.SQFBlock;
 import cz.zipek.sqflint.sqf.SQFExpression;
 import cz.zipek.sqflint.sqf.SQFUnit;
