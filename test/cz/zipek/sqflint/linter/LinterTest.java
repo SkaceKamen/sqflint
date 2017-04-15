@@ -75,6 +75,7 @@ public class LinterTest {
 			"file",
 			true
 		)), new Options());
+		
 		// Assign preprocessor for futher usage
 		linter.setPreprocessor(preprocessor);
 		// No stdout output should be created
@@ -155,5 +156,14 @@ public class LinterTest {
 		
 		assertEquals("Should report correct position", 9, warning.getToken().beginColumn);
 		assertEquals("Should report correct position", 14, warning.getToken().endColumn);
+	}
+	
+	@Test
+	public void testEmptyFile() throws Exception {
+		Linter linter = parse("/* NOTHING \nNOTHING */");
+		
+		assertEquals(Linter.CODE_OK, linter.start());
+		assertTrue("Should not throw warnings", linter.getWarnings().isEmpty());
+		assertTrue("Should not throw errors", linter.getErrors().isEmpty());
 	}
 }
