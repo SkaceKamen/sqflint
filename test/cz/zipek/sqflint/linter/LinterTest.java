@@ -139,4 +139,21 @@ public class LinterTest {
 		assertTrue("Shouldn't return any errors", linter.getErrors().isEmpty());
 		assertTrue("Shouldn't return any warnings", linter.getWarnings().isEmpty());
 	}
+	
+	/**
+	 * Test if undefined warning works and throws correct position.
+	 * @throws Exception 
+	 */
+	@Test
+	public void testUndefinedWarning() throws Exception {
+		Linter linter = parse("\t_foo = _kamen;");
+		
+		assertEquals(Linter.CODE_OK, linter.start());
+		assertEquals("Should throw warning", 1, linter.getWarnings().size());
+		
+		Warning warning = linter.getWarnings().get(0);
+		
+		assertEquals("Should report correct position", 9, warning.getToken().beginColumn);
+		assertEquals("Should report correct position", 14, warning.getToken().endColumn);
+	}
 }
