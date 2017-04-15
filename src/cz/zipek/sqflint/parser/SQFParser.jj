@@ -292,6 +292,8 @@ SQFUnit PrimaryExpression(SQFExpression left) :
 	SQFUnit result = null;
 }
 {
+	result = TryStatement() { return result; } |
+	result = SwitchStatement() { return result; } |
 	result = Literal() { return result; }  |
 	"(" result = Expression(null) ")" { return result; } |
 	result = Name() { return result; } |
@@ -337,10 +339,8 @@ SQFUnit Statement() :
 {
 	try {
 		LOOKAHEAD(3)
-		result = SwitchStatement() { return result; } |
 		result = WhileStatement() { return result; } |
 		result = ForStatement() { return result; } |
-		result = TryStatement() { return result; } |
 		result = Expression(null) { return result; }
 	} catch(ParseException ex) {
 		recover(ex, SEMICOLON);

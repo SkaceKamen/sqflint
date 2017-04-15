@@ -105,7 +105,8 @@ public class LinterTest {
 			"switch (A) do {\n" +
 			"  case B: { X };\n" +
 			"  case C: { Y };\n" +
-			"};"
+			"};\n" +
+			"_somethig = true;"
 		);
 		assertEquals(Linter.CODE_OK, linter.start());
 		assertTrue("Shouldn't return any errors", linter.getErrors().isEmpty());
