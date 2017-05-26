@@ -128,6 +128,22 @@ public class LinterTest {
 	}
 	
 	/**
+	 * Tests if definitions order matters.
+	 * @throws Exception 
+	 */
+	@Test
+	public void testDefinitionsOrderInParams() throws Exception {
+		Linter linter = parse(
+			"params [\"_side\", \"_group\", \"_className\"];\n" +
+			"diag_log _side;\n" +
+			"_side = 1;"
+		);
+		assertEquals(Linter.CODE_OK, linter.start());
+		assertTrue("Shouldn't return any errors", linter.getErrors().isEmpty());
+		assertTrue("Shouldn't yield warning", linter.getWarnings().isEmpty());
+	}
+	
+	/**
 	 * Tests if result assigment.
 	 * @throws Exception 
 	 */
