@@ -90,6 +90,14 @@ public class Linter extends SQFParser {
 						addUndefinedMessage(u);
 					});
 				} else {
+					// This makes sure the definitions are properly sorted
+					var.definitions.sort((Token a, Token b) -> {
+						if (a.beginLine == b.beginLine) {
+							return a.beginColumn - b.beginColumn;
+						}
+						return a.beginLine - b.beginLine;
+					});
+					
 					Token first = var.definitions.get(0);
 					var.usage.stream().forEach((u) -> {
 						if (u == first) return;
