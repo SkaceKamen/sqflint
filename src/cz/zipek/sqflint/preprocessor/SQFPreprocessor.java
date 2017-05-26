@@ -87,12 +87,12 @@ public class SQFPreprocessor {
 		
 			if (lineUpdated.length() > 0 && lineUpdated.charAt(0) == '#') {
 				// Parse the line
-				String word = readUntil(lineUpdated, 1, ' ');
-				String values = readUntil(lineUpdated, 2 + word.length(), '\n', true);
-				
+				String word = readUntil(lineUpdated, 1, ' ', false, false);
+				String values = readUntil(lineUpdated, 2 + word.length(), '\n', true, false);
+								
 				switch(word.toLowerCase()) {
 					case "define":
-						String ident = readUntil(values, 0, ' ');
+						String ident = readUntil(values, 0, ' ', false, true);
 						String value = null;
 						String arguments = null;
 						
@@ -100,7 +100,7 @@ public class SQFPreprocessor {
 						if (values.length() > ident.length() + 1) {
 							value = values.substring(ident.length() + 1).trim();
 						}
-						
+
 						// Parse argumented macro
 						if (ident.indexOf('(') >= 0) {
 							arguments = ident.substring(ident.indexOf('(') + 1);
@@ -161,6 +161,9 @@ public class SQFPreprocessor {
 						
 						if (!replaced) break;
 					}
+					
+					// System.out.println("#" + lineIndex + "\t" + line);
+					
 				} catch (Exception ex) {
 					Logger.getLogger(SQFLint.class.getName()).log(Level.SEVERE, "Failed to parse line " + lineIndex + " of " + source, ex);
 					System.exit(1);
@@ -287,10 +290,10 @@ public class SQFPreprocessor {
 	}
 	
 	private String readUntil(String input, int from, char exit) {
-		return readUntil(input, from, exit, false);
+		return readUntil(input, from, exit, false, false);
 	}
 	
-	private String readUntil(String input, int from, char exit, boolean escape) {
+	private String readUntil(String input, int from, char exit, boolean escape, boolean brackets) {
 		StringBuilder res = new StringBuilder();
 		boolean escaped = false;
 		while(input.length() > from && (escaped || input.charAt(from) != exit)) {
@@ -299,10 +302,18 @@ public class SQFPreprocessor {
 			if (escape && input.charAt(from) == '\\') {
 				escaped = true;
 			}
+			if (brackets && input.charAt(from) == '(') {
+				int endIndex = walkToEnd(input.substring(from + 1));
+				if (endIndex >= 0) {
+					res.append(input.substring(from + 1, from + 2 + endIndex));
+					from += endIndex + 1;
+				}
+			}
 			from++;
 		}
 		return res.toString();
 	}
+
 
 	/**
 	 * @return the macros
