@@ -25,6 +25,7 @@ package cz.zipek.sqflint.sqf.operators;
 
 import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.linter.SQFParseException;
+import cz.zipek.sqflint.parser.Token;
 import cz.zipek.sqflint.sqf.SQFBlock;
 import cz.zipek.sqflint.sqf.SQFExpression;
 import java.util.Arrays;
@@ -67,7 +68,11 @@ public class IfOperator extends Operator {
 		*/
 		if (expression.getRight() == null ||
 			expression.getRight().getRight() == null) {
-			source.getErrors().add(new SQFParseException(expression.getRight().getToken(), "Missing if operation after condition."));
+			Token token = expression.getToken();
+			if (expression.getRight() != null) {
+				token = expression.getRight().getToken();
+			}
+			source.getErrors().add(new SQFParseException(token, "Missing if operation after condition."));
 			return;
 		}
 		
