@@ -39,6 +39,7 @@ public class SQFLint {
 		options.addOption("h", "help", false, "");
 		options.addOption("iv", "ignore-variables", true, "ignored variables are treated as internal command");
 		options.addOption("s", "server", false, "run as server");
+		options.addOption("ip", "include-prefix", true, "adds include prefix override, format: prefix,path_to_use");
 		
 		try {
 			cmd = cmdParser.parse(options, args);
@@ -53,7 +54,7 @@ public class SQFLint {
 			return;
 		}
 		
-		SQFPreprocessor preprocessor = new SQFPreprocessor();
+		SQFPreprocessor preprocessor;
 		Linter linter;
 		String contents = null;
 		String root = null;
@@ -74,6 +75,19 @@ public class SQFLint {
 			Logger.getLogger(SQFLint.class.getName()).log(Level.SEVERE, null, ex);
 			return;
 		}
+		
+		if (cmd.hasOption("ip")) {
+			for (String value : cmd.getOptionValues("ip")) {
+				String[] split = value.split(",");
+				if (split.length != 2) {
+					System.out.println("Invalid include prefix : " + value);
+					System.out.println("Include prefix format is: prefix,include_path");
+					return;
+				}
+				
+				linterOptions.getIncludePaths().put(split[0], split[1]);
+			}
+		}
 
 		linterOptions.setRootPath(root);
 		linterOptions.addIgnoredVariables(ignoredVariables);
@@ -88,6 +102,8 @@ public class SQFLint {
 		linterOptions.setExitCodeEnabled(cmd.hasOption("oc"));
 		linterOptions.setWarningAsError(cmd.hasOption("we"));
 		linterOptions.setCheckPaths(cmd.hasOption("cp"));
+		
+		preprocessor = new SQFPreprocessor(linterOptions);
 		
 		if (!cmd.hasOption("s")) {
 			if (cmd.getArgs().length == 0) {

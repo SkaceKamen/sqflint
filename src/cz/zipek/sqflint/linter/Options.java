@@ -59,6 +59,8 @@ public final class Options {
 	private boolean checkPaths = false;
 	private String rootPath = null;
 	
+	private final Map<String, String> includePaths = new HashMap<>();
+	
 	private final Set<String> ignoredVariables;
 	private final Set<String> skippedVariables;
 	
@@ -335,5 +337,9 @@ public final class Options {
 		for(String var : vars) {
 			skippedVariables.add(var.toLowerCase());
 		}
+	}
+	
+	public Map<String, String> getIncludePaths() {
+		return this.includePaths;
 	}
 }

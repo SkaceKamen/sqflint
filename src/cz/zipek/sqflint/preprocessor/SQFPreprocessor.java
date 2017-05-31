@@ -25,6 +25,7 @@ package cz.zipek.sqflint.preprocessor;
 
 import cz.zipek.sqflint.SQFLint;
 import cz.zipek.sqflint.linter.Linter;
+import cz.zipek.sqflint.linter.Options;
 import cz.zipek.sqflint.parser.Token;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -34,11 +35,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -54,8 +53,10 @@ public class SQFPreprocessor {
 	
 	private final List<SQFMacro> sortedMacros = new ArrayList<>();
 
-	public SQFPreprocessor() {
-		
+	private Options options;
+	
+	public SQFPreprocessor(Options options) {
+		this.options = options;
 	}
 	
 	public String process(InputStream stream, String source, boolean include_filename) throws Exception {
@@ -84,6 +85,9 @@ public class SQFPreprocessor {
 			lineUpdated = comments
 					.matcher(lineUpdated)
 					.replaceAll("");
+			
+			// Remove tabs
+			lineUpdated = lineUpdated.replaceAll("\t", " ");
 		
 			if (lineUpdated.length() > 0 && lineUpdated.charAt(0) == '#') {
 				// Parse the line
@@ -131,8 +135,10 @@ public class SQFPreprocessor {
 					case "include":
 						String filename = values.trim();
 						SQFInclude include = new SQFInclude(filename.substring(1, filename.length() - 1), source);
-						Path path = root.resolve(include.getFile());
+						String actualPath = resolvePath(include.getFile()).replaceAll("/\\/", "/");
 						
+						Path path = root.resolve(actualPath);
+
 						getIncludes().add(include);
 						
 						if (Files.exists(path)) {
@@ -176,6 +182,22 @@ public class SQFPreprocessor {
 		}
 		
 		return String.join("\n", lines);
+	}
+	
+	/**
+	 * Tries to match specified path against include paths.
+	 * @param path
+	 * @return updated path or original if no include path has been matched
+	 */
+	private String resolvePath(String path) {
+		for (String key : options.getIncludePaths().keySet()) {
+			if (path.indexOf(key) == 0) {
+				return options.getIncludePaths().get(key) +
+						path.substring(key.length());
+			}
+		}
+		
+		return path;
 	}
 	
 	private int walkToEnd(String input) {

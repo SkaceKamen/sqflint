@@ -35,6 +35,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -102,6 +103,8 @@ public class SQFLintServer {
 	
 	private void applyOptions(JSONObject data) {
 		try {
+			// @TODO: Clear options?
+			
 			if (data.has("checkPaths")) {
 				options.setCheckPaths(data.getBoolean("checkPaths"));
 			}
@@ -116,6 +119,18 @@ public class SQFLintServer {
 					options.getSkippedVariables().add(vars.getString(i));
 				}
 			}
+						
+			if (data.has("includePrefixes")) {
+				options.getIncludePaths().clear();
+				
+				JSONObject paths = data.getJSONObject("includePrefixes");
+				Iterator keys = paths.keys();
+				while (keys.hasNext()) {
+					String key = (String)keys.next();
+					options.getIncludePaths().put(key, paths.getString(key));
+				}
+			}
+			
 		} catch (JSONException ex) {
 			Logger.getLogger(SQFLintServer.class.getName()).log(Level.SEVERE, null, ex);
 		}
@@ -132,7 +147,7 @@ public class SQFLintServer {
 		options.getSkippedVariables().clear();
 
 		// Preprocessor may be required
-		SQFPreprocessor preprocessor = new SQFPreprocessor();
+		SQFPreprocessor preprocessor = new SQFPreprocessor(options);
 		
 		// Create linter from preprocessed input
 		Linter linter = new Linter(stringToStream(preprocessor.process(
