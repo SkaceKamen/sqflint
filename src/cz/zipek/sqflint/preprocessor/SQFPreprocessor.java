@@ -137,7 +137,6 @@ public class SQFPreprocessor {
 						if (filename.length() > 0) {
 							SQFInclude include = new SQFInclude(filename.substring(1, filename.length() - 1), source);
 							String actualPath = resolvePath(include.getFile()).replaceAll("\\\\", "/");
-
 							Path path = root.resolve(actualPath);
 
 							getIncludes().add(include);
@@ -193,7 +192,7 @@ public class SQFPreprocessor {
 	 */
 	private String resolvePath(String path) {
 		for (String key : options.getIncludePaths().keySet()) {
-			if (path.indexOf(key) == 0) {
+			if (path.toLowerCase().indexOf(key.toLowerCase()) == 0) {
 				return options.getIncludePaths().get(key) +
 						path.substring(key.length());
 			}
