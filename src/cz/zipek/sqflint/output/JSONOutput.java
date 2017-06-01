@@ -45,6 +45,10 @@ public class JSONOutput implements OutputFormatter {
 				error.put("type", "warning");
 				error.put("message", e.getMessage());
 				
+				if (e.getFilename() != null) {
+					error.put("filename", e.getFilename());
+				}
+				
 				result.add(error);
 			} catch (JSONException ex) {
 				Logger.getLogger(JSONOutput.class.getName()).log(Level.SEVERE, null, ex);
@@ -102,6 +106,7 @@ public class JSONOutput implements OutputFormatter {
 					JSONObject info = new JSONObject();
 					info.put("type", "include");
 					info.put("include", entry.getFile());
+					info.put("expandedInclude", entry.getExpandedFile());
 					info.put("from", entry.getSource());
 					
 					result.add(info);

@@ -11,9 +11,21 @@ import cz.zipek.sqflint.parser.TokenMgrError;
 public class SQFParseException extends ParseException {
 
 	protected String jsonMessage;
+	private String originFilename;
 
 	public SQFParseException(Token token, String message) {
 		super(message);
+		currentToken = token;
+		jsonMessage = message;
+		
+		if (token == null) {
+			throw new IllegalArgumentException("Token can't be null.");
+		}
+	}
+	
+	public SQFParseException(String filename, Token token, String message) {
+		super(message);
+		originFilename = filename;
 		currentToken = token;
 		jsonMessage = message;
 		
@@ -139,5 +151,12 @@ public class SQFParseException extends ParseException {
 			}
 		}
 		return retval.toString();
+	}
+
+	/**
+	 * @return the originFilename
+	 */
+	public String getOriginFilename() {
+		return originFilename;
 	}
 }

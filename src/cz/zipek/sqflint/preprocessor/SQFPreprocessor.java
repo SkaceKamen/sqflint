@@ -26,6 +26,7 @@ package cz.zipek.sqflint.preprocessor;
 import cz.zipek.sqflint.SQFLint;
 import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.linter.Options;
+import cz.zipek.sqflint.linter.Warning;
 import cz.zipek.sqflint.parser.Token;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -50,10 +51,11 @@ import java.util.stream.Collectors;
 public class SQFPreprocessor {
 	private final Map<String, SQFMacro> macros = new HashMap<>();
 	private final List<SQFInclude> includes = new ArrayList<>();
-	
 	private final List<SQFMacro> sortedMacros = new ArrayList<>();
-
-	private Options options;
+	
+	private final List<Warning> warnings = new ArrayList<>();
+	
+	private final Options options;
 	
 	public SQFPreprocessor(Options options) {
 		this.options = options;
@@ -75,7 +77,9 @@ public class SQFPreprocessor {
 		Pattern doubleWhitespace = Pattern.compile("\\s{1,}");
 		Pattern comments = Pattern.compile("(\\/\\*[^*]*\\*\\/)|(\\/\\/.*)");
 		
-		for (String line : lines) {
+		boolean inComment = false;
+		
+		for (String line : lines) {	
 			// Remove whitespaces at beginning
 			String lineUpdated = whitespaceAtStart
 					.matcher(line)
@@ -85,6 +89,30 @@ public class SQFPreprocessor {
 			lineUpdated = comments
 					.matcher(lineUpdated)
 					.replaceAll("");
+			
+			// Handle multiline comments
+			// @TODO: Escapes in comments?
+			// Is there beginning of the comment and not the end on this line?
+			if (lineUpdated.contains("/*")) {
+				// Remove everyhing past the comment start
+				lineUpdated = lineUpdated
+					.substring(0, lineUpdated.indexOf("/*"));
+				// Next line is inside comment
+				inComment = true;
+			}
+			
+			// @TODO: Escapes in comments?
+			if (inComment) {
+				if (lineUpdated.contains("*/")) {
+					lineUpdated = lineUpdated
+						.substring(lineUpdated.indexOf("*/") + 2);
+
+					inComment = false;
+				} else {
+					lines[lineIndex++] = line;
+					continue;
+				}
+			}
 			
 			// Remove tabs
 			lineUpdated = lineUpdated.replaceAll("\t", " ");
@@ -135,14 +163,32 @@ public class SQFPreprocessor {
 					case "include":
 						String filename = values.trim();
 						if (filename.length() > 0) {
-							SQFInclude include = new SQFInclude(filename.substring(1, filename.length() - 1), source);
-							String actualPath = resolvePath(include.getFile()).replaceAll("\\\\", "/");
+							String originalPath = filename.substring(1, filename.length() - 1);
+							String actualPath = resolvePath(originalPath).replaceAll("\\\\", "/");							
 							Path path = root.resolve(actualPath);
 
-							getIncludes().add(include);
+							getIncludes().add(
+								new SQFInclude(originalPath, actualPath, source)
+							);
 
 							if (Files.exists(path) && !Files.isDirectory(path)) {
 								process(new FileInputStream(path.toString()), path.toString(), true);
+							} else if (options.isCheckPaths()) {
+								warnings.add(
+									new Warning(
+										include_filename ? source : null,
+										buildToken(
+											lineIndex + 1,
+											lineIndex + 1,
+											1 + "#include ".length(),
+											line.length() + 1
+										),
+										String.format(
+											"File %s doesn't seem to exists.",
+											path.toString()
+										)
+									)
+								);
 							}
 						}
 						
@@ -182,7 +228,17 @@ public class SQFPreprocessor {
 			lines[lineIndex++] = line;
 		}
 		
+		
 		return String.join("\n", lines);
+	}
+	
+	private Token buildToken(int lineStart, int lineEnd, int columnStart, int columnEnd) {
+		Token token = new Token(Linter.STRING_LITERAL);
+		token.beginLine = lineStart;
+		token.endLine = lineEnd;
+		token.beginColumn = columnStart;
+		token.endColumn = columnEnd;
+		return token;
 	}
 	
 	/**
@@ -350,5 +406,12 @@ public class SQFPreprocessor {
 	 */
 	public List<SQFInclude> getIncludes() {
 		return includes;
+	}
+
+	/**
+	 * @return the warnings
+	 */
+	public List<Warning> getWarnings() {
+		return warnings;
 	}
 }

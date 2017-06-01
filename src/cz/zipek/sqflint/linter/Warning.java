@@ -9,21 +9,37 @@ import cz.zipek.sqflint.parser.Token;
 public class Warning {
 	private final Token token;
 	private final String message;
+	private final String filename;
 	
 	public Warning(Token token, String message) {
+		this.filename = null;
+		this.token = token;
+		this.message = message;
+	}
+	
+	public Warning(String filename, Token token, String message) {
+		this.filename = filename;
 		this.token = token;
 		this.message = message;
 	}
 	
 	@Override
 	public String toString() {
-		return new StringBuilder().append("Warning: ")
-				.append(getMessage())
-				.append(" at line ")
-				.append(getToken().beginLine)
-				.append(" column ")
-				.append(getToken().beginColumn)
-				.toString();
+		StringBuilder out = new StringBuilder()
+			.append("Warning: ")
+			.append(getMessage());
+		
+		if (filename != null) {
+			out.append(" at ");
+			out.append(filename);
+		}
+		
+		out.append(" at line ")
+			.append(getToken().beginLine)
+			.append(" column ")
+			.append(getToken().beginColumn);
+	
+		return out.toString();
 	}
 
 	/**
@@ -38,5 +54,12 @@ public class Warning {
 	 */
 	public String getMessage() {
 		return message;
+	}
+
+	/**
+	 * @return the filename
+	 */
+	public String getFilename() {
+		return filename;
 	}
 }

@@ -111,6 +111,8 @@ public class Linter extends SQFParser {
 				}
 			}
 		});
+		
+		getWarnings().addAll(preprocessor.getWarnings());
 	}
 	
 	/**
