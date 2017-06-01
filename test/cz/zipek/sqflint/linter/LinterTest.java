@@ -68,7 +68,7 @@ public class LinterTest {
 	 */
 	private Linter parse(String input) throws Exception {
 		// Preprocessor may be required
-		SQFPreprocessor preprocessor = new SQFPreprocessor();
+		SQFPreprocessor preprocessor = new SQFPreprocessor(new Options());
 		// Create linter from preprocessed input
 		Linter linter = new Linter(stringToStream(preprocessor.process(
 			input,
