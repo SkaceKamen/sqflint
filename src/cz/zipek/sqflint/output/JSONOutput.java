@@ -131,6 +131,7 @@ public class JSONOutput implements OutputFormatter {
 					JSONObject info = new JSONObject();
 					info.put("type", "macro");
 					info.put("macro", macro.getName());
+					info.put("arguments", macro.getArguments());
 					info.put("definitions", definitions);
 					
 					result.add(info);
