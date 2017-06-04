@@ -319,7 +319,7 @@ public class SQFPreprocessor {
 			for (int i = 0; i < arguments.length && i < args.length; i++) {
 				String argName = arguments[i].trim();
 				String argValue = args[i].trim();
-				String noletter = "([^a-zA-Z#])";
+				String noletter = "([^a-zA-Z_#])";
 				
 				// @TODO: There has to be other way :O
 				value = value.replaceAll("##" + argName + "##", argValue);
