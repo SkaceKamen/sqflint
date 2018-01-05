@@ -131,7 +131,8 @@ TOKEN :
 	< TRUE: "true" > |
 	< FALSE: "false" > |
 	< TRY: "try" > |
-	< CATCH: "catch" >
+	< CATCH: "catch" > |
+	< WITH: "with" >
 }
 
 /* LITERALS */
@@ -298,7 +299,18 @@ SQFUnit PrimaryExpression(SQFExpression left) :
 	"(" result = Expression(null) ")" { return result; } |
 	result = Name() { return result; } |
 	result = Block() { return result; } |
-	result = Array() { return result; }
+	result = Array() { return result; } |
+	result = WithStatement() { return result; }
+}
+
+SQFWithStatement WithStatement () :
+{
+	SQFBlock block = null;
+	SQFExpression with = null;
+}
+{
+	"with" with = Expression(null) "do" block = Block()
+	{ return new SQFWithStatement(with, block); }
 }
 
 SQFArray Array() :
@@ -329,7 +341,8 @@ SQFBlock BlockContents():
 {
 	statement = Statement() { result.add(statement); }
 	( ";" [ statement = Statement() { result.add(statement); }  ] )*
-	{ return result; }
+	{ return result; } |
+	";" { return result; }
 }
 
 SQFUnit Statement() :
