@@ -70,7 +70,7 @@ public final class Options {
 		skippedVariables = new HashSet<>();
 		ignoredVariables = new HashSet<>();
 		
-		ignoredVariables.addAll(Arrays.asList(new String[] { "_this", "_x", "_foreachindex", "_exception" }));
+		ignoredVariables.addAll(Arrays.asList(new String[] { "_this", "_x", "_foreachindex", "_exception", "__FILE__", "__LINE__" }));
 		
 		operators.put("params", new ParamsOperator());
 		operators.put("execvm", new PathLoader());
