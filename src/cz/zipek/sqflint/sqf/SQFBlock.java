@@ -45,7 +45,7 @@ public class SQFBlock extends SQFUnit {
 
 	@Override
 	public void analyze(Linter source, SQFBlock context) {
-		for(SQFUnit unit : getStatements()) {
+		for (SQFUnit unit : getStatements()) {
 			if (unit != null)
 				unit.analyze(source, this);
 		}
