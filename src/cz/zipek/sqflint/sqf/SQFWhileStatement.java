@@ -43,5 +43,4 @@ public class SQFWhileStatement extends SQFUnit {
 		if (condition != null) condition.analyze(source, context);
 		if (block != null) block.analyze(source, context);
 	}
-
 }
