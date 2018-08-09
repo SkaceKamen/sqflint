@@ -183,4 +183,35 @@ public class LinterTest {
 		assertTrue("Should not throw warnings", linter.getWarnings().isEmpty());
 		assertTrue("Should not throw errors", linter.getErrors().isEmpty());
 	}
+	
+	@Test
+	public void testEmptyBlock() throws Exception {
+		Linter linter = parse(";");
+		
+		assertEquals(Linter.CODE_OK, linter.start());
+		assertTrue("Should not throw warnings", linter.getWarnings().isEmpty());
+		assertTrue("Should not throw errors", linter.getErrors().isEmpty());
+	}
+	
+	@Test
+	public void testEmptyBlockContents() throws Exception {
+		Linter linter = parse("_test = { ; }");
+		
+		assertEquals(Linter.CODE_OK, linter.start());
+		assertTrue("Should not throw warnings", linter.getWarnings().isEmpty());
+		assertTrue("Should not throw errors", linter.getErrors().isEmpty());
+	}
+	
+	@Test
+	public void testNewSelectOperator() throws Exception {
+		Linter linter = parse(
+			"(disconnectCache # 2) params [\"_uid\", \"_group\"];\n" +
+			"	\n" +
+			"[player] joinSilent _group;"
+		);
+		
+		assertEquals(Linter.CODE_OK, linter.start());
+		assertTrue("Should not throw warnings", linter.getWarnings().isEmpty());
+		assertTrue("Should not throw errors", linter.getErrors().isEmpty());
+	}
 }
