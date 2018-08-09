@@ -37,7 +37,6 @@ SKIP :
 | "\n"
 | "\r"
 | "\f"
-| "#" : PREPROCESSOR_OUTPUT
 }
 
 <PREPROCESSOR_OUTPUT> SKIP:
@@ -109,7 +108,8 @@ TOKEN :
 	< POWER: "^" >     |
 	< REM: "%" >       |
 	< REM2: "mod" > |
-	< CSEL: ">>" >
+	< CSEL: ">>" > |
+	< SELECT: "#" >
 }
 
 /* SQF Operators */
@@ -259,7 +259,8 @@ Token Operator() :
 	result = "^" { return result; } |
 	result = ">=" { return result; } |
 	result = "<=" { return result; } |
-	result = "/" { return result; }
+	result = "/" { return result; } |
+	result = "#" { return result; }
 }
 
 SQFIdentifier Name() :

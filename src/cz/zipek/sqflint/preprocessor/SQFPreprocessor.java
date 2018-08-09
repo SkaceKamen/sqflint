@@ -118,10 +118,13 @@ public class SQFPreprocessor {
 			lineUpdated = lineUpdated.replaceAll("\t", " ");
 		
 			if (lineUpdated.length() > 0 && lineUpdated.charAt(0) == '#') {
+				// Remove line for grammar parser
+				line = "";
+
 				// Parse the line
 				String word = readUntil(lineUpdated, 1, ' ', false, false);
 				String values = readUntil(lineUpdated, 2 + word.length(), '\n', true, false);
-								
+					
 				switch(word.toLowerCase()) {
 					case "define":
 						String ident = readUntil(values, 0, ' ', false, true);
