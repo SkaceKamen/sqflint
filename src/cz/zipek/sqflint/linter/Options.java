@@ -26,6 +26,7 @@ package cz.zipek.sqflint.linter;
 import cz.zipek.sqflint.output.OutputFormatter;
 import cz.zipek.sqflint.output.TextOutput;
 import cz.zipek.sqflint.sqf.operators.ExitWithOperator;
+import cz.zipek.sqflint.sqf.operators.ForEachOperator;
 import cz.zipek.sqflint.sqf.operators.GenericOperator;
 import cz.zipek.sqflint.sqf.operators.IfOperator;
 import cz.zipek.sqflint.sqf.operators.Operator;
@@ -70,7 +71,10 @@ public final class Options {
 		skippedVariables = new HashSet<>();
 		ignoredVariables = new HashSet<>();
 		
-		ignoredVariables.addAll(Arrays.asList(new String[] { "_this", "_x", "_foreachindex", "_exception", "__file__", "__line__" }));
+		ignoredVariables.addAll(Arrays.asList(new String[] {
+			"_this", "_x", "_foreachindex", "_exception",
+			"__file__", "__line__"
+		}));
 		
 		operators.put("params", new ParamsOperator());
 		operators.put("execvm", new PathLoader());
@@ -80,6 +84,7 @@ public final class Options {
 		operators.put("if", new IfOperator());
 		operators.put("then", new ThenOperator());
 		operators.put("exitwith", new ExitWithOperator());
+		operators.put("foreach", new ForEachOperator());
 		
 		loadCommands();
 	}

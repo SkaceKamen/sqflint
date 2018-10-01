@@ -21,31 +21,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package cz.zipek.sqflint.sqf;
+package cz.zipek.sqflint.sqf.operators;
 
 import cz.zipek.sqflint.linter.Linter;
+import cz.zipek.sqflint.linter.SQFParseException;
+import cz.zipek.sqflint.sqf.SQFBlock;
+import cz.zipek.sqflint.sqf.SQFContext;
+import cz.zipek.sqflint.sqf.SQFExpression;
 
 /**
  *
  * @author Jan Zípek <jan at zipek.cz>
  */
-public class SQFUnit {
-	protected final Linter linter;
-	protected final SQFContext context;
-	
-	public SQFUnit(Linter linter) {
-		this.linter = linter;
-		this.context = linter.getContext();
-	}
-	
-	public void analyze(Linter source, SQFBlock context) {
-		
-	}
-	
-	/**
-	 * @return the context
-	 */
-	public SQFContext getContext() {
-		return context;
+public class ForEachOperator extends Operator {
+	@Override
+	public void analyze(Linter source, SQFContext context, SQFExpression expression) {
+		if (expression.getLeft() != null && expression.getLeft().isBlock()) {
+			SQFBlock block = expression.getLeft().getBlock();
+			if (block.getInnerContext() != null) {
+				block.getInnerContext().setNewThread(false);
+				block.getInnerContext().clear();
+				block.revalidate();
+			}
+		} else {
+			source.getErrors().add(new SQFParseException(
+				expression.getLeft().getToken(),
+				"ForEach expects code block."
+			));
+		}
 	}
 }

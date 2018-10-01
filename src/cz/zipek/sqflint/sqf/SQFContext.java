@@ -24,9 +24,12 @@
 package cz.zipek.sqflint.sqf;
 
 import cz.zipek.sqflint.linter.Linter;
+import cz.zipek.sqflint.linter.SQFParseException;
 import cz.zipek.sqflint.linter.SQFVariable;
 import cz.zipek.sqflint.parser.Token;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -36,7 +39,8 @@ import java.util.Map;
 public class SQFContext {
 	private final Linter linter;
 	private final SQFContext previous;
-	private final boolean newThread;
+	private boolean newThread;
+	private final List<SQFContext> children = new ArrayList<>();
 	
 	private final Map<String, SQFVariable> variables = new HashMap<>();
 	
@@ -44,6 +48,13 @@ public class SQFContext {
 		this.linter = linter;
 		this.previous = previous;
 		this.newThread = newThread;
+		if (previous != null) {
+			previous.addChild(this);
+		}
+	}
+	
+	public void addChild(SQFContext child) {
+		children.add(child);
 	}
 	
 	/**
@@ -57,7 +68,7 @@ public class SQFContext {
 	 */
 	public SQFVariable getVariable(String ident, String name, boolean privateAssigment) {
 		SQFVariable var;
-		
+
 		if (!variables.containsKey(ident)) {
 			if (!privateAssigment && previous != null && !newThread) {
 				return previous.getVariable(ident, name, false);
@@ -72,15 +83,16 @@ public class SQFContext {
 		return var;
 	}
 	
-	public void handleName(Token name, boolean isAssigment, boolean isPrivate) {
+	public SQFParseException handleName(Token name, boolean isAssigment, boolean isPrivate) {
 		SQFVariable var = getVariable(
 			name.toString().toLowerCase(),
 			name.toString(),
 			isAssigment && isPrivate
 		);
+		SQFParseException ex = null;
 		
 		if (var.isLocal() && !isAssigment && var.definitions.isEmpty()) {
-			linter.addUndefinedMessage(name);
+			ex = linter.addUndefinedMessage(name);
 		}
 		
 		var.usage.add(name);
@@ -95,6 +107,8 @@ public class SQFContext {
 				var.comments.add(null);
 			}
 		}
+		
+		return ex;
 	}
 
 	/**
@@ -102,5 +116,32 @@ public class SQFContext {
 	 */
 	public SQFContext getPrevious() {
 		return previous;
+	}
+
+	public Map<String, SQFVariable> getVariables() {
+		return variables;
+	}
+
+	public List<SQFContext> getChildren() {
+		return children;
+	}
+
+	/**
+	 * @return the newThread
+	 */
+	public boolean isNewThread() {
+		return newThread;
+	}
+
+	/**
+	 * @param newThread the newThread to set
+	 */
+	public void setNewThread(boolean newThread) {
+		this.newThread = newThread;
+	}
+	
+	public void clear() {
+		variables.clear();
+		children.forEach(c -> c.clear());
 	}
 }

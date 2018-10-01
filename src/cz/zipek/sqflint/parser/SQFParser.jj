@@ -145,7 +145,6 @@ TOKEN :
 	< TRY: "try" > |
 	< CATCH: "catch" > |
 	< WITH: "with" > |
-	< FOREACH: "foreach" > |
 	< THEN: "then" > |
 	< EXITWITH: "exitWith" > |
 	< THROW: "throw" > |
@@ -219,6 +218,8 @@ TOKEN :
 SQFBlock CompilationUnit() :
 {
 	SQFBlock result = new SQFBlock(getLinter());
+	pushContext(true);
+	result.setInnerContext(context);
 }
 {
 	try {
@@ -368,6 +369,7 @@ SQFBlock BlockContents(boolean newThread):
 	SQFBlock result = new SQFBlock(getLinter());
 	SQFUnit statement = null;
 	pushContext(newThread);
+	result.setInnerContext(context);
 }
 {
 	statement = Statement() { result.add(statement); }
@@ -385,7 +387,6 @@ SQFUnit Statement() :
 		LOOKAHEAD(3)
 		result = WhileStatement() { return result; } |
 		result = ForStatement() { return result; } |
-		result = ForEachStatement() { return result; } |
 		result = Expression(null, true) { return result; }
 	} catch(ParseException ex) {
 		recover(ex, SEMICOLON);
@@ -462,13 +463,4 @@ SQFForStatement ForStatement() :
 	LOOKAHEAD(2) ( "for" variable = Expression(null, false) "from" from = Expression(null, false) "to" to = Expression(null, false) [ "step" step = Expression(null, false) ] "do" block = Block(false) ) {
 		return new SQFForExpressionStatement(getLinter(), variable, from, to, step, block);
 	}
-}
-
-SQFForeachStatement ForEachStatement() :
-{
-	SQFBlock block = null;
-	SQFExpression list = null;
-}
-{
-	block = Block(false) "foreach" list = Expression(null, false) { return new SQFForeachStatement(getLinter(), block, list); }
 }

@@ -33,7 +33,8 @@ import java.util.List;
  */
 public class SQFBlock extends SQFUnit {
 	private final List<SQFUnit> statements = new ArrayList<>();
-
+	private SQFContext innerContext;
+	
 	public SQFBlock(Linter linter) {
 		super(linter);
 	}
@@ -52,5 +53,32 @@ public class SQFBlock extends SQFUnit {
 			if (unit != null)
 				unit.analyze(source, this);
 		}
+	}
+
+	@Override
+	public String toString() {
+		return "Code block";
+	}
+
+	public void revalidate() {
+		for (SQFUnit unit : getStatements()) {
+			if (unit != null && unit instanceof SQFExpression) {
+				((SQFExpression)unit).finish();
+			}
+		}
+	}
+
+	/**
+	 * @return the innerContext
+	 */
+	public SQFContext getInnerContext() {
+		return innerContext;
+	}
+
+	/**
+	 * @param innerContext the innerContext to set
+	 */
+	public void setInnerContext(SQFContext innerContext) {
+		this.innerContext = innerContext;
 	}
 }

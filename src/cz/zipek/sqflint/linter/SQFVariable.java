@@ -22,4 +22,15 @@ public class SQFVariable {
 	public boolean isLocal() {
 		return name.startsWith("_");
 	}
+	
+	public SQFVariable copy() {
+		SQFVariable cloned = new SQFVariable(name);
+		cloned.usage = new ArrayList<>();
+		cloned.usage.addAll(usage);
+		cloned.definitions = new ArrayList<>();
+		cloned.definitions.addAll(definitions);
+		cloned.comments = new ArrayList<>();
+		cloned.comments.addAll(comments);
+		return cloned;
+	}
 }

@@ -25,6 +25,7 @@ package cz.zipek.sqflint.sqf;
 
 import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.linter.SQFParseException;
+import cz.zipek.sqflint.linter.Warning;
 import cz.zipek.sqflint.parser.Token;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -48,6 +49,8 @@ public class SQFExpression extends SQFUnit {
 	
 	private final List<String> signOperators = Arrays.asList("+", "-", "!");
 	
+	private SQFParseException sentError;
+	
 	public SQFExpression(Linter linter, Token token) {
 		super(linter);
 		id = idCounter++;
@@ -69,7 +72,16 @@ public class SQFExpression extends SQFUnit {
 		return this;
 	}
 
-	public SQFExpression finish() {		
+	public SQFExpression finish() {	
+		// Remove previous error if there is any
+		if (sentError != null) {
+			if (sentError instanceof Warning) {
+				linter.getWarnings().remove((Warning)sentError);
+			} else {
+				linter.getErrors().remove(sentError);
+			}
+		}
+		
 		// If main part of expression is identifier, try to run command
 		if (main != null && main instanceof SQFIdentifier) {
 			// Load main part of this expression
@@ -77,21 +89,32 @@ public class SQFExpression extends SQFUnit {
 			String ident = mainIdent.getToken().image.toLowerCase();
 			
 			if (linter.getOptions().getOperators().containsKey(ident)) {
-				linter.getOptions().getOperators().get(ident).analyze(linter, context, this);
+				linter.getOptions().getOperators().get(ident).analyze(
+					linter,
+					context,
+					this
+				);
 			} else if (
 				!linter.getPreprocessor().getMacros().containsKey(ident)
 				&& !linter.getOptions().getIgnoredVariables().contains(ident)
 			) {
 				boolean isPrivate = left != null && left.isPrivate();
 				boolean isAssigment = right != null && right.isAssignOperator();
-
-				context.handleName(mainIdent.getToken(), isAssigment, isPrivate);
+				
+				sentError = context.handleName(
+					mainIdent.getToken(),
+					isAssigment,
+					isPrivate
+				);
 			}
 		}
 		
 		if (!isCommand() && !isOperator()) {
 			if (right != null && !right.isOperator() && !right.isCommand()) {
-				linter.getErrors().add(new SQFParseException(right.getToken(), main + " and " + right.main + " is not a valid combination of expressions."));
+				linter.getErrors().add(new SQFParseException(
+					right.getToken(),
+					main + " and " + right.main + " is not a valid combination of expressions."
+				));
 			}
 		}
 		
@@ -149,6 +172,17 @@ public class SQFExpression extends SQFUnit {
 	
 	public boolean isCommand() {
 		return (getIdentifier() != null && linter.getOptions().getOperators().containsKey(getIdentifier()));
+	}
+	
+	public boolean isBlock() {
+		return main != null && main instanceof SQFBlock;
+	}
+	
+	public SQFBlock getBlock() {
+		if (isBlock()) {
+			return (SQFBlock)main;
+		}
+		return null;
 	}
 	
 	public boolean isVariable(Linter source) {
