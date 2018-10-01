@@ -148,7 +148,8 @@ TOKEN :
 	< THEN: "then" > |
 	< EXITWITH: "exitWith" > |
 	< THROW: "throw" > |
-	< ELSE: "else" >
+	< ELSE: "else" > |
+	< IF: "if" >
 }
 
 /* LITERALS */
@@ -284,7 +285,6 @@ Token Operator() :
 SQFIdentifier Name() :
 {
 	Token token = null;
-	// handleName();
 }
 {
 	token = <IDENTIFIER>
@@ -297,10 +297,14 @@ SQFExpression Expression(SQFExpression left, boolean newThread) :
 	Token main = null;
 	SQFExpression right = null;
 	SQFExpression next = null;
+	SQFExpression cond = null;
 
 	result.setLeft(left);
 }
 {
+	(main = "if") cond = Expression(result, false) [ next = Expression(result, newThread) ] {
+		return result.setMain(new SQFIdentifier(getLinter(), main)).setRight(cond).finish();
+	} |
 	(main = "exitWith" | main = "throw" | main = "else") right = Expression(result, false) {
 		return result.setMain(new SQFIdentifier(getLinter(), main)).setRight(right).finish();
 	} |
@@ -327,7 +331,7 @@ void PrimaryExpression(SQFExpression left, SQFExpression main, boolean newThread
 	result = TryStatement() { main.setMain(result); } |
 	result = SwitchStatement() { main.setMain(result); } |
 	result = Literal() { main.setMain(result); }  |
-	"(" result = Expression(null, true) ")" { main.setMain(result); } |
+	"(" result = Expression(null, newThread) ")" { main.setMain(result); } |
 	result = Name() { main.setMain(result); } |
 	result = Block(newThread) { main.setMain(result); } |
 	result = Array() { main.setMain(result); } |

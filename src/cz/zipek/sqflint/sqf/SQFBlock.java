@@ -63,7 +63,8 @@ public class SQFBlock extends SQFUnit {
 	public void revalidate() {
 		for (SQFUnit unit : getStatements()) {
 			if (unit != null && unit instanceof SQFExpression) {
-				((SQFExpression)unit).finish();
+				SQFExpression exp = (SQFExpression)unit;
+				exp.finish(true);
 			}
 		}
 	}

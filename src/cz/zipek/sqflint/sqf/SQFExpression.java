@@ -38,7 +38,7 @@ import java.util.Map;
  */
 public class SQFExpression extends SQFUnit {
 	static int idCounter = 0;
-	static Map<String, SQFExpression> called = new HashMap<String, SQFExpression>();
+	static Map<String, SQFExpression> called = new HashMap<>();
 	
 	private final Token token;
 	private final int id;
@@ -72,7 +72,25 @@ public class SQFExpression extends SQFUnit {
 		return this;
 	}
 
-	public SQFExpression finish() {	
+	public SQFExpression finish() {
+		return finish(false);
+	}
+	
+	public SQFExpression finish(boolean revalidate) {
+		if (revalidate) {
+			if (getRight() != null) {
+				getRight().finish(revalidate);
+			}
+			
+			if (main instanceof SQFExpression) {
+				((SQFExpression)main).finish(revalidate);
+			}
+			
+			if (isBlock()) {
+				getBlock().revalidate();
+			}
+		}
+		
 		// Remove previous error if there is any
 		if (sentError != null) {
 			if (sentError instanceof Warning) {
@@ -220,6 +238,6 @@ public class SQFExpression extends SQFUnit {
 
 	@Override
 	public String toString() {
-		return "Expression(" + main + ")";
+		return "Expression(" + main + ", #" + id + ")";
 	}
 }
