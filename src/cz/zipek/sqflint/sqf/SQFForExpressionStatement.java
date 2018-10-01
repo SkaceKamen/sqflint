@@ -38,12 +38,35 @@ public class SQFForExpressionStatement extends SQFForStatement {
 	private final SQFExpression to;
 	private final SQFExpression step;
 
-	public SQFForExpressionStatement(SQFExpression variable, SQFExpression from, SQFExpression to, SQFExpression step, SQFBlock block) {
+	public SQFForExpressionStatement(Linter linter, SQFExpression variable, SQFExpression from, SQFExpression to, SQFExpression step, SQFBlock block) {
+		super(linter);
+		
 		this.variable = variable;
 		this.from = from;
 		this.to = to;
 		this.step = step;
 		this.block = block;
+		
+		// For can define new variable, catch it
+		if (variable != null
+				&& variable.getMain() != null
+				&& variable.getMain() instanceof SQFString) {
+			SQFString lit = (SQFString)variable.getMain();
+			String ident = lit.getStringContents()
+					.toLowerCase();
+
+			SQFVariable var = context.getVariable(ident, lit.getStringContents(), false);
+			
+			Token unquoted = new Token(SQFParser.IDENTIFIER, lit.getStringContents());
+			unquoted.beginLine = lit.getContents().beginLine;
+			unquoted.endLine = lit.getContents().endLine;
+			unquoted.beginColumn = lit.getContents().beginColumn + 1;
+			unquoted.endColumn = lit.getContents().endColumn - 1;
+			
+			var.usage.add(unquoted);
+			var.definitions.add(unquoted);
+			var.comments.add(null);
+		}
 	}
 
 	/**
@@ -76,27 +99,6 @@ public class SQFForExpressionStatement extends SQFForStatement {
 
 	@Override
 	public void analyze(Linter source, SQFBlock context) {
-		// For can define new variable, catch it
-		if (getVariable() != null
-				&& getVariable().getMain() != null
-				&& getVariable().getMain() instanceof SQFString) {
-			SQFString lit = (SQFString)getVariable().getMain();
-			String ident = lit.getStringContents()
-					.toLowerCase();
-
-			SQFVariable var = source.getVariable(ident, lit.getStringContents());
-			
-			Token unquoted = new Token(SQFParser.IDENTIFIER, lit.getStringContents());
-			unquoted.beginLine = lit.getContents().beginLine;
-			unquoted.endLine = lit.getContents().endLine;
-			unquoted.beginColumn = lit.getContents().beginColumn + 1;
-			unquoted.endColumn = lit.getContents().endColumn - 1;
-			
-			var.usage.add(unquoted);
-			var.definitions.add(unquoted);
-			var.comments.add(null);
-		}
-		
 		if (block != null) {
 			block.analyze(source, context);
 		}

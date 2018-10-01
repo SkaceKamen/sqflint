@@ -33,6 +33,10 @@ import java.util.List;
  */
 public class SQFArray extends SQFUnit {
 	private final List<SQFExpression> units = new ArrayList<>();
+
+	public SQFArray(Linter linter) {
+		super(linter);
+	}
 	
 	public void add(SQFExpression unit) {
 		units.add(unit);

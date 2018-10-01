@@ -1,5 +1,7 @@
 package cz.zipek.sqflint.sqf;
 
+import cz.zipek.sqflint.linter.Linter;
+
 /*
  * The MIT License
  *
@@ -30,6 +32,10 @@ package cz.zipek.sqflint.sqf;
  */
 public class SQFForStatement extends SQFUnit {
 	protected SQFBlock block;
+
+	public SQFForStatement(Linter linter) {
+		super(linter);
+	}
 
 	/**
 	 * @return the block

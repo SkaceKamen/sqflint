@@ -8,6 +8,7 @@ import cz.zipek.sqflint.parser.TokenMgrError;
 import cz.zipek.sqflint.preprocessor.SQFInclude;
 import cz.zipek.sqflint.preprocessor.SQFMacro;
 import cz.zipek.sqflint.preprocessor.SQFPreprocessor;
+import cz.zipek.sqflint.sqf.SQFContext;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -49,7 +50,6 @@ public class Linter extends SQFParser {
 		} catch (ParseException | TokenMgrError  e) {
 			if (e instanceof SQFParseException) {
 				getErrors().add((SQFParseException)e);
-				//getErrors().add(new SQFParseException(e));
 			} else if (e instanceof ParseException) {
 				getErrors().add(new SQFParseException((ParseException)e));
 			} else if (e instanceof TokenMgrError) {
@@ -60,7 +60,7 @@ public class Linter extends SQFParser {
 				block.analyze(this, null);
 			}
 			
-			postParse();
+			// postParse();
 			options.getOutputFormatter().print(this);
 		}
 		
@@ -115,12 +115,26 @@ public class Linter extends SQFParser {
 		getWarnings().addAll(preprocessor.getWarnings());
 	}
 	
+	@Override
+	protected void pushContext(boolean newThread) {
+		context = new SQFContext(this, context, newThread);
+	}
+
+	@Override
+	protected Linter getLinter() {
+		return this;
+	}
+	
+	public SQFContext getContext() {
+		return context;
+	}
+	
 	/**
 	 * Adds undefined message for specified token.
 	 * 
 	 * @param token token of undefined variable
 	 */
-	protected void addUndefinedMessage(Token token) {
+	public void addUndefinedMessage(Token token) {
 		if (options.isWarningAsError()) {
 			getErrors().add(new SQFParseException(token, "Possibly undefined variable " + token));
 		} else {
@@ -150,6 +164,9 @@ public class Linter extends SQFParser {
 	
 	@Override
 	protected void handleName() throws ParseException {
+		// Load previous token
+		Token prev = getToken(0);
+
 		// Load current token
 		Token name = getToken(1);
 		
@@ -161,6 +178,12 @@ public class Linter extends SQFParser {
 			&& !preprocessor.getMacros().containsKey(ident)
 			&& !options.getIgnoredVariables().contains(ident)
 		) {
+			boolean isPrivate = prev.image.toLowerCase().equals("private");
+			boolean isAssigment = getToken(2).kind == ASSIGN;
+			
+			context.handleName(name, isAssigment, isPrivate);
+			/*
+			boolean isPrivate = prev.image.toLowerCase().equals("private");
 			SQFVariable var = getVariable(ident, name.toString());
 
 			var.usage.add(name);
@@ -174,6 +197,7 @@ public class Linter extends SQFParser {
 					var.comments.add(null);
 				}
 			}
+			*/
 		}
 	}
 	

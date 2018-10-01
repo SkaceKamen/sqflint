@@ -23,6 +23,7 @@
  */
 package cz.zipek.sqflint.sqf;
 
+import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.parser.Token;
 
 /**
@@ -30,10 +31,10 @@ import cz.zipek.sqflint.parser.Token;
  * @author Jan Zípek <jan at zipek.cz>
  */
 public class SQFString extends SQFLiteral {
-	private String contents;
+	private final String contents;
 	
-	public SQFString(Token contents) {
-		super(contents);
+	public SQFString(Linter linter, Token contents) {
+		super(linter, contents);
 		
 		this.contents = contents.toString().substring(1, contents.toString().length() - 1);
 	}

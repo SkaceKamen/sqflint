@@ -23,6 +23,7 @@
  */
 package cz.zipek.sqflint.sqf;
 
+import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.parser.Token;
 
 /**
@@ -32,7 +33,8 @@ import cz.zipek.sqflint.parser.Token;
 public class SQFIdentifier extends SQFUnit {
 	private final Token contents;
 	
-	public SQFIdentifier(Token contents) {
+	public SQFIdentifier(Linter linter, Token contents) {
+		super(linter);
 		this.contents = contents;
 	}
 	

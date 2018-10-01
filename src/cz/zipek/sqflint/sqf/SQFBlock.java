@@ -24,7 +24,6 @@
 package cz.zipek.sqflint.sqf;
 
 import cz.zipek.sqflint.linter.Linter;
-import cz.zipek.sqflint.linter.SQFVariable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,6 +33,10 @@ import java.util.List;
  */
 public class SQFBlock extends SQFUnit {
 	private final List<SQFUnit> statements = new ArrayList<>();
+
+	public SQFBlock(Linter linter) {
+		super(linter);
+	}
 	
 	public void add(SQFUnit statement) {
 		statements.add(statement);

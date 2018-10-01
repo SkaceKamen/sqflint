@@ -29,6 +29,7 @@ import cz.zipek.sqflint.parser.SQFParser;
 import cz.zipek.sqflint.parser.Token;
 import cz.zipek.sqflint.sqf.SQFArray;
 import cz.zipek.sqflint.sqf.SQFBlock;
+import cz.zipek.sqflint.sqf.SQFContext;
 import cz.zipek.sqflint.sqf.SQFExpression;
 import cz.zipek.sqflint.sqf.SQFString;
 
@@ -39,23 +40,23 @@ import cz.zipek.sqflint.sqf.SQFString;
  */
 public class ParamsOperator extends Operator {
 	@Override
-	public void analyze(Linter source, SQFBlock context, SQFExpression expression) {
+	public void analyze(Linter source, SQFContext context, SQFExpression expression) {
 		SQFExpression right = expression.getRight();
 		if (right != null && right.getMain() != null) {
 			if (right.getMain() instanceof SQFArray) {
-				handleParams(source, (SQFArray)right.getMain());
+				handleParams(source, context, (SQFArray)right.getMain());
 			}
 		}
 	}
 	
-	protected void handleParams(Linter source, SQFArray contents) {
+	protected void handleParams(Linter source, SQFContext context, SQFArray contents) {
 		// List each item of params
 		for(SQFExpression item : contents.getItems()) {
 			// Empty expression can happen
 			if (item.getMain() != null) {
 				// Literal, presumably string = variable ident
 				if (item.getMain() instanceof SQFString) {
-					handleParamLiteral(source, (SQFString)item.getMain());
+					handleParamLiteral(source, context, (SQFString)item.getMain());
 				}
 
 				// Array = param with additional options, variable ident is first
@@ -64,7 +65,7 @@ public class ParamsOperator extends Operator {
 					if (!array.getItems().isEmpty()) {
 						SQFExpression subitem = array.getItems().get(0);
 						if (subitem.getMain() != null && subitem.getMain() instanceof SQFString) {
-							handleParamLiteral(source, (SQFString)subitem.getMain());
+							handleParamLiteral(source, context, (SQFString)subitem.getMain());
 						}
 					}
 				}
@@ -78,12 +79,12 @@ public class ParamsOperator extends Operator {
 	 * @param literal possible variable definition
 	 * @return if literal was variable definition
 	 */
-	private boolean handleParamLiteral(Linter source, SQFString literal) {
+	private boolean handleParamLiteral(Linter source, SQFContext context, SQFString literal) {
 		// Load variable name without quotes and case insensitive
 		String ident = literal.getStringContents().toLowerCase();
 
 		// Load variable
-		SQFVariable var = source.getVariable(ident, literal.getStringContents());
+		SQFVariable var = context.getVariable(ident, literal.getStringContents(), true);
 		
 		// Actual variable name token (without quotes)
 		Token unquoted = new Token(SQFParser.IDENTIFIER, literal.getStringContents());

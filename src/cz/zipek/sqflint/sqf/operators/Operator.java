@@ -25,6 +25,7 @@ package cz.zipek.sqflint.sqf.operators;
 
 import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.sqf.SQFBlock;
+import cz.zipek.sqflint.sqf.SQFContext;
 import cz.zipek.sqflint.sqf.SQFExpression;
 
 /**
@@ -32,7 +33,7 @@ import cz.zipek.sqflint.sqf.SQFExpression;
  * @author Jan Zípek <jan at zipek.cz>
  */
 public class Operator {
-	public void analyze(Linter source, SQFBlock context, SQFExpression expression) {
+	public void analyze(Linter source, SQFContext context, SQFExpression expression) {
 		
 	}
 }

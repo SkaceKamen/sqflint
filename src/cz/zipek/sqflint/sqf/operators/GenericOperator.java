@@ -26,6 +26,7 @@ package cz.zipek.sqflint.sqf.operators;
 import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.linter.SQFParseException;
 import cz.zipek.sqflint.sqf.SQFBlock;
+import cz.zipek.sqflint.sqf.SQFContext;
 import cz.zipek.sqflint.sqf.SQFExpression;
 import cz.zipek.sqflint.sqf.SQFUnit;
 import java.util.ArrayList;
@@ -79,7 +80,7 @@ public class GenericOperator extends Operator {
 	}
 
 	@Override
-	public void analyze(Linter source, SQFBlock context, SQFExpression expression) {
+	public void analyze(Linter source, SQFContext context, SQFExpression expression) {
 		// Prepare arrays for both sides
 		Side[] sides = new Side[] {
 			new Side(expression.getLeft(), "left", left, leftEmpty),

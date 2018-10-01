@@ -36,6 +36,10 @@ public class SQFSwitchStatement extends SQFUnit {
 	private SQFExpression expression;
 	private SQFBlock defaultBlock;
 
+	public SQFSwitchStatement(Linter linter) {
+		super(linter);
+	}
+
 	public void setExpression(SQFExpression exp) {
 		expression = exp;
 	}

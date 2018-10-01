@@ -41,7 +41,8 @@ public class SQFExpression extends SQFUnit {
 	
 	private final List<String> signOperators = Arrays.asList("+", "-", "!");
 	
-	public SQFExpression(Token token) {
+	public SQFExpression(Linter linter, Token token) {
+		super(linter);
 		this.token = token;
 	}
 	
@@ -57,6 +58,33 @@ public class SQFExpression extends SQFUnit {
 	
 	public SQFExpression setRight(SQFExpression expr) {
 		right = expr;
+		return this;
+	}
+	
+	public SQFExpression finish() {
+		// If main part of expression is identifier, try to run command
+		if (main != null && main instanceof SQFIdentifier) {
+			// Load main part of this expression
+			SQFIdentifier mainIdent = (SQFIdentifier)main;
+			String ident = mainIdent.getToken().image.toLowerCase();
+			
+			if (linter.getOptions().getOperators().containsKey(ident)) {
+				linter.getOptions().getOperators().get(ident).analyze(linter, context, this);
+			}
+		}
+		
+		/*
+		// Check right side for some cases
+		if (!isCommand(source)) {
+			if (right != null && right.getToken() != null && !right.isCommand(source)) {
+				// source.getErrors().add(new SQFParseException(new SQFParseException(right.getToken(), "Unexpected " + right.getToken().toString())));
+			}
+			if (right != null && right.main != null && right.main instanceof SQFArray) {
+				// source.getErrors().add(new SQFParseException(new SQFParseException(getToken(), "Unexpected " + getToken().toString())));
+			}
+		}
+		*/
+		
 		return this;
 	}
 
@@ -130,27 +158,6 @@ public class SQFExpression extends SQFUnit {
 		// Do some analytics on inside (probably won't do anything)
 		if (main != null) {
 			main.analyze(source, context);
-		}
-
-		// If main part of expression is identifier, try to run command
-		if (main != null && main instanceof SQFIdentifier) {
-			// Load main part of this expression
-			SQFIdentifier token = (SQFIdentifier)main;
-			String ident = token.getToken().image.toLowerCase();
-			
-			if (source.getOptions().getOperators().containsKey(ident)) {
-				source.getOptions().getOperators().get(ident).analyze(source, context, this);
-			}
-		}
-		
-		// Check right side for some cases
-		if (!isCommand(source)) {
-			if (right != null && right.getToken() != null && !right.isCommand(source)) {
-				// source.getErrors().add(new SQFParseException(new SQFParseException(right.getToken(), "Unexpected " + right.getToken().toString())));
-			}
-			if (right != null && right.main != null && right.main instanceof SQFArray) {
-				// source.getErrors().add(new SQFParseException(new SQFParseException(getToken(), "Unexpected " + getToken().toString())));
-			}
 		}
 		
 		// We're going left to right

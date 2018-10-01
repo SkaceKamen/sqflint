@@ -26,6 +26,7 @@ package cz.zipek.sqflint.sqf.operators;
 import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.linter.SQFParseException;
 import cz.zipek.sqflint.sqf.SQFBlock;
+import cz.zipek.sqflint.sqf.SQFContext;
 import cz.zipek.sqflint.sqf.SQFExpression;
 
 /**
@@ -35,7 +36,7 @@ import cz.zipek.sqflint.sqf.SQFExpression;
 public class ExitWithOperator extends Operator {
 
 	@Override
-	public void analyze(Linter source, SQFBlock context, SQFExpression expression) {
+	public void analyze(Linter source, SQFContext context, SQFExpression expression) {
 		// Expect argument
 		if (expression.getRight() == null) {
 			source.getErrors().add(new SQFParseException(expression.getToken(), "Expected block after exitWith."));

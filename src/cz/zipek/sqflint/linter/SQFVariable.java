@@ -10,6 +10,7 @@ import java.util.List;
  */
 public class SQFVariable {
 	public String name;
+	public boolean isPrivate;
 	public List<Token> usage = new ArrayList<>();
 	public List<Token> definitions = new ArrayList<>();
 	public List<Token> comments = new ArrayList<>();

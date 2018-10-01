@@ -34,7 +34,8 @@ public class SQFIfStatement extends SQFUnit {
 	private final SQFBlock trueBlock;
 	private final SQFBlock falseBlock;
 	
-	public SQFIfStatement(SQFExpression condition, SQFBlock t, SQFBlock f) {
+	public SQFIfStatement(Linter linter, SQFExpression condition, SQFBlock t, SQFBlock f) {
+		super(linter);
 		this.condition = condition;
 		trueBlock = t;
 		falseBlock = f;

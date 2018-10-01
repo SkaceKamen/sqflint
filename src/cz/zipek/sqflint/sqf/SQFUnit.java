@@ -24,14 +24,19 @@
 package cz.zipek.sqflint.sqf;
 
 import cz.zipek.sqflint.linter.Linter;
-import cz.zipek.sqflint.parser.Token;
 
 /**
  *
  * @author Jan Zípek <jan at zipek.cz>
  */
 public class SQFUnit {
-	// protected Token token;
+	protected final Linter linter;
+	protected final SQFContext context;
+	
+	public SQFUnit(Linter linter) {
+		this.linter = linter;
+		this.context = linter.getContext();
+	}
 	
 	public void analyze(Linter source, SQFBlock context) {
 		
