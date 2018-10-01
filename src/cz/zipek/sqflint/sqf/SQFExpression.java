@@ -86,6 +86,10 @@ public class SQFExpression extends SQFUnit {
 				((SQFExpression)main).finish(revalidate);
 			}
 			
+			if (main instanceof SQFArray) {
+				((SQFArray)main).revalidate();
+			}
+			
 			if (isBlock()) {
 				getBlock().revalidate();
 			}

@@ -57,6 +57,15 @@ public class SQFArray extends SQFUnit {
 			}
 		}
 	}
+	
+	public void revalidate() {
+		for (SQFUnit unit : units) {
+			if (unit != null && unit instanceof SQFExpression) {
+				SQFExpression exp = (SQFExpression)unit;
+				exp.finish(true);
+			}
+		}
+	}
 
 	@Override
 	public String toString() {

@@ -65,6 +65,8 @@ public class SQFBlock extends SQFUnit {
 			if (unit != null && unit instanceof SQFExpression) {
 				SQFExpression exp = (SQFExpression)unit;
 				exp.finish(true);
+			} else if (unit instanceof SQFArray) {
+				((SQFArray)unit).revalidate();
 			}
 		}
 	}
