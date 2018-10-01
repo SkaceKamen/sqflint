@@ -291,17 +291,27 @@ SQFExpression Expression(SQFExpression left, boolean newThread) :
 	SQFExpression result = new SQFExpression(getLinter(), getToken(0));
 	SQFUnit main = null;
 	SQFExpression right = null;
-	Token opLit = null;
+
+	System.out.println("LEFT: " + left);
 
 	result.setLeft(left);
 }
 {
-	(opLit = "!" | opLit = "not " | opLit = Operator()) right = Expression(result, newThread) { return result.setMain(new SQFOperator(getLinter(), opLit)).setRight(right).finish(); } |
+	ExpressionOperator(result) right = Expression(result, newThread) { return result.setRight(right).finish(); } |
 	PrimaryExpression(left, result, newThread) [ right = Expression(result, newThread) ] { return result.setRight(right).finish(); }
+}
+
+void ExpressionOperator(SQFExpression main) :
+{
+	Token result = null;
+}
+{
+	(result = "!" | result = "not " | result = Operator()) { main.setMain(new SQFOperator(getLinter(), result)); }
 }
 
 void PrimaryExpression(SQFExpression left, SQFExpression main, boolean newThread) :
 {
+	System.out.println("PLEFT: " + left);
 	SQFUnit result = null;
 }
 {

@@ -57,6 +57,9 @@ public class SQFArray extends SQFUnit {
 			}
 		}
 	}
-	
-	
+
+	@Override
+	public String toString() {
+		return "Array";
+	}		
 }

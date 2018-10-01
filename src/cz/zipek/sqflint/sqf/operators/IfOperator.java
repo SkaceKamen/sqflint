@@ -78,7 +78,7 @@ public class IfOperator extends Operator {
 		}
 		
 		// Only then, exitWith and throw can be used after if
-		if (!expression.getRight().getRight().isCommand(source) ||
+		if (!expression.getRight().getRight().isCommand() ||
 			!expected.contains(expression.getRight().getRight().getIdentifier().toLowerCase())
 		) {
 			source.getErrors().add(new SQFParseException(expression.getRight().getRight().getToken(), "Expected then, exitWith or throw."));

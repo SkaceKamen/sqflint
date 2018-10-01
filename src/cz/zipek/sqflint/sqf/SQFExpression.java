@@ -24,16 +24,23 @@
 package cz.zipek.sqflint.sqf;
 
 import cz.zipek.sqflint.linter.Linter;
+import cz.zipek.sqflint.linter.SQFParseException;
 import cz.zipek.sqflint.parser.Token;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
  * @author kamen
  */
-public class SQFExpression extends SQFUnit {	
+public class SQFExpression extends SQFUnit {
+	static int idCounter = 0;
+	static Map<String, SQFExpression> called = new HashMap<String, SQFExpression>();
+	
 	private final Token token;
+	private final int id;
 	
 	private SQFUnit main;
 	private SQFExpression left;
@@ -43,6 +50,7 @@ public class SQFExpression extends SQFUnit {
 	
 	public SQFExpression(Linter linter, Token token) {
 		super(linter);
+		id = idCounter++;
 		this.token = token;
 	}
 	
@@ -60,8 +68,8 @@ public class SQFExpression extends SQFUnit {
 		right = expr;
 		return this;
 	}
-	
-	public SQFExpression finish() {
+
+	public SQFExpression finish() {		
 		// If main part of expression is identifier, try to run command
 		if (main != null && main instanceof SQFIdentifier) {
 			// Load main part of this expression
@@ -78,6 +86,12 @@ public class SQFExpression extends SQFUnit {
 				boolean isAssigment = right != null && right.isAssignOperator();
 
 				context.handleName(mainIdent.getToken(), isAssigment, isPrivate);
+			}
+		}
+		
+		if (!isCommand() && !isOperator()) {
+			if (right != null && !right.isOperator() && !right.isCommand()) {
+				linter.getErrors().add(new SQFParseException(right.getToken(), main + " and " + right.main + " is not a valid combination of expressions."));
 			}
 		}
 		
@@ -133,12 +147,12 @@ public class SQFExpression extends SQFUnit {
 		return null;
 	}
 	
-	public boolean isCommand(Linter source) {
-		return (getIdentifier() != null && source.getOptions().getOperators().containsKey(getIdentifier()));
+	public boolean isCommand() {
+		return (getIdentifier() != null && linter.getOptions().getOperators().containsKey(getIdentifier()));
 	}
 	
 	public boolean isVariable(Linter source) {
-		return (getIdentifier() != null && !isCommand(source));
+		return (getIdentifier() != null && !isCommand());
 	}
 	
 	public boolean isOperator() {
@@ -168,5 +182,10 @@ public class SQFExpression extends SQFUnit {
 		if (right != null) {
 			right.analyze(source, context);
 		}
+	}
+
+	@Override
+	public String toString() {
+		return "Expression(" + main + ")";
 	}
 }

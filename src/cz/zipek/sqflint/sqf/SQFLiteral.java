@@ -44,4 +44,9 @@ public class SQFLiteral extends SQFUnit {
 	public Token getContents() {
 		return contents;
 	}
+
+	@Override
+	public String toString() {
+		return "Literal(" + contents + ")";
+	}
 }
