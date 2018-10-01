@@ -149,7 +149,8 @@ TOKEN :
 	< EXITWITH: "exitWith" > |
 	< THROW: "throw" > |
 	< ELSE: "else" > |
-	< IF: "if" >
+	< IF: "if" > |
+	< WAITUNTIL: "waitUntil" >
 }
 
 /* LITERALS */
@@ -308,7 +309,7 @@ SQFExpression Expression(SQFExpression left, boolean newThread) :
 	(main = "exitWith" | main = "throw" | main = "else") right = Expression(result, false) {
 		return result.setMain(new SQFIdentifier(getLinter(), main)).setRight(right).finish();
 	} |
-	(main = "then") right = Expression(result, false) [ next = Expression(right, newThread) ] {
+	(main = "then" | main = "waitUntil") right = Expression(result, false) [ next = Expression(right, newThread) ] {
 		return result.setMain(new SQFIdentifier(getLinter(), main)).setRight(right).finish();
 	} |
 	ExpressionOperator(result) right = Expression(result, newThread) { return result.setRight(right).finish(); } |

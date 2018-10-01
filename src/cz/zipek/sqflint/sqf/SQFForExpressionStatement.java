@@ -55,17 +55,24 @@ public class SQFForExpressionStatement extends SQFForStatement {
 			String ident = lit.getStringContents()
 					.toLowerCase();
 
-			SQFVariable var = context.getVariable(ident, lit.getStringContents(), false);
-			
-			Token unquoted = new Token(SQFParser.IDENTIFIER, lit.getStringContents());
-			unquoted.beginLine = lit.getContents().beginLine;
-			unquoted.endLine = lit.getContents().endLine;
-			unquoted.beginColumn = lit.getContents().beginColumn + 1;
-			unquoted.endColumn = lit.getContents().endColumn - 1;
-			
-			var.usage.add(unquoted);
-			var.definitions.add(unquoted);
-			var.comments.add(null);
+			if (block.getInnerContext() != null) {
+				block.getInnerContext().clear();
+				SQFVariable var = block
+						.getInnerContext()
+						.getVariable(ident, lit.getStringContents(), true);
+
+				Token unquoted = new Token(SQFParser.IDENTIFIER, lit.getStringContents());
+				unquoted.beginLine = lit.getContents().beginLine;
+				unquoted.endLine = lit.getContents().endLine;
+				unquoted.beginColumn = lit.getContents().beginColumn + 1;
+				unquoted.endColumn = lit.getContents().endColumn - 1;
+
+				var.usage.add(unquoted);
+				var.definitions.add(unquoted);
+				var.comments.add(null);
+
+				block.revalidate();
+			}
 		}
 	}
 
