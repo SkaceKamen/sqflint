@@ -145,7 +145,11 @@ TOKEN :
 	< TRY: "try" > |
 	< CATCH: "catch" > |
 	< WITH: "with" > |
-	< FOREACH: "foreach" >
+	< FOREACH: "foreach" > |
+	< THEN: "then" > |
+	< EXITWITH: "exitWith" > |
+	< THROW: "throw" > |
+	< ELSE: "else" >
 }
 
 /* LITERALS */
@@ -289,14 +293,19 @@ SQFIdentifier Name() :
 SQFExpression Expression(SQFExpression left, boolean newThread) :
 {
 	SQFExpression result = new SQFExpression(getLinter(), getToken(0));
-	SQFUnit main = null;
+	Token main = null;
 	SQFExpression right = null;
-
-	System.out.println("LEFT: " + left);
+	SQFExpression next = null;
 
 	result.setLeft(left);
 }
 {
+	(main = "exitWith" | main = "throw" | main = "else") right = Expression(result, false) {
+		return result.setMain(new SQFIdentifier(getLinter(), main)).setRight(right).finish();
+	} |
+	(main = "then") right = Expression(result, false) [ next = Expression(right, newThread) ] {
+		return result.setMain(new SQFIdentifier(getLinter(), main)).setRight(right).finish();
+	} |
 	ExpressionOperator(result) right = Expression(result, newThread) { return result.setRight(right).finish(); } |
 	PrimaryExpression(left, result, newThread) [ right = Expression(result, newThread) ] { return result.setRight(right).finish(); }
 }
@@ -311,7 +320,6 @@ void ExpressionOperator(SQFExpression main) :
 
 void PrimaryExpression(SQFExpression left, SQFExpression main, boolean newThread) :
 {
-	System.out.println("PLEFT: " + left);
 	SQFUnit result = null;
 }
 {
