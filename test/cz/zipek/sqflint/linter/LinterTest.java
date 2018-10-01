@@ -214,4 +214,97 @@ public class LinterTest {
 		assertTrue("Should not throw warnings", linter.getWarnings().isEmpty());
 		assertTrue("Should not throw errors", linter.getErrors().isEmpty());
 	}
+	
+	@Test
+	public void testContextSeparationForLocalFunctions() throws Exception {
+		String[] lines = {
+			"_func = { _i = 10; };",
+			"diag_log _i;"
+		};
+		Linter linter = parse(String.join("\n", lines));
+		
+		assertEquals(Linter.CODE_OK, linter.start());
+		assertEquals("Should throw warnings", 1, linter.getWarnings().size());
+		assertTrue("Should not throw errors", linter.getErrors().isEmpty());
+	}
+	
+	@Test
+	public void testContextNotLeakingIntoFunctions() throws Exception {
+		String[] lines = {
+			"_i = 10;",
+			"_fnc = { diag_log _i; }",
+			"diag_log _i;"
+		};
+		Linter linter = parse(String.join("\n", lines));
+		
+		assertEquals(Linter.CODE_OK, linter.start());
+		assertEquals("Should throw warnings", 1, linter.getWarnings().size());
+		assertTrue("Should not throw errors", linter.getErrors().isEmpty());
+	}
+	
+	@Test
+	public void testContextSeparationForSpawning() throws Exception {
+		String[] lines = {
+			"0 spawn { _i = 10; };",
+			"diag_log _i;"
+		};
+		Linter linter = parse(String.join("\n", lines));
+		
+		assertEquals(Linter.CODE_OK, linter.start());
+		assertEquals("Should throw warnings", 1, linter.getWarnings().size());
+		assertTrue("Should not throw errors", linter.getErrors().isEmpty());
+	}
+	
+	@Test
+	public void testContextSeparationForBlocksAsArguments() throws Exception {
+		String[] lines = {
+			"player addEventHandler [\"Killed\", { _i = 10; }];",
+			"diag_log _i;"
+		};
+		Linter linter = parse(String.join("\n", lines));
+		
+		assertEquals(Linter.CODE_OK, linter.start());
+		assertEquals("Should throw warnings", 1, linter.getWarnings().size());
+		assertTrue("Should not throw errors", linter.getErrors().isEmpty());
+	}
+	
+	@Test
+	public void testPrivateContextSeparation() throws Exception {
+		String[] lines = {
+			"if (true) then { private _i = 10; };",
+			"diag_log _i;"
+		};
+		Linter linter = parse(String.join("\n", lines));
+		
+		assertEquals(Linter.CODE_OK, linter.start());
+		assertEquals("Should throw warnings", 1, linter.getWarnings().size());
+		assertTrue("Should not throw errors", linter.getErrors().isEmpty());
+	}
+
+	@Test
+	public void testContextSeparationLeaking() throws Exception {
+		String[] lines = {
+			"if (true) then { _i = 10; };",
+			"diag_log _i;"
+		};
+		Linter linter = parse(String.join("\n", lines));
+		
+		assertEquals(Linter.CODE_OK, linter.start());
+		assertTrue("Should not throw warnings", linter.getWarnings().isEmpty());
+		assertTrue("Should not throw errors", linter.getErrors().isEmpty());
+	}
+	
+	@Test
+	public void testContextSeparationUpPropagation() throws Exception {
+		String[] lines = {
+			"private _i = 10;",
+			"if (true) then { diag_log _i; };",
+			"diag_log _i;"
+		};
+		Linter linter = parse(String.join("\n", lines));
+		
+		assertEquals(Linter.CODE_OK, linter.start());
+		assertTrue("Should not throw warnings", linter.getWarnings().isEmpty());
+		assertTrue("Should not throw errors", linter.getErrors().isEmpty());
+	}
 }
