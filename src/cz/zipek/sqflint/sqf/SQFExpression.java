@@ -70,20 +70,16 @@ public class SQFExpression extends SQFUnit {
 			
 			if (linter.getOptions().getOperators().containsKey(ident)) {
 				linter.getOptions().getOperators().get(ident).analyze(linter, context, this);
+			} else if (
+				!linter.getPreprocessor().getMacros().containsKey(ident)
+				&& !linter.getOptions().getIgnoredVariables().contains(ident)
+			) {
+				boolean isPrivate = left != null && left.isPrivate();
+				boolean isAssigment = right != null && right.isAssignOperator();
+
+				context.handleName(mainIdent.getToken(), isAssigment, isPrivate);
 			}
 		}
-		
-		/*
-		// Check right side for some cases
-		if (!isCommand(source)) {
-			if (right != null && right.getToken() != null && !right.isCommand(source)) {
-				// source.getErrors().add(new SQFParseException(new SQFParseException(right.getToken(), "Unexpected " + right.getToken().toString())));
-			}
-			if (right != null && right.main != null && right.main instanceof SQFArray) {
-				// source.getErrors().add(new SQFParseException(new SQFParseException(getToken(), "Unexpected " + getToken().toString())));
-			}
-		}
-		*/
 		
 		return this;
 	}
@@ -131,8 +127,8 @@ public class SQFExpression extends SQFUnit {
 	public String getIdentifier() {
 		if (main != null && main instanceof SQFIdentifier) {
 			// Load main part of this expression
-			SQFIdentifier token = (SQFIdentifier)main;
-			return token.getToken().image.toLowerCase();
+			SQFIdentifier mainToken = (SQFIdentifier)main;
+			return mainToken.getToken().image.toLowerCase();
 		}
 		return null;
 	}
@@ -151,6 +147,14 @@ public class SQFExpression extends SQFUnit {
 	
 	public boolean isSignOperator() {
 		return isOperator() && signOperators.contains(main.toString());
+	}
+	
+	public boolean isPrivate() {
+		return getIdentifier() != null && getIdentifier().equals("private");
+	}
+	
+	public boolean isAssignOperator() {
+		return isOperator() && main.toString().equals("=");
 	}
 
 	@Override

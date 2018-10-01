@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2016 Jan Zípek <jan at zipek.cz>.
+ * Copyright 2018 Jan Zípek <jan at zipek.cz>.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,39 +24,27 @@
 package cz.zipek.sqflint.sqf;
 
 import cz.zipek.sqflint.linter.Linter;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *
  * @author Jan Zípek <jan at zipek.cz>
  */
-public class SQFArray extends SQFUnit {
-	private final List<SQFExpression> units = new ArrayList<>();
-
-	public SQFArray(Linter linter) {
-		super(linter);
-	}
+public class SQFForeachStatement extends SQFUnit {
+	private final SQFBlock block;
+	private final SQFExpression list;
 	
-	public void add(SQFExpression unit) {
-		units.add(unit);
-	}
-
-	/**
-	 * @return the units
-	 */
-	public List<SQFExpression> getItems() {
-		return units;
+	public SQFForeachStatement(Linter linter, SQFBlock block, SQFExpression list) {
+		super(linter);
+		
+		this.block = block;
+		this.list = list;
 	}
 
 	@Override
 	public void analyze(Linter source, SQFBlock context) {
-		for (SQFExpression unit : units) {
-			if (unit != null) {
-				unit.analyze(source, context);
-			}
-		}
+		super.analyze(source, context);
+		
+		if (block != null) block.analyze(source, context);
+		if (list != null) list.analyze(source, context);
 	}
-	
-	
 }

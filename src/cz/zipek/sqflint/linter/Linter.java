@@ -164,9 +164,6 @@ public class Linter extends SQFParser {
 	
 	@Override
 	protected void handleName() throws ParseException {
-		// Load previous token
-		Token prev = getToken(0);
-
 		// Load current token
 		Token name = getToken(1);
 		
@@ -178,7 +175,7 @@ public class Linter extends SQFParser {
 			&& !preprocessor.getMacros().containsKey(ident)
 			&& !options.getIgnoredVariables().contains(ident)
 		) {
-			boolean isPrivate = prev.image.toLowerCase().equals("private");
+			boolean isPrivate = false;
 			boolean isAssigment = getToken(2).kind == ASSIGN;
 			
 			context.handleName(name, isAssigment, isPrivate);
@@ -213,6 +210,8 @@ public class Linter extends SQFParser {
 	 */
 	@Override
 	protected int recover(ParseException ex, int recoveryPoint, boolean skip) throws ParseException {
+		System.out.println("Recovering!");
+
 		// Add to list of encountered errors
 		if (!(ex instanceof SQFParseException)) {
 			getErrors().add(new SQFParseException(ex));

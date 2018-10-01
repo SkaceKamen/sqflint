@@ -25,7 +25,6 @@ package cz.zipek.sqflint.sqf;
 
 import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.linter.SQFVariable;
-import static cz.zipek.sqflint.parser.SQFParserConstants.ASSIGN;
 import cz.zipek.sqflint.parser.Token;
 import java.util.HashMap;
 import java.util.Map;
@@ -73,14 +72,14 @@ public class SQFContext {
 		return var;
 	}
 	
-	public void handleName (Token name, boolean isAssigment, boolean isPrivate) {
+	public void handleName(Token name, boolean isAssigment, boolean isPrivate) {
 		SQFVariable var = getVariable(
 			name.toString().toLowerCase(),
 			name.toString(),
 			isAssigment && isPrivate
 		);
 		
-		if (!isAssigment && var.definitions.isEmpty()) {
+		if (var.isLocal() && !isAssigment && var.definitions.isEmpty()) {
 			linter.addUndefinedMessage(name);
 		}
 		

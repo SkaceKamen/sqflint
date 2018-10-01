@@ -144,7 +144,8 @@ TOKEN :
 	< FALSE: "false" > |
 	< TRY: "try" > |
 	< CATCH: "catch" > |
-	< WITH: "with" >
+	< WITH: "with" > |
+	< FOREACH: "foreach" >
 }
 
 /* LITERALS */
@@ -278,12 +279,10 @@ Token Operator() :
 SQFIdentifier Name() :
 {
 	Token token = null;
-
-	handleName();
+	// handleName();
 }
 {
 	token = <IDENTIFIER>
-
 	{ return new SQFIdentifier(getLinter(), token); }
 }
 
@@ -298,22 +297,22 @@ SQFExpression Expression(SQFExpression left, boolean newThread) :
 }
 {
 	(opLit = "!" | opLit = "not " | opLit = Operator()) right = Expression(result, newThread) { return result.setMain(new SQFOperator(getLinter(), opLit)).setRight(right).finish(); } |
-	main = PrimaryExpression(left, newThread) [ right = Expression(result, newThread) ] { return result.setMain(main).setRight(right).finish(); }
+	PrimaryExpression(left, result, newThread) [ right = Expression(result, newThread) ] { return result.setRight(right).finish(); }
 }
 
-SQFUnit PrimaryExpression(SQFExpression left, boolean newThread) :
+void PrimaryExpression(SQFExpression left, SQFExpression main, boolean newThread) :
 {
 	SQFUnit result = null;
 }
 {
-	result = TryStatement() { return result; } |
-	result = SwitchStatement() { return result; } |
-	result = Literal() { return result; }  |
-	"(" result = Expression(null, true) ")" { return result; } |
-	result = Name() { return result; } |
-	result = Block(newThread) { return result; } |
-	result = Array() { return result; } |
-	result = WithStatement() { return result; }
+	result = TryStatement() { main.setMain(result); } |
+	result = SwitchStatement() { main.setMain(result); } |
+	result = Literal() { main.setMain(result); }  |
+	"(" result = Expression(null, true) ")" { main.setMain(result); } |
+	result = Name() { main.setMain(result); } |
+	result = Block(newThread) { main.setMain(result); } |
+	result = Array() { main.setMain(result); } |
+	result = WithStatement() { main.setMain(result); }
 }
 
 SQFWithStatement WithStatement () :
@@ -368,6 +367,7 @@ SQFUnit Statement() :
 		LOOKAHEAD(3)
 		result = WhileStatement() { return result; } |
 		result = ForStatement() { return result; } |
+		result = ForEachStatement() { return result; } |
 		result = Expression(null, true) { return result; }
 	} catch(ParseException ex) {
 		recover(ex, SEMICOLON);
@@ -444,4 +444,13 @@ SQFForStatement ForStatement() :
 	LOOKAHEAD(2) ( "for" variable = Expression(null, false) "from" from = Expression(null, false) "to" to = Expression(null, false) [ "step" step = Expression(null, false) ] "do" block = Block(false) ) {
 		return new SQFForExpressionStatement(getLinter(), variable, from, to, step, block);
 	}
+}
+
+SQFForeachStatement ForEachStatement() :
+{
+	SQFBlock block = null;
+	SQFExpression list = null;
+}
+{
+	block = Block(false) "foreach" list = Expression(null, false) { return new SQFForeachStatement(getLinter(), block, list); }
 }
