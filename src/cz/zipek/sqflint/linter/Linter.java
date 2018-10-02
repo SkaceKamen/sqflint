@@ -8,6 +8,7 @@ import cz.zipek.sqflint.parser.TokenMgrError;
 import cz.zipek.sqflint.preprocessor.SQFInclude;
 import cz.zipek.sqflint.preprocessor.SQFMacro;
 import cz.zipek.sqflint.preprocessor.SQFPreprocessor;
+import cz.zipek.sqflint.sqf.SQFContext;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -25,13 +26,12 @@ public class Linter extends SQFParser {
 	
 	private final List<SQFParseException> errors = new ArrayList<>();
 	private final List<Warning> warnings = new ArrayList<>();
-	private final Map<String, SQFVariable> variables = new HashMap<>();
 	
 	private final List<SQFInclude> includes = new ArrayList<>();
 	private final List<SQFMacro> macros = new ArrayList<>();
 		
 	private SQFPreprocessor preprocessor;
-	private Options options;
+	private final Options options;
 	
 	public Linter(InputStream stream, Options options) {
 		super(stream);
@@ -49,7 +49,6 @@ public class Linter extends SQFParser {
 		} catch (ParseException | TokenMgrError  e) {
 			if (e instanceof SQFParseException) {
 				getErrors().add((SQFParseException)e);
-				//getErrors().add(new SQFParseException(e));
 			} else if (e instanceof ParseException) {
 				getErrors().add(new SQFParseException((ParseException)e));
 			} else if (e instanceof TokenMgrError) {
@@ -60,7 +59,7 @@ public class Linter extends SQFParser {
 				block.analyze(this, null);
 			}
 			
-			postParse();
+			// postParse();
 			options.getOutputFormatter().print(this);
 		}
 		
@@ -79,102 +78,40 @@ public class Linter extends SQFParser {
 	 */
 	protected void postParse() {
 		if (options.isSkipWarnings()) return;
-		
-		variables.entrySet().stream().forEach((entry) -> {
-			SQFVariable var = entry.getValue();
-			if (var.isLocal()
-					&& !options.getSkippedVariables().contains(var.name.toLowerCase())
-					&& !preprocessor.getMacros().containsKey(var.name.toLowerCase())) {
-				if (var.definitions.isEmpty()) {
-					var.usage.stream().forEach((u) -> {
-						addUndefinedMessage(u);
-					});
-				} else {
-					// This makes sure the definitions are properly sorted
-					var.definitions.sort((Token a, Token b) -> {
-						if (a.beginLine == b.beginLine) {
-							return a.beginColumn - b.beginColumn;
-						}
-						return a.beginLine - b.beginLine;
-					});
-					
-					Token first = var.definitions.get(0);
-					var.usage.stream().forEach((u) -> {
-						if (u == first) return;
-						
-						if (u.beginLine < first.beginLine ||
-								(u.beginLine == first.beginLine &&
-									u.beginColumn < first.beginColumn)) {
-							addUndefinedMessage(u);
-						}
-					});
-				}
-			}
-		});
-		
+
 		getWarnings().addAll(preprocessor.getWarnings());
+	}
+	
+	@Override
+	protected void pushContext(boolean newThread) {
+		context = new SQFContext(this, context, newThread);
+	}
+
+	@Override
+	protected Linter getLinter() {
+		return this;
+	}
+	
+	public SQFContext getContext() {
+		return context;
 	}
 	
 	/**
 	 * Adds undefined message for specified token.
 	 * 
 	 * @param token token of undefined variable
+	 * @return 
 	 */
-	protected void addUndefinedMessage(Token token) {
+	public SQFParseException addUndefinedMessage(Token token) {
+		SQFParseException ex;
 		if (options.isWarningAsError()) {
-			getErrors().add(new SQFParseException(token, "Possibly undefined variable " + token));
+			ex = new SQFParseException(token, "Possibly undefined variable " + token);
+			getErrors().add(ex);
 		} else {
-			getWarnings().add(new Warning(token, "Possibly undefined variable " + token));
+			ex = new Warning(token, "Possibly undefined variable " + token);
+			getWarnings().add((Warning)ex);
 		}
-	}
-	
-	/**
-	 * Loads variable assigned to specified ident.
-	 * If variable isn't registered yet, it will be.
-	 * 
-	 * @param ident
-	 * @param name
-	 * @return
-	 */
-	public SQFVariable getVariable(String ident, String name) {
-		SQFVariable var;
-		if (!variables.containsKey(ident)) {
-			var = new SQFVariable(name);
-			variables.put(ident, var);
-		} else {
-			var = variables.get(ident);
-		}
-		
-		return var;
-	}
-	
-	@Override
-	protected void handleName() throws ParseException {
-		// Load current token
-		Token name = getToken(1);
-		
-		// Convert to ident (SQF is case insensitivie)
-		String ident = name.toString().toLowerCase();
-		
-		// Otherwise, if not macro, command or ignored variable, handle variable
-		if (!options.getOperators().containsKey(ident)
-			&& !preprocessor.getMacros().containsKey(ident)
-			&& !options.getIgnoredVariables().contains(ident)
-		) {
-			SQFVariable var = getVariable(ident, name.toString());
-
-			var.usage.add(name);
-
-			if (getToken(2).kind == ASSIGN) {
-				var.definitions.add(name);
-
-				if (name.specialToken != null) {
-					var.comments.add(name.specialToken);
-				} else {
-					var.comments.add(null);
-				}
-			}
-		}
+		return ex;
 	}
 	
 	/**
@@ -231,7 +168,34 @@ public class Linter extends SQFParser {
 	 * @return the variables
 	 */
 	public Map<String, SQFVariable> getVariables() {
+		Map<String, SQFVariable> variables = new HashMap<>();
+		
+		if (context != null) {
+			addContextVariables(variables, context);
+		} else {
+			System.err.println("NO CONTEXT!");
+		}
+		
 		return variables;
+	}
+	
+	private void addContextVariables(Map<String, SQFVariable> container, SQFContext context) {
+		mergeVariables(container, context.getVariables());
+		context.getChildren().forEach(child -> { addContextVariables(container, child); });
+	}
+	
+	private void mergeVariables(Map<String, SQFVariable> container, Map<String, SQFVariable> newVariables) {
+		newVariables.keySet().forEach(key -> {
+			SQFVariable added = newVariables.get(key);
+			if (container.containsKey(key)) {
+				SQFVariable var = container.get(key);
+				var.usage.addAll(added.usage);
+				var.definitions.addAll(added.definitions);
+				var.comments.addAll(added.comments);
+			} else {
+				container.put(key, added.copy());
+			}
+		});
 	}
 
 	/**

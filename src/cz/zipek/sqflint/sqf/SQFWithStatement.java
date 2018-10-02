@@ -33,7 +33,9 @@ public class SQFWithStatement extends SQFUnit {
 	private final SQFExpression with;
 	private final SQFBlock block;
 	
-	public SQFWithStatement(SQFExpression cond, SQFBlock bl) {
+	public SQFWithStatement(Linter linter, SQFExpression cond, SQFBlock bl) {		
+		super(linter);
+		
 		with = cond;
 		block = bl;
 	}

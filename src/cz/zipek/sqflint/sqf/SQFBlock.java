@@ -24,7 +24,6 @@
 package cz.zipek.sqflint.sqf;
 
 import cz.zipek.sqflint.linter.Linter;
-import cz.zipek.sqflint.linter.SQFVariable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,6 +33,11 @@ import java.util.List;
  */
 public class SQFBlock extends SQFUnit {
 	private final List<SQFUnit> statements = new ArrayList<>();
+	private SQFContext innerContext;
+	
+	public SQFBlock(Linter linter) {
+		super(linter);
+	}
 	
 	public void add(SQFUnit statement) {
 		statements.add(statement);
@@ -49,5 +53,35 @@ public class SQFBlock extends SQFUnit {
 			if (unit != null)
 				unit.analyze(source, this);
 		}
+	}
+
+	@Override
+	public String toString() {
+		return "Code block";
+	}
+
+	public void revalidate() {
+		for (SQFUnit unit : getStatements()) {
+			if (unit != null && unit instanceof SQFExpression) {
+				SQFExpression exp = (SQFExpression)unit;
+				exp.finish(true);
+			} else if (unit instanceof SQFArray) {
+				((SQFArray)unit).revalidate();
+			}
+		}
+	}
+
+	/**
+	 * @return the innerContext
+	 */
+	public SQFContext getInnerContext() {
+		return innerContext;
+	}
+
+	/**
+	 * @param innerContext the innerContext to set
+	 */
+	public void setInnerContext(SQFContext innerContext) {
+		this.innerContext = innerContext;
 	}
 }

@@ -33,7 +33,8 @@ public class SQFCaseStatement extends SQFUnit {
 	private SQFExpression condition;
 	private SQFBlock block;
 
-	public SQFCaseStatement(SQFExpression condition, SQFBlock block) {
+	public SQFCaseStatement(Linter linter, SQFExpression condition, SQFBlock block) {
+		super(linter);
 		this.condition = condition;
 		this.block = block;
 	}

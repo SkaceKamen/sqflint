@@ -33,25 +33,21 @@ import cz.zipek.sqflint.sqf.SQFExpression;
  *
  * @author Jan Zípek <jan at zipek.cz>
  */
-public class ThenOperator extends Operator {
-
+public class ForEachOperator extends Operator {
 	@Override
 	public void analyze(Linter source, SQFContext context, SQFExpression expression) {
-		// Expect argument
-		if (expression.getRight() == null) {
-			source.getErrors().add(new SQFParseException(expression.getToken(), "Expected block after then."));
-		}
-		
-		// Expect only block
-		if (!(expression.getRight().getMain() instanceof SQFBlock)) {
-			source.getErrors().add(new SQFParseException(expression.getRight().getToken(), "Expected block after then."));
-		}
-		
-		// Expect else or nothing after block
-		if (expression.getRight().getRight() != null &&
-			!expression.getRight().getRight().getIdentifier().equalsIgnoreCase("else")) {
-			source.getErrors().add(new SQFParseException(expression.getRight().getRight().getToken(), "Expected else or nothing."));
+		if (expression.getLeft() != null && expression.getLeft().isBlock()) {
+			SQFBlock block = expression.getLeft().getBlock();
+			if (block.getInnerContext() != null) {
+				block.getInnerContext().setNewThread(false);
+				block.getInnerContext().clear();
+				block.revalidate();
+			}
+		} else {
+			source.getErrors().add(new SQFParseException(
+				expression.getLeft().getToken(),
+				"ForEach expects code block."
+			));
 		}
 	}
-	
 }

@@ -23,6 +23,7 @@
  */
 package cz.zipek.sqflint.sqf;
 
+import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.parser.Token;
 
 /**
@@ -32,7 +33,8 @@ import cz.zipek.sqflint.parser.Token;
 public class SQFLiteral extends SQFUnit {
 	private final Token contents;
 	
-	public SQFLiteral(Token contents) {
+	public SQFLiteral(Linter linter, Token contents) {
+		super(linter);
 		this.contents = contents;
 	}
 
@@ -41,5 +43,10 @@ public class SQFLiteral extends SQFUnit {
 	 */
 	public Token getContents() {
 		return contents;
+	}
+
+	@Override
+	public String toString() {
+		return "Literal(" + contents + ")";
 	}
 }

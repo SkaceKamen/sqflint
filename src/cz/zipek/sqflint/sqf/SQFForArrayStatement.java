@@ -34,7 +34,8 @@ public class SQFForArrayStatement extends SQFForStatement {
 	private final SQFBlock condition;
 	private final SQFBlock step;
 	
-	public SQFForArrayStatement(SQFBlock init, SQFBlock condition, SQFBlock step, SQFBlock block) {
+	public SQFForArrayStatement(Linter linter, SQFBlock init, SQFBlock condition, SQFBlock step, SQFBlock block) {
+		super(linter);
 		this.init = init;
 		this.condition = condition;
 		this.step = step;

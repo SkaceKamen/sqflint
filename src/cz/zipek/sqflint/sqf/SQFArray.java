@@ -33,6 +33,10 @@ import java.util.List;
  */
 public class SQFArray extends SQFUnit {
 	private final List<SQFExpression> units = new ArrayList<>();
+
+	public SQFArray(Linter linter) {
+		super(linter);
+	}
 	
 	public void add(SQFExpression unit) {
 		units.add(unit);
@@ -47,12 +51,24 @@ public class SQFArray extends SQFUnit {
 
 	@Override
 	public void analyze(Linter source, SQFBlock context) {
-		for(SQFExpression unit : units) {
+		for (SQFExpression unit : units) {
 			if (unit != null) {
 				unit.analyze(source, context);
 			}
 		}
 	}
 	
-	
+	public void revalidate() {
+		for (SQFUnit unit : units) {
+			if (unit != null && unit instanceof SQFExpression) {
+				SQFExpression exp = (SQFExpression)unit;
+				exp.finish(true);
+			}
+		}
+	}
+
+	@Override
+	public String toString() {
+		return "Array";
+	}		
 }

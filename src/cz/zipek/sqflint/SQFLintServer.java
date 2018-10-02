@@ -131,6 +131,10 @@ public class SQFLintServer {
 				}
 			}
 			
+			if (data.has("contextSeparation")) {
+				options.setContextSeparationEnabled(data.getBoolean("contextSeparation"));
+			}
+			
 		} catch (JSONException ex) {
 			Logger.getLogger(SQFLintServer.class.getName()).log(Level.SEVERE, null, ex);
 		}

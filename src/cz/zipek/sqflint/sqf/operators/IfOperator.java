@@ -27,6 +27,7 @@ import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.linter.SQFParseException;
 import cz.zipek.sqflint.parser.Token;
 import cz.zipek.sqflint.sqf.SQFBlock;
+import cz.zipek.sqflint.sqf.SQFContext;
 import cz.zipek.sqflint.sqf.SQFExpression;
 import java.util.Arrays;
 import java.util.List;
@@ -41,7 +42,7 @@ public class IfOperator extends Operator {
 	private static final List<String> negations = Arrays.asList("!", "not");
 	
 	@Override
-	public void analyze(Linter source, SQFBlock context, SQFExpression expression) {
+	public void analyze(Linter source, SQFContext context, SQFExpression expression) {
 		// Condition required for if
 		if (expression.getRight() == null) {
 			source.getErrors().add(new SQFParseException(expression.getToken(), "Missing condition after if."));
@@ -77,7 +78,7 @@ public class IfOperator extends Operator {
 		}
 		
 		// Only then, exitWith and throw can be used after if
-		if (!expression.getRight().getRight().isCommand(source) ||
+		if (!expression.getRight().getRight().isCommand() ||
 			!expected.contains(expression.getRight().getRight().getIdentifier().toLowerCase())
 		) {
 			source.getErrors().add(new SQFParseException(expression.getRight().getRight().getToken(), "Expected then, exitWith or throw."));

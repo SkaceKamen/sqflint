@@ -33,7 +33,8 @@ public class SQFWhileStatement extends SQFUnit {
 	private final SQFBlock condition;
 	private final SQFBlock block;
 	
-	public SQFWhileStatement(SQFBlock cond, SQFBlock bl) {
+	public SQFWhileStatement(Linter linter, SQFBlock cond, SQFBlock bl) {
+		super(linter);
 		condition = cond;
 		block = bl;
 	}

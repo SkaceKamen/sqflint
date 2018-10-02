@@ -26,6 +26,7 @@ package cz.zipek.sqflint.sqf.operators;
 import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.linter.Warning;
 import cz.zipek.sqflint.sqf.SQFBlock;
+import cz.zipek.sqflint.sqf.SQFContext;
 import cz.zipek.sqflint.sqf.SQFExpression;
 import cz.zipek.sqflint.sqf.SQFString;
 import java.nio.file.Files;
@@ -37,7 +38,7 @@ import java.nio.file.Paths;
  */
 public class PathLoader extends Operator {
 	@Override
-	public void analyze(Linter source, SQFBlock context, SQFExpression expression) {
+	public void analyze(Linter source, SQFContext context, SQFExpression expression) {
 		// Check for existence of loaded file, if allowed
 		if (source.getOptions().isCheckPaths() && source.getOptions().getRootPath() != null) {
 			if (expression.getRight() != null

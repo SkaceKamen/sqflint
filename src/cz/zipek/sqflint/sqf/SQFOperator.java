@@ -23,6 +23,7 @@
  */
 package cz.zipek.sqflint.sqf;
 
+import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.parser.Token;
 
 /**
@@ -32,8 +33,8 @@ import cz.zipek.sqflint.parser.Token;
 public class SQFOperator extends SQFLiteral {
 	private final String contents;
 	
-	public SQFOperator(Token contents) {
-		super(contents);
+	public SQFOperator(Linter linter, Token contents) {
+		super(linter, contents);
 		
 		this.contents = contents.toString();
 	}

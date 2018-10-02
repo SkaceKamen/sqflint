@@ -33,7 +33,8 @@ public class SQFTryStatement extends SQFUnit {
 	private final SQFBlock tryBlock;
 	private final SQFBlock catchBlock;
 
-	public SQFTryStatement(SQFBlock tryBlock, SQFBlock catchBlock) {
+	public SQFTryStatement(Linter linter, SQFBlock tryBlock, SQFBlock catchBlock) {
+		super(linter);
 		this.tryBlock = tryBlock;
 		this.catchBlock = catchBlock;
 	}
