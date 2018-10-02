@@ -70,7 +70,10 @@ public class SQFContext {
 		SQFVariable var;
 
 		if (!variables.containsKey(ident)) {
-			if (!privateAssigment && previous != null && !newThread) {
+			if (!privateAssigment &&
+					previous != null &&
+					(!newThread || !linter.getOptions().isContextSeparationEnabled())
+			) {
 				return previous.getVariable(ident, name, false);
 			} else {
 				var = new SQFVariable(name);

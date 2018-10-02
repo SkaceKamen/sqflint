@@ -118,7 +118,7 @@ public class SQFExpression extends SQFUnit {
 				);
 			} else if (
 				!linter.getPreprocessor().getMacros().containsKey(ident)
-				&& !linter.getOptions().getIgnoredVariables().contains(ident)
+				&& !linter.getOptions().isVariableSkipped(ident)
 			) {
 				boolean isPrivate = left != null && left.isPrivate();
 				boolean isAssigment = right != null && right.isAssignOperator();

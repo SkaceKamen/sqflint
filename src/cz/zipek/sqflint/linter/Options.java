@@ -40,6 +40,7 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -58,6 +59,7 @@ public final class Options {
 	private boolean exitCodeEnabled = false;
 	private boolean warningAsError = false;
 	private boolean checkPaths = false;
+	private boolean contextSeparationEnabled = true;
 	private String rootPath = null;
 	
 	private final Map<String, String> includePaths = new HashMap<>();
@@ -346,5 +348,44 @@ public final class Options {
 	
 	public Map<String, String> getIncludePaths() {
 		return this.includePaths;
+	}
+
+	/**
+	 * @return the contextSeparationEnabled
+	 */
+	public boolean isContextSeparationEnabled() {
+		return contextSeparationEnabled;
+	}
+
+	/**
+	 * @param contextSeparationEnabled the contextSeparationEnabled to set
+	 */
+	public void setContextSeparationEnabled(boolean contextSeparationEnabled) {
+		this.contextSeparationEnabled = contextSeparationEnabled;
+	}
+	
+	public boolean isVariableSkipped(String name) {
+		if (getIgnoredVariables().contains(name)) {
+			return true;
+		}
+		
+		for (String skipped : getSkippedVariables()) {
+			if (skipped.indexOf('*') < 0) {
+				if (skipped.equals(name)) {
+					return true;
+				}
+			} else {
+				String[] values = (String[])Pattern.compile("\\*")
+					.splitAsStream(skipped)
+					.map(v -> Pattern.quote(v))
+					.toArray();
+				String matcher = String.join("(.*)", values);
+				if (Pattern.compile(matcher).matcher(name).matches()) {
+					return true;
+				}
+			}
+		}
+		
+		return false;
 	}
 }

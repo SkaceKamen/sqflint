@@ -40,6 +40,7 @@ public class SQFLint {
 		options.addOption("iv", "ignore-variables", true, "ignored variables are treated as internal command");
 		options.addOption("s", "server", false, "run as server");
 		options.addOption("ip", "include-prefix", true, "adds include prefix override, format: prefix,path_to_use");
+		options.addOption("ncs", "no-context-separation", true, "disable context separation");
 		
 		try {
 			cmd = cmdParser.parse(options, args);
