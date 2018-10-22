@@ -32,7 +32,7 @@ import cz.zipek.sqflint.parser.Token;
  *
  * @author Jan Zípek <jan at zipek.cz>
  */
-public class SQFForExpressionStatement extends SQFForStatement {
+public final class SQFForExpressionStatement extends SQFForStatement {
 	private final SQFExpression variable;
 	private final SQFExpression from;
 	private final SQFExpression to;
@@ -47,33 +47,7 @@ public class SQFForExpressionStatement extends SQFForStatement {
 		this.step = step;
 		this.block = block;
 		
-		// For can define new variable, catch it
-		if (variable != null
-				&& variable.getMain() != null
-				&& variable.getMain() instanceof SQFString) {
-			SQFString lit = (SQFString)variable.getMain();
-			String ident = lit.getStringContents()
-					.toLowerCase();
-
-			if (block.getInnerContext() != null) {
-				block.getInnerContext().clear();
-				SQFVariable var = block
-						.getInnerContext()
-						.getVariable(ident, lit.getStringContents(), true);
-
-				Token unquoted = new Token(SQFParser.IDENTIFIER, lit.getStringContents());
-				unquoted.beginLine = lit.getContents().beginLine;
-				unquoted.endLine = lit.getContents().endLine;
-				unquoted.beginColumn = lit.getContents().beginColumn + 1;
-				unquoted.endColumn = lit.getContents().endColumn - 1;
-
-				var.usage.add(unquoted);
-				var.definitions.add(unquoted);
-				var.comments.add(null);
-
-				block.revalidate();
-			}
-		}
+		this.revalidate();
 	}
 
 	/**
@@ -109,5 +83,35 @@ public class SQFForExpressionStatement extends SQFForStatement {
 		if (block != null) {
 			block.analyze(source, context);
 		}
+	}
+
+	@Override
+	public void revalidate() {
+		if (variable != null
+				&& variable.getMain() != null
+				&& variable.getMain() instanceof SQFString) {
+			SQFString lit = (SQFString)variable.getMain();
+			String ident = lit.getStringContents()
+					.toLowerCase();
+
+			if (block.getInnerContext() != null) {
+				block.getInnerContext().clear();
+				SQFVariable var = block
+						.getInnerContext()
+						.getVariable(ident, lit.getStringContents(), true);
+
+				Token unquoted = new Token(SQFParser.IDENTIFIER, lit.getStringContents());
+				unquoted.beginLine = lit.getContents().beginLine;
+				unquoted.endLine = lit.getContents().endLine;
+				unquoted.beginColumn = lit.getContents().beginColumn + 1;
+				unquoted.endColumn = lit.getContents().endColumn - 1;
+
+				var.usage.add(unquoted);
+				var.definitions.add(unquoted);
+				var.comments.add(null);
+			}
+		}
+		
+		super.revalidate();
 	}
 }
