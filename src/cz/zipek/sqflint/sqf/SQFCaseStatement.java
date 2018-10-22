@@ -44,4 +44,10 @@ public class SQFCaseStatement extends SQFUnit {
 		if (condition != null) condition.analyze(source, context);
 		if (block != null) block.analyze(source, context);
 	}
+
+	@Override
+	public void revalidate() {
+		if (condition != null) condition.revalidate();
+		if (block != null) block.revalidate();
+	}
 }

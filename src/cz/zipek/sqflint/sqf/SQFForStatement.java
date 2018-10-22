@@ -43,4 +43,9 @@ public class SQFForStatement extends SQFUnit {
 	public SQFBlock getBlock() {
 		return block;
 	}
+
+	@Override
+	public void revalidate() {
+		this.block.revalidate();
+	}
 }

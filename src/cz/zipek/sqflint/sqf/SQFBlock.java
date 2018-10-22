@@ -60,14 +60,10 @@ public class SQFBlock extends SQFUnit {
 		return "Code block";
 	}
 
+	@Override
 	public void revalidate() {
 		for (SQFUnit unit : getStatements()) {
-			if (unit != null && unit instanceof SQFExpression) {
-				SQFExpression exp = (SQFExpression)unit;
-				exp.finish(true);
-			} else if (unit instanceof SQFArray) {
-				((SQFArray)unit).revalidate();
-			}
+			unit.revalidate();
 		}
 	}
 

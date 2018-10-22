@@ -244,4 +244,9 @@ public class SQFExpression extends SQFUnit {
 	public String toString() {
 		return "Expression(" + main + ", #" + id + ")";
 	}
+	
+	@Override
+	public void revalidate() {
+		this.finish(true);
+	}
 }

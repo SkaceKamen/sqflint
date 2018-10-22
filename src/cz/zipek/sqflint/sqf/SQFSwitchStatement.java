@@ -57,10 +57,21 @@ public class SQFSwitchStatement extends SQFUnit {
 	public void analyze(Linter source, SQFBlock context) {
 		if (expression != null) expression.analyze(source, context);
 		
-		for(SQFCaseStatement c : cases) {
+		for (SQFCaseStatement c : cases) {
 			c.analyze(source, context);
 		}
 		
 		if (defaultBlock != null) defaultBlock.analyze(source, context);
+	}
+
+	@Override
+	public void revalidate() {
+		if (expression != null) expression.revalidate();
+		
+		for (SQFCaseStatement c : cases) {
+			c.revalidate();
+		}
+		
+		if (defaultBlock != null) defaultBlock.revalidate();
 	}
 }

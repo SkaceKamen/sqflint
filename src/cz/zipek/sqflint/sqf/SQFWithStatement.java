@@ -45,4 +45,10 @@ public class SQFWithStatement extends SQFUnit {
 		if (with != null) with.analyze(source, context);
 		if (block != null) block.analyze(source, context);
 	}
+
+	@Override
+	public void revalidate() {
+		if (with != null) with.revalidate();
+		if (block != null) block.revalidate();
+	}
 }

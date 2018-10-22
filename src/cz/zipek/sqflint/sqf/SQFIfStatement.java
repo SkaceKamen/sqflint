@@ -49,4 +49,9 @@ public class SQFIfStatement extends SQFUnit {
 		if (falseBlock != null) falseBlock.analyze(source, context);
 	}
 	
+	public void revalidate() {
+		this.condition.finish(true);
+		if (trueBlock != null) trueBlock.revalidate();
+		if (falseBlock != null) falseBlock.revalidate();
+	}
 }

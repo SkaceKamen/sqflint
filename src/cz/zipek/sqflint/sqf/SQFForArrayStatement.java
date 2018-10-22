@@ -71,4 +71,12 @@ public class SQFForArrayStatement extends SQFForStatement {
 		if (block != null) block.analyze(source, context);
 	}
 
+	@Override
+	public void revalidate() {
+		super.revalidate();
+		
+		if (init != null) init.revalidate();
+		if (condition != null) condition.revalidate();
+		if (step != null) step.revalidate();
+	}
 }

@@ -58,6 +58,7 @@ public class SQFArray extends SQFUnit {
 		}
 	}
 	
+	@Override
 	public void revalidate() {
 		for (SQFUnit unit : units) {
 			if (unit != null && unit instanceof SQFExpression) {

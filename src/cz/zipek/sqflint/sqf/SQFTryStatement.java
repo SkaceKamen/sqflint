@@ -44,4 +44,10 @@ public class SQFTryStatement extends SQFUnit {
 		if (tryBlock != null) tryBlock.analyze(source, context);
 		if (catchBlock != null) catchBlock.analyze(source, context);
 	}
+
+	@Override
+	public void revalidate() {
+		if (tryBlock != null) tryBlock.revalidate();
+		if (catchBlock != null) catchBlock.revalidate();
+	}
 }

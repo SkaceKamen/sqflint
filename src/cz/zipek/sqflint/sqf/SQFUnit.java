@@ -48,4 +48,8 @@ public class SQFUnit {
 	public SQFContext getContext() {
 		return context;
 	}
+	
+	public void revalidate() {
+		
+	}
 }
