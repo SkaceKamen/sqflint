@@ -171,6 +171,7 @@ public class SQFPreprocessor {
 						
 						break;
 					case "include":
+						values = readUntil(lineUpdated, 2 + word.length(), '\n', false, false);
 						String filename = values.trim();
 						if (filename.length() > 0) {
 							String originalPath = filename.substring(1, filename.length() - 1);
