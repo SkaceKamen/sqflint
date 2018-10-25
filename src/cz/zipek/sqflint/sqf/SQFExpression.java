@@ -129,7 +129,7 @@ public class SQFExpression extends SQFUnit {
 			if (right != null && !right.isOperator() && !right.isCommand()) {
 				linter.getErrors().add(new SQFParseException(
 					right.getToken(),
-					main + " and " + right.main + " is not a valid combination of expressions."
+					main + " and " + right.main + " is not a valid combination of expressions. Maybe there's missing semicolon?"
 				));
 			}
 		}
