@@ -210,6 +210,8 @@ public class SQFPreprocessor {
 				}
 			} else {
 				try {
+					// @TODO: Replacing should recognize strings and variable names and not replace those
+					
 					sortedMacros.sort((a, b) -> b.getName().length() - a.getName().length());
 					
 					SQFMacro lastReplaced = null;
