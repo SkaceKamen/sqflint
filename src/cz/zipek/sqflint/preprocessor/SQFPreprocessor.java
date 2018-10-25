@@ -36,6 +36,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,6 +58,8 @@ public class SQFPreprocessor {
 	
 	private final Options options;
 	
+	private int readUntilIndex;
+	
 	public SQFPreprocessor(Options options) {
 		this.options = options;
 	}
@@ -69,7 +72,11 @@ public class SQFPreprocessor {
 	public String process(String input, String source, boolean include_filename) throws Exception {
 		Path root = Paths.get(source).toAbsolutePath().getParent();
 		
-		String[] lines = input.replace("\r", "").split("\n");
+		String[] lines = input
+			.replaceAll("\r", "")
+			.replaceAll("\\\\\n", "")
+			.split("\n");
+		
 		String output = input;
 		int lineIndex = 0;
 		
@@ -127,7 +134,7 @@ public class SQFPreprocessor {
 					
 				switch(word.toLowerCase()) {
 					case "define":
-						String ident = readUntil(values, 0, ' ', false, true);
+						String ident = readUntil(values, 0, new char[] { ' ', '\t' }, true, true);
 						String value = null;
 						String arguments = null;
 						
@@ -370,20 +377,32 @@ public class SQFPreprocessor {
 		
 		return line;
 	}
-	
-	private String readUntil(String input, int from, char exit) {
-		return readUntil(input, from, exit, false, false);
+
+	private String readUntil(String input, int from, char exit, boolean escape, boolean brackets) {
+		return readUntil(input, from, new char[] { exit }, escape, brackets);
+	}
+		
+	private boolean inCharList(char f, char[] list) {
+		for (int i = 0; i < list.length; i++) {
+			if (list[i] == f) return true;
+		}
+		return false;
 	}
 	
-	private String readUntil(String input, int from, char exit, boolean escape, boolean brackets) {
+	private String readUntil(String input, int from, char[] exit, boolean escape, boolean brackets) {
 		StringBuilder res = new StringBuilder();
 		boolean escaped = false;
-		while(input.length() > from && (escaped || input.charAt(from) != exit)) {
-			res.append(input.charAt(from));
+		
+		while(input.length() > from && (escaped || !inCharList(input.charAt(from), exit))) {	
+			if (!escaped && (!escape || input.charAt(from) != '\\')) {
+				res.append(input.charAt(from));
+			}
+
 			escaped = false;
 			if (escape && input.charAt(from) == '\\') {
 				escaped = true;
 			}
+			
 			if (brackets && input.charAt(from) == '(') {
 				int endIndex = walkToEnd(input.substring(from + 1));
 				if (endIndex >= 0) {
@@ -391,8 +410,12 @@ public class SQFPreprocessor {
 					from += endIndex + 1;
 				}
 			}
+			
 			from++;
 		}
+		
+		readUntilIndex = from;
+		
 		return res.toString();
 	}
 
