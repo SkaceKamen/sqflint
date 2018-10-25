@@ -212,11 +212,13 @@ public class SQFPreprocessor {
 				try {
 					sortedMacros.sort((a, b) -> b.getName().length() - a.getName().length());
 					
+					SQFMacro lastReplaced = null;
 					while (true) {
 						boolean replaced = false;
 						for (SQFMacro macro : sortedMacros) {
-							if (line.contains(macro.getName())) {
+							if (line.contains(macro.getName()) && lastReplaced != macro) {
 								line = replaceMacro(line, macro);
+								lastReplaced = macro;
 								replaced = true;
 								break;
 							}
