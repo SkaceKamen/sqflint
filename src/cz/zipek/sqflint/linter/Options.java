@@ -75,7 +75,7 @@ public final class Options {
 		
 		ignoredVariables.addAll(Arrays.asList(new String[] {
 			"_this", "_x", "_foreachindex", "_exception",
-			"__file__", "__line__"
+			"__file__", "__line__", "_thiseventhandler"
 		}));
 		
 		operators.put("params", new ParamsOperator());
