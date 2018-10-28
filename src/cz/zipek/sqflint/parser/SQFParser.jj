@@ -380,6 +380,10 @@ SQFBlock BlockContents(boolean newThread):
 	statement = Statement() { result.add(statement); }
 	( ";" [ statement = Statement() { result.add(statement); }  ] )*
 	{ popContext(); return result; } |
+	LOOKAHEAD(2)
+	";" statement = Statement() { result.add(statement); }
+	( ";" [ statement = Statement() { result.add(statement); }  ] )*
+	{ popContext(); return result; } |
 	";" { popContext(); return result; }
 }
 
