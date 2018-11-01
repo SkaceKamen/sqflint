@@ -37,6 +37,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,9 +73,34 @@ public class SQFPreprocessor {
 	public String process(String input, String source, boolean include_filename) throws Exception {
 		Path root = Paths.get(source).toAbsolutePath().getParent();
 		
+		// Fixes escaped newlines
+		int index = 0;
+		while (index + 2 < input.length()) {
+			if (input.substring(index, index + 2).equals("\\\n")) {
+				int lines = 0;
+				int end = index;
+				while (end < input.length()) {
+					if (input.substring(end, end + 2).equals("\\\n")) {
+						lines++;
+						end += 2;
+					}
+					if (input.charAt(end) == '\n') {
+						break;
+					}
+					end++;
+				}
+				
+				input = input.substring(0, index) +
+								input.substring(index + 2, end).replaceAll("\\\\\n", "") +
+								String.join("", Collections.nCopies(lines, "\n")) +
+								input.substring(end);
+			}
+			
+			index++;
+		}
+		
 		String[] lines = input
 			.replaceAll("\r", "")
-			.replaceAll("\\\\\n", "")
 			.split("\n");
 		
 		String output = input;
@@ -211,25 +237,48 @@ public class SQFPreprocessor {
 				}
 			} else {
 				try {
-					// @TODO: Replacing should recognize strings and variable names and not replace those
-					
 					sortedMacros.sort((a, b) -> b.getName().length() - a.getName().length());
 					
-					SQFMacro lastReplaced = null;
-					while (true) {
-						boolean replaced = false;
-						for (SQFMacro macro : sortedMacros) {
-							if (line.contains(macro.getName()) && lastReplaced != macro) {
-								line = replaceMacro(line, macro);
-								lastReplaced = macro;
-								replaced = true;
-								break;
+					int replaceIndex = 0;
+					boolean replaceInString = false;
+					String stringLimiter = "\"";
+					boolean replaceInComment = false;
+					while (replaceIndex < line.length()) {
+						if (replaceInString) {
+							if (replaceIndex < line.length() - 2 && line.substring(replaceIndex, replaceIndex + 2).equals(stringLimiter + stringLimiter)) {
+								replaceIndex += 2;
+							} else if (line.substring(replaceIndex, replaceIndex + 1).equals(stringLimiter)) {
+								replaceInString = false;
 							}
+							replaceIndex++;
+						} else if (replaceInComment) {
+							if (replaceIndex < line.length() - 2 && line.substring(replaceIndex, replaceIndex + 2).equals("*/")) {
+								replaceIndex += 2;
+								replaceInComment = false;
+							}
+						} else if (replaceIndex < line.length() - 2 && line.substring(replaceIndex, replaceIndex + 2).equals("/*")) {
+							replaceIndex += 2;
+							replaceInComment = true;
+						} else if (line.substring(replaceIndex, replaceIndex + 1).equals("\"")) {
+							stringLimiter = "\"";
+							replaceIndex++;
+							replaceInString = true;
+						} else if (line.substring(replaceIndex, replaceIndex + 1).equals("'")) {
+							stringLimiter = "'";
+							replaceIndex++;
+							replaceInString = true;
+						} else {
+							for (SQFMacro macro : sortedMacros) {
+								if (line.substring(replaceIndex).indexOf(macro.getName()) == 0) {
+									line = line.substring(0, replaceIndex) +
+													replaceMacro(line.substring(replaceIndex), macro);
+								}
+							}
+							replaceIndex++;
 						}
-						
-						if (!replaced) break;
 					}
 					
+
 					// System.out.println("#" + lineIndex + "\t" + line);
 					
 				} catch (Exception ex) {
