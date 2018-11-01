@@ -108,7 +108,7 @@ public class SQFPreprocessor {
 		
 		Pattern whitespaceAtStart = Pattern.compile("^\\s*");
 		Pattern doubleWhitespace = Pattern.compile("\\s{1,}");
-		Pattern comments = Pattern.compile("(\\/\\*[^*]*\\*\\/)|(\\/\\/.*)");
+		Pattern comments = Pattern.compile("(\\/\\*.*?\\*\\/)|(\\/\\/.*)");
 		
 		boolean inComment = false;
 		
@@ -117,6 +117,11 @@ public class SQFPreprocessor {
 			String lineUpdated = whitespaceAtStart
 					.matcher(line)
 					.replaceAll("");
+			
+			// Remove doubled whitespaces
+			lineUpdated = doubleWhitespace
+					.matcher(lineUpdated)
+					.replaceAll(" ");
 			
 			// Remove comments
 			lineUpdated = comments
