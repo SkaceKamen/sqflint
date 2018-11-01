@@ -307,4 +307,21 @@ public class LinterTest {
 		assertTrue("Should not throw warnings", linter.getWarnings().isEmpty());
 		assertTrue("Should not throw errors", linter.getErrors().isEmpty());
 	}
+	
+	@Test
+	public void testContextSeparationForInlineFunctions() throws Exception {
+		String[] lines = {
+			"private _i = 1;",
+			"{ damage _x == _i } count allUnits;",
+			"allUnits findIf { damage _x == _i };",
+			"allUnits apply { _i };",
+			"allUnits select { damage _x == _i };",
+			"diag_log _i;"
+		};
+		Linter linter = parse(String.join("\n", lines));
+		
+		assertEquals(Linter.CODE_OK, linter.start());
+		assertTrue("Should not throw warnings", linter.getWarnings().isEmpty());
+		assertTrue("Should not throw errors", linter.getErrors().isEmpty());
+	}
 }
