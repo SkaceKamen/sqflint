@@ -25,6 +25,7 @@ package cz.zipek.sqflint.linter;
 
 import cz.zipek.sqflint.output.OutputFormatter;
 import cz.zipek.sqflint.output.TextOutput;
+import cz.zipek.sqflint.sqf.operators.CountOperator;
 import cz.zipek.sqflint.sqf.operators.ExitWithOperator;
 import cz.zipek.sqflint.sqf.operators.ForEachOperator;
 import cz.zipek.sqflint.sqf.operators.GenericOperator;
@@ -87,6 +88,7 @@ public final class Options {
 		operators.put("then", new ThenOperator());
 		operators.put("exitwith", new ExitWithOperator());
 		operators.put("foreach", new ForEachOperator());
+		operators.put("count", new CountOperator());
 		
 		loadCommands();
 		

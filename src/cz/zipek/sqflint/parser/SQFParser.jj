@@ -154,7 +154,6 @@ TOKEN :
 	< FINDIF: "findIf" > |
 	< APPLY: "apply" > |
 	< SELECT2: "select" > |
-	< COUNT: "count" > |
 	< AND: "and" > |
 	< OR: "or" >
 }
@@ -328,7 +327,6 @@ Token InlineFunctionInvoker():
 	main = "select" { return main; } |
 	main = "findIf" { return main; } |
 	main = "apply" { return main; } |
-	main = "count" { return main; } |
 	main = "&&" { return main; } |
 	main = "and" { return main; } |
 	main = "or" { return main; } |
