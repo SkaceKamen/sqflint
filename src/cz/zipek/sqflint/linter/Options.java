@@ -89,6 +89,9 @@ public final class Options {
 		operators.put("foreach", new ForEachOperator());
 		
 		loadCommands();
+		
+		operators.put("&&", operators.get("and"));
+		operators.put("||", operators.get("or"));
 	}
 	
 	/**

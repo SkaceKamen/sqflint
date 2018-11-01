@@ -150,7 +150,13 @@ TOKEN :
 	< THROW: "throw" > |
 	< ELSE: "else" > |
 	< IF: "if" > |
-	< WAITUNTIL: "waitUntil" >
+	< WAITUNTIL: "waitUntil" > |
+	< FINDIF: "findIf" > |
+	< APPLY: "apply" > |
+	< SELECT2: "select" > |
+	< COUNT: "count" > |
+	< AND: "and" > |
+	< OR: "or" >
 }
 
 /* LITERALS */
@@ -273,8 +279,6 @@ Token Operator() :
 	result = "-" { return result; } |
 	result = "*" { return result; } |
 	result = "%" { return result; } |
-	result = "&&" { return result; } |
-	result = "||" { return result; } |
 	result = "mod" { return result; } |
 	result = "^" { return result; } |
 	result = ">=" { return result; } |
@@ -303,17 +307,32 @@ SQFExpression Expression(SQFExpression left, boolean newThread) :
 	result.setLeft(left);
 }
 {
-	(main = "if") cond = Expression(result, false) [ next = Expression(result, newThread) ] {
-		return result.setMain(new SQFIdentifier(getLinter(), main)).setRight(cond).finish();
-	} |
-	(main = "exitWith" | main = "throw" | main = "else") right = Expression(result, false) {
-		return result.setMain(new SQFIdentifier(getLinter(), main)).setRight(right).finish();
-	} |
-	(main = "then" | main = "waitUntil") right = Expression(result, false) [ next = Expression(right, newThread) ] {
+	main = InlineFunctionInvoker() right = Expression(result, false) {
 		return result.setMain(new SQFIdentifier(getLinter(), main)).setRight(right).finish();
 	} |
 	ExpressionOperator(result) right = Expression(result, newThread) { return result.setRight(right).finish(); } |
 	PrimaryExpression(left, result, newThread) [ right = Expression(result, newThread) ] { return result.setRight(right).finish(); }
+}
+
+Token InlineFunctionInvoker():
+{
+	Token main = null;
+}
+{
+	main = "if" { return main; } |
+	main = "exitWith" { return main; } |
+	main = "then" { return main; } |
+	main = "throw" { return main; } |
+	main = "else" { return main; } |
+	main = "waitUntil" { return main; } |
+	main = "select" { return main; } |
+	main = "findIf" { return main; } |
+	main = "apply" { return main; } |
+	main = "count" { return main; } |
+	main = "&&" { return main; } |
+	main = "and" { return main; } |
+	main = "or" { return main; } |
+	main = "||" { return main; }
 }
 
 void ExpressionOperator(SQFExpression main) :
