@@ -73,14 +73,16 @@ public class SQFLintServer {
 	}
 	
 	private boolean processMessage(JSONObject message) {
+		String filePath = "";
+		
 		try {
 			if (message.has("type") && "exit".equals(message.getString("type"))) {
 				return false;
 			}
 			
-			String filePath = message.getString("file");
+			filePath = message.getString("file");
 			Linter linter;
-			
+
 			if (message.has("contents")) {
 				linter = parse(message.getString("contents"), filePath);
 			} else {
@@ -95,6 +97,7 @@ public class SQFLintServer {
 		} catch (JSONException ex) {
 			Logger.getLogger(SQFLintServer.class.getName()).log(Level.SEVERE, null, ex);
 		} catch (Exception ex) {
+			Logger.getLogger(SQFLintServer.class.getName()).log(Level.SEVERE, "Error when parsing {0}", filePath);
 			Logger.getLogger(SQFLintServer.class.getName()).log(Level.SEVERE, null, ex);
 		}
 		
