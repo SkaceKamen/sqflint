@@ -80,7 +80,7 @@ public class SQFPreprocessor {
 				int lines = 0;
 				int end = index;
 				while (end < input.length()) {
-					if (input.substring(end, end + 2).equals("\\\n")) {
+					if (end < input.length() - 1 && input.substring(end, end + 2).equals("\\\n")) {
 						lines++;
 						end += 2;
 					}
@@ -235,7 +235,7 @@ public class SQFPreprocessor {
 					case "undef": break;
 					case "else": break;
 				}
-			} else {
+			} else if (!inComment) {
 				try {
 					sortedMacros.sort((a, b) -> b.getName().length() - a.getName().length());
 					
@@ -255,6 +255,8 @@ public class SQFPreprocessor {
 							if (replaceIndex < line.length() - 2 && line.substring(replaceIndex, replaceIndex + 2).equals("*/")) {
 								replaceIndex += 2;
 								replaceInComment = false;
+							} else {
+								replaceIndex++;
 							}
 						} else if (replaceIndex < line.length() - 2 && line.substring(replaceIndex, replaceIndex + 2).equals("/*")) {
 							replaceIndex += 2;
