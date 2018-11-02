@@ -275,10 +275,16 @@ public class SQFPreprocessor {
 							replaceIndex++;
 							replaceInString = true;
 						} else {
-							for (SQFMacro macro : sortedMacros) {
-								if (line.substring(replaceIndex).indexOf(macro.getName()) == 0) {
-									line = line.substring(0, replaceIndex) +
-													replaceMacro(line.substring(replaceIndex), macro);
+							boolean replaced = true;
+							while (replaced) {
+								replaced = false;
+								for (SQFMacro macro : sortedMacros) {
+									if (line.substring(replaceIndex).indexOf(macro.getName()) == 0) {
+										line = line.substring(0, replaceIndex) +
+														replaceMacro(line.substring(replaceIndex), macro);
+										replaced = true;
+										break;
+									}
 								}
 							}
 							replaceIndex++;
