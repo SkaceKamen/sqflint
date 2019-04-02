@@ -83,4 +83,21 @@ public class SQFMacro {
 	public int getLine() {
 		return line;
 	}
+        
+        public boolean matchAt(String matchLine, int index) {
+                // If the remaining text in the line is less than the macro name length we abort
+                if(matchLine.length() <= index + name.length()) return false;
+                // If the next or prev char is a valid identifier char then we are looking in the middle of an identifier and
+                // should not do macro replacement. Do it before we do any more expensive string manipulation.
+                if(index > 0 && isIdentifierChar(matchLine.charAt(index-1))) return false;
+                if(index + name.length() < matchLine.length()  && isIdentifierChar(matchLine.charAt(index + name.length()))) return false;
+                // Get the part of the line that we want to check and compare it
+                String part = matchLine.substring(index, index + name.length());
+                if(!part.equals(name)) return false;
+                return true;
+        }
+               
+        private boolean isIdentifierChar(char f) {
+                return Character.isLetterOrDigit(f) || f == '_';
+	}
 }

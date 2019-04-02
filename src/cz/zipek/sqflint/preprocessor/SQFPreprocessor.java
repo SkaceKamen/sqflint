@@ -101,6 +101,10 @@ public class SQFPreprocessor {
 		
 		String[] lines = input
 			.replaceAll("\r", "")
+                        // Join all lines with trailing backslash. 
+                        // This isn't perfect: it would join a comment line with a trailing \ as well.
+                        // ? Also it messes with line numbers maybe ?
+                        .replaceAll("\\\\\n", "")
 			.split("\n");
 		
 		String output = input;
@@ -111,7 +115,7 @@ public class SQFPreprocessor {
 		Pattern comments = Pattern.compile("(\\/\\*.*?\\*\\/)|(\\/\\/.*)");
 		
 		boolean inComment = false;
-		
+                
 		for (String line : lines) {	
 			// Remove whitespaces at beginning
 			String lineUpdated = whitespaceAtStart
@@ -139,12 +143,14 @@ public class SQFPreprocessor {
 				inComment = true;
 			}
 			
+                        boolean replaceInComment = false;
 			// @TODO: Escapes in comments?
 			if (inComment) {
+                                // Make sure the macro replacer knows it is starting in a comment.
+                                replaceInComment = true;
 				if (lineUpdated.contains("*/")) {
 					lineUpdated = lineUpdated
 						.substring(lineUpdated.indexOf("*/") + 2);
-
 					inComment = false;
 				} else {
 					lines[lineIndex++] = line;
@@ -247,7 +253,6 @@ public class SQFPreprocessor {
 					int replaceIndex = 0;
 					boolean replaceInString = false;
 					String stringLimiter = "\"";
-					boolean replaceInComment = false;
 					while (replaceIndex < line.length()) {
 						if (replaceInString) {
 							if (replaceIndex < line.length() - 2 && line.substring(replaceIndex, replaceIndex + 2).equals(stringLimiter + stringLimiter)) {
@@ -274,20 +279,32 @@ public class SQFPreprocessor {
 							stringLimiter = "'";
 							replaceIndex++;
 							replaceInString = true;
+						} else if (replaceIndex < line.length() - 2 && line.substring(replaceIndex, replaceIndex + 2).equals("//")) {
+                                                        // Rest of the line is a comment, so skip it
+							break;
 						} else {
 							boolean replaced = true;
-							while (replaced) {
+
+                                                        // Cap macro recursion depth to 10.
+                                                        int depth = 0;
+							while (replaced && depth < 20) {
 								replaced = false;
 								for (SQFMacro macro : sortedMacros) {
-									if (line.substring(replaceIndex).indexOf(macro.getName()) == 0) {
+									if (macro.matchAt(line, replaceIndex)) {
 										line = line.substring(0, replaceIndex) +
-														replaceMacro(line.substring(replaceIndex), macro);
+											replaceMacro(line.substring(replaceIndex), macro);
 										replaced = true;
+                                                                                depth++;
 										break;
 									}
 								}
 							}
-							replaceIndex++;
+
+                                                        // We only increment the index if we didn't perform any macro replacement.
+                                                        // If we DID then we need to check for strings etc.
+                                                        if (depth == 0) {
+                                                            replaceIndex++;
+                                                        }
 						}
 					}
 					
@@ -334,10 +351,69 @@ public class SQFPreprocessor {
 		return path;
 	}
 	
+        private int parseParams(String input, ArrayList<String> params) {
+		int bracket = 0;
+                int index = 0;
+                boolean inString = false;
+                boolean inComment = false;
+                String stringLimiter = "\"";
+                int paramStart = 0;
+                while (index < input.length()) {
+                        if (inString) {
+                                if (index < input.length() - 2 && input.substring(index, index + 2).equals(stringLimiter + stringLimiter)) {
+                                        index += 2;
+                                } else if (input.substring(index, index + 1).equals(stringLimiter)) {
+                                        inString = false;
+                                }
+                                index++;
+                        } else if (inComment) {
+                                if (index < input.length() - 2 && input.substring(index, index + 2).equals("*/")) {
+                                        index += 2;
+                                        inComment = false;
+                                } else {
+                                        index++;
+                                }
+                        } else if (index < input.length() - 2 && input.substring(index, index + 2).equals("/*")) {
+                                index += 2;
+                                inComment = true;
+                        } else if (input.substring(index, index + 1).equals("\"")) {
+                                stringLimiter = "\"";
+                                index++;
+                                inString = true;
+                        } else if (input.substring(index, index + 1).equals("'")) {
+                                stringLimiter = "'";
+                                index++;
+                                inString = true;
+                        } else if (index < input.length() - 2 && input.substring(index, index + 2).equals("//")) {
+                                // Rest of the input is a comment, so skip it
+                                break;
+                        } else {
+                                char ch = input.charAt(index);
+                                if (ch == '(') {
+                                        bracket++;
+                                } else if (ch == ')') {
+                                        bracket--;
+                                        if (bracket < 0) {
+                                                params.add(input.substring(paramStart, index));
+                                                break;
+                                        }
+                                }
+                                
+                                if(bracket == 0 && ch == ',') {
+                                        params.add(input.substring(paramStart, index));
+                                        paramStart = index + 1;
+                                }
+                                index++;
+                        }
+                        
+                }
+                return index;
+	}
+        
 	private int walkToEnd(String input) {
 		int index = 0;
 		int bracket = 0;
-		
+
 		while (index < input.length()) {
 			if (input.charAt(index) == '(') {
 				bracket++;
@@ -348,7 +424,7 @@ public class SQFPreprocessor {
 			if (bracket < 0) {
 				return index;
 			}
-			
+
 			index++;
 		}
 		return -1;
@@ -372,30 +448,35 @@ public class SQFPreprocessor {
 			System.out.println("MACRO: " + macro.getName());
 			System.out.println("VALUE: " + value);
 			*/
-			
 			line = line.substring(0, index) + value + line.substring(index + macro.getName().length());
 		} else {
 			String[] arguments = macro.getArguments().split(",");
-			String values = line.substring(line.indexOf('(', index) + 1);
-			
-			/*if (values.indexOf(')') >= 0) {
-				values = values.substring(0, values.indexOf(')'));
-			}*/
-			int endIndex = walkToEnd(values);
-			if (endIndex != -1) {
-				values = values.substring(0, endIndex);
-			} else {
-				values = "";
-			}
-			
-			String[] args = values.split(",");
+                        int startArgs = line.indexOf('(', index + macro.getName().length());
+                        if(startArgs == -1 || !line.substring(index + macro.getName().length(), startArgs).trim().isEmpty())
+                        {
+                            // Failure, the macro expects arguments but they have 
+                            // not been correctly provided (params across more than 
+                            // one line for a macro is not supported).
+                            // We will remove the macro name to avoid it recursing
+                            return line.substring(index + macro.getName().length());
+                        }
+			String values = line.substring(startArgs + 1);
+
+			ArrayList<String> args = new ArrayList<String>();
+                        int argsClose = parseParams(values, args);
+                        if(args.size() != arguments.length) {
+                                return line.substring(index + macro.getName().length());
+                        }
+
+                        // Index of next char after closing paren of argument list
+                        int pastEndOfMacro = startArgs + 1 + argsClose + 1;
 			
 			// This is completely wrong, but #YOLO
 			// (I actually don't want to spend much time on this, because #YOLO)
 			// This works somewhat, so deal with it
-			for (int i = 0; i < arguments.length && i < args.length; i++) {
+			for (int i = 0; i < arguments.length && i < args.size(); i++) {
 				String argName = arguments[i].trim();
-				String argValue = args[i].trim();
+				String argValue = args.get(i).trim();
 				String noletter = "([^a-zA-Z_#])";
 				
 				// @TODO: There has to be other way :O
@@ -427,12 +508,7 @@ public class SQFPreprocessor {
 			*/
 			
 			String left = line.substring(0, index);
-			String right = "";
-			int rightIndex = index + macro.getName().length() + values.length() + 2;
-			
-			if (rightIndex < line.length()) {
-				right = line.substring(rightIndex);
-			}
+			String right = line.substring(pastEndOfMacro);
 			
 			/*
 			System.out.println("LEFT: " + left);
