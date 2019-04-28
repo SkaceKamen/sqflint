@@ -47,7 +47,7 @@ public class SQFExpression extends SQFUnit {
 	private SQFExpression left;
 	private SQFExpression right;
 	
-	private final List<String> signOperators = Arrays.asList("+", "-", "!");
+	private final List<String> signOperators = Arrays.asList("+", "-", "!", "not ");
 	
 	private SQFParseException sentError;
 	
