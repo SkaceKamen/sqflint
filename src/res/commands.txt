@@ -74,16 +74,16 @@ b:CONTROL ctrlsetfont STRING
 b:ARRAY allowgetin BOOL 
 b:CONTROL ctrlsetfonth4b STRING 
 b:CONTROL tvdata ARRAY 
-b:TASK sendtaskresult ARRAY 
 b:OBJECT directsay STRING 
 b:CONTROL ctrlsetforegroundcolor ARRAY 
+b:TASK sendtaskresult ARRAY 
 b:TASK setsimpletaskdescription ARRAY 
 b:SCALAR setforcegeneratorrtd ARRAY 
 b:CONTROL menusetvalue ARRAY 
 b:OBJECT worldtomodel ARRAY 
 b:OBJECT sethitindex ARRAY 
 b:OBJECT hideobject BOOL 
-b:STRING setmarkerpos ARRAY 
+b:STRING setmarkerpos ARRAY,OBJECT 
 b:OBJECT get3denattribute STRING 
 b:GROUP get3denattribute STRING 
 b:ARRAY get3denattribute STRING 
@@ -233,6 +233,7 @@ b:ARRAY joinstring STRING
 b:OBJECT,GROUP knowsabout OBJECT 
 b:SIDE knowsabout OBJECT 
 b:ANY in ARRAY 
+b:STRING in STRING 
 b:OBJECT in OBJECT 
 b:ARRAY in LOCATION 
 b:TEAM_MEMBER sendtask ARRAY 
@@ -387,6 +388,7 @@ b:CONTROL tvdelete ARRAY
 b:SCALAR,NaN mod SCALAR,NaN 
 b:CONTROL ctrlsetfonth5b STRING 
 b:STRING enableaifeature BOOL 
+b:OBJECT enableaifeature ARRAY 
 b:CONTROL addmenuitem ARRAY 
 b:OBJECT enablesimulation BOOL 
 b:OBJECT allowdamage BOOL 
@@ -484,11 +486,11 @@ b:OBJECT modeltoworldvisualworld ARRAY
 b:ARRAY,OBJECT doartilleryfire ARRAY 
 b:OBJECT isuniformallowed STRING 
 b:OBJECT skill STRING 
-b:OBJECT creatediaryrecord ARRAY 
 b:SCALAR,NaN / SCALAR,NaN 
 b:CONFIG / STRING 
 b:OBJECT addweapon STRING 
 b:ARRAY waypointattachvehicle OBJECT 
+b:OBJECT creatediaryrecord ARRAY 
 b:OBJECT,GROUP lockwp BOOL 
 b:OBJECT addmagazineammocargo ARRAY 
 b:DISPLAY displayseteventhandler ARRAY 
@@ -658,6 +660,7 @@ b:OBJECT removemagazineglobal STRING
 b:OBJECT setlightflaremaxdistance SCALAR 
 b:OBJECT playmovenow STRING 
 b:ARRAY,OBJECT commandfire OBJECT 
+b:OBJECT addweaponwithattachmentscargo ARRAY 
 b:ARRAY,OBJECT domove ARRAY 
 b:OBJECT forcespeed SCALAR 
 b:CONTROL lbsetpicturerightcolordisabled ARRAY 
@@ -681,12 +684,13 @@ b:TEAM_MEMBER setformation STRING
 b:ARRAY vectorcos ARRAY 
 b:ARRAY,OBJECT commandwatch ARRAY 
 b:ARRAY,OBJECT commandwatch OBJECT 
+b:OBJECT setdiaryrecordtext ARRAY 
 b:CONTROL lbcolor SCALAR 
 b:OBJECT targets ARRAY 
 b:OBJECT addcuratorcameraarea ARRAY 
 b:ANY call CODE 
 b:CONTROL ctrlsetfonth6b STRING 
-b:STRING setmarkerposlocal ARRAY 
+b:STRING setmarkerposlocal ARRAY,OBJECT 
 b:OBJECT setpilotcamerarotation ARRAY 
 b:OBJECT fire STRING 
 b:OBJECT fire ARRAY 
@@ -758,7 +762,6 @@ b:OBJECT addweaponitem ARRAY
 b:OBJECT removesimpletask TASK 
 b:STRING cuttext ARRAY 
 b:SCALAR cuttext ARRAY 
-b:TASK settaskstate STRING 
 b:OBJECT triggerattachvehicle ARRAY 
 b:BOOL setcamuseti SCALAR 
 b:OBJECT addcuratoraddons ARRAY 
@@ -766,6 +769,7 @@ b:OBJECT addbackpackcargo ARRAY
 b:ARRAY join OBJECT,GROUP 
 b:ARRAY,OBJECT glanceat ARRAY,OBJECT 
 b:DISPLAY displayremovealleventhandlers STRING 
+b:TASK settaskstate STRING 
 b:CONTROL ctrlmapscreentoworld ARRAY 
 b:ARRAY setwaypointname STRING 
 b:OBJECT canadd ARRAY,STRING 
@@ -787,11 +791,11 @@ b:SCALAR fadespeech SCALAR
 b:OBJECT setpylonspriority ARRAY 
 b:DISPLAY closedisplay SCALAR 
 b:CONTROL menuvalue ARRAY 
-b:TASK settaskresult ARRAY 
 b:OBJECT setlightuseflare BOOL 
 b:OBJECT setvelocity ARRAY 
 b:ANY breakout STRING 
 b:ANY isequaltypeany ARRAY 
+b:TASK settaskresult ARRAY 
 b:CONTROL drawtriangle ARRAY 
 b:CONTROL lbsetselectcolor ARRAY 
 b:CONTROL mapcenteroncamera BOOL 
@@ -801,6 +805,7 @@ b:OBJECT addbackpackcargoglobal ARRAY
 b:ARRAY,OBJECT distance2d ARRAY,OBJECT 
 b:ARRAY,OBJECT commandfsm ARRAY 
 b:OBJECT setcamerainterest SCALAR 
+b:OBJECT seteffectivecommander OBJECT 
 b:OBJECT switchaction STRING 
 b:OBJECT animate ARRAY 
 b:OBJECT createsimpletask ARRAY 
@@ -883,7 +888,6 @@ b:OBJECT campreparerelpos ARRAY
 b:OBJECT setconvoyseparation SCALAR 
 b:OBJECT enablefatigue BOOL 
 b:OBJECT moveindriver OBJECT 
-b:OBJECT selectdiarysubject STRING 
 b:OBJECT canslingload OBJECT 
 b:CONTROL ctrlsetpixelprecision SCALAR 
 b:CONTROL ctrlsetpixelprecision STRING 
@@ -895,6 +899,7 @@ b:ARRAY,OBJECT dotarget OBJECT
 b:OBJECT addvest STRING 
 b:ANY remoteexeccall ARRAY 
 b:CONTROL ctrlsetfonth4 STRING 
+b:OBJECT selectdiarysubject STRING 
 b:OBJECT kbreact ARRAY 
 b:ARRAY vectordiff ARRAY 
 b:OBJECT land STRING 
@@ -969,6 +974,7 @@ b:ARRAY select CODE
 b:CONFIG select SCALAR 
 b:OBJECT setvehicleammo SCALAR 
 b:CONTROL lnbsetpicture ARRAY 
+b:OBJECT addweaponwithattachmentscargoglobal ARRAY 
 b:OBJECT,GROUP setcombatmode STRING 
 b:TEAM_MEMBER setcombatmode STRING 
 b:CONTROL tvsetvalue ARRAY 
@@ -1021,6 +1027,7 @@ b:CONTROL getobjectargument ARRAY
 b:OBJECT addeventhandler ARRAY 
 b:OBJECT sethit ARRAY 
 b:CONTROL tvsetpicturerightcolorselected ARRAY 
+b:OBJECT removediaryrecord ARRAY 
 b:ANY exec STRING 
 b:SCALAR setovercast SCALAR 
 b:ARRAY deleteat SCALAR 
@@ -1030,6 +1037,7 @@ b:OBJECT setvehiclereportremotetargets BOOL
 b:CONTROL menusetaction ARRAY 
 b:ARRAY,OBJECT setsoundeffect ARRAY 
 b:STRING objstatus STRING 
+b:OBJECT removediarysubject STRING 
 b:CONTROL geteditorobjectscope STRING 
 b:OBJECT customchat ARRAY 
 b:OBJECT,GROUP move ARRAY 
@@ -1075,6 +1083,7 @@ b:OBJECT enableautotrimrtd BOOL
 b:OBJECT assignasdriver OBJECT 
 b:OBJECT enablecopilot BOOL 
 b:CONTROL menuadd ARRAY 
+b:OBJECT checkaifeature STRING 
 b:OBJECT landat SCALAR,OBJECT 
 b:CONTROL onshownewobject STRING 
 b:ARRAY setwaypointloitertype STRING 
@@ -1556,6 +1565,7 @@ u:isweaponrested OBJECT
 u:isaimprecisionenabled OBJECT 
 u:isagent TEAM_MEMBER 
 u:commander OBJECT 
+u:toupperansi STRING 
 u:markerpos STRING 
 u:markerpos ARRAY 
 u:leaderboardinit STRING 
@@ -1682,7 +1692,7 @@ u:loadabs OBJECT
 u:removeswitchableunit OBJECT 
 u:inheritsfrom CONFIG 
 u:lnbsort ARRAY 
-u:islighton OBJECT 
+u:islighton ARRAY,OBJECT 
 u:simulationenabled OBJECT 
 u:currentmagazinedetail OBJECT 
 u:onmapsingleclick STRING,CODE 
@@ -1735,6 +1745,7 @@ u:lnbpictureright ARRAY
 u:servercommandavailable STRING 
 u:geteditormode CONTROL 
 u:removeallprimaryweaponitems OBJECT 
+u:getdiverstate OBJECT 
 u:diag_lightnewload STRING 
 u:menuhover CONTROL 
 u:menuhover SCALAR 
@@ -1818,6 +1829,7 @@ u:side OBJECT
 u:side GROUP 
 u:side LOCATION 
 u:completedfsm SCALAR 
+u:toloweransi STRING 
 u:playableslotsnumber SIDE 
 u:servercommandexecutable STRING 
 u:enablesaving BOOL,ARRAY 
@@ -1901,9 +1913,9 @@ u:goto STRING
 u:deletewaypoint ARRAY 
 u:setshadowdistance SCALAR 
 u:tvsortbyvalue ARRAY 
-u:lockidentity OBJECT 
 u:typeof OBJECT 
 u:score OBJECT 
+u:lockidentity OBJECT 
 u:matrixtranspose ARRAY 
 u:lbsetpicturecolor ARRAY 
 u:nextmenuitemindex CONTROL 
@@ -1998,6 +2010,7 @@ u:moveout OBJECT
 u:setstatvalue ARRAY 
 u:deleteteam TEAM_MEMBER 
 u:get3denactionstate STRING 
+u:getobjectfov OBJECT 
 u:createagent ARRAY 
 u:importallgroups CONTROL 
 u:selectrandomweighted ARRAY 
@@ -2015,7 +2028,6 @@ u:getobjectmaterials OBJECT
 u:getplayeruid OBJECT 
 u:airplanethrottle OBJECT 
 u:binocular OBJECT 
-u:getweaponsway OBJECT 
 u:collect3denhistory CODE 
 u:handgunitems OBJECT 
 u:removeallcuratoreditingareas OBJECT 
@@ -2027,6 +2039,7 @@ u:enableaudiofeature ARRAY
 u:publicvariable STRING 
 u:create3dencomposition ARRAY 
 u:showscoretable SCALAR 
+u:getweaponsway OBJECT 
 u:tofixed SCALAR 
 u:backpackcargo OBJECT 
 u:getobjecttextures OBJECT 
@@ -2048,6 +2061,7 @@ u:lbvalue ARRAY
 u:createcenter SIDE 
 u:menuexpand ARRAY 
 u:getposaslw OBJECT 
+u:getposworldvisual OBJECT 
 u:atg SCALAR,NaN 
 u:lineintersectssurfaces ARRAY 
 u:ongroupiconoverleave STRING,CODE 
@@ -2085,6 +2099,7 @@ u:vestitems OBJECT
 u:log SCALAR,NaN 
 u:switchcamera OBJECT 
 u:setcustommissiondata ARRAY 
+u:currentpilot OBJECT 
 u:ppeffectcommitted STRING 
 u:ppeffectcommitted SCALAR 
 u:buttonsetaction ARRAY 
@@ -2200,6 +2215,7 @@ u:direction OBJECT
 u:direction LOCATION 
 u:admin SCALAR 
 u:dynamicsimulationdistance STRING 
+u:getmissionpath STRING 
 u:ppeffectenabled SCALAR 
 u:getdlcs SCALAR 
 u:getsuppression OBJECT 
@@ -2208,6 +2224,7 @@ u:settrafficgap ARRAY
 u:camusenvg BOOL 
 u:ctclear CONTROL 
 u:resources TEAM_MEMBER 
+u:calculatepath ARRAY 
 u:getarray CONFIG 
 u:hintsilent STRING,TEXT 
 u:assignedcommander OBJECT 
@@ -2238,7 +2255,7 @@ u:sendudpmessage ARRAY
 u:checkaifeature STRING 
 u:uavcontrol OBJECT 
 u:iswalking OBJECT 
-u:compile STRING 
+u:compile ARRAY,STRING 
 u:tasktype TASK 
 u:flag OBJECT 
 u:composetext ARRAY 
@@ -2420,10 +2437,10 @@ n:blufor
 n:visiblescoretable 
 n:is3denmultiplayer 
 n:worldname 
-n:ismultiplayersolo 
 n:isremoteexecuted 
 n:curatorcamera 
 n:resistance 
+n:ismultiplayersolo 
 n:displaynull 
 n:diag_frameno 
 n:currentnamespace 
@@ -2453,8 +2470,10 @@ n:alldisplays
 n:isautotest 
 n:viewdistance 
 n:sideambientlife 
+n:isgamefocused 
 n:allmapmarkers 
 n:worldsize 
+n:getaudiooptionvolumes 
 n:rain 
 n:didjip 
 n:missionstart 
@@ -2478,9 +2497,9 @@ n:mapanimdone
 n:resetcamshake 
 n:showncompass 
 n:winddir 
-n:pixelgridbase 
 n:currentchannel 
 n:ispipenabled 
+n:pixelgridbase 
 n:gettotaldlcusagetime 
 n:get3denlinesvisible 
 n:sidefriendly 
@@ -2531,6 +2550,8 @@ n:lightnings
 n:simulweathersync 
 n:shownmap 
 n:shownpad 
+n:diag_deltatime 
+n:isactionmenuvisible 
 n:independent 
 n:campaignconfigfile 
 n:clientowner 
@@ -2569,7 +2590,6 @@ n:buldozer_isenabledroaddiag
 n:userinputdisabled 
 n:netobjnull 
 n:loadgame 
-n:forcedmap 
 n:isuicontext 
 n:cameraview 
 n:moonintensity 
@@ -2577,6 +2597,7 @@ n:isserver
 n:reversedmousey 
 n:librarydisclaimers 
 n:getremotesensorsdisabled 
+n:forcedmap 
 n:get3dencamera 
 n:profilenamespace 
 n:cadetmode 
@@ -2636,10 +2657,12 @@ n:alldead
 n:getresolution 
 n:timemultiplier 
 n:safezonew 
+n:getsubtitleoptions 
 n:allunits 
 n:getmouseposition 
 n:groupiconselectable 
 n:uinamespace 
+n:isgamepaused 
 n:customwaypointposition 
 n:get3deniconsvisible 
 n:isstreamfriendlyuienabled 
