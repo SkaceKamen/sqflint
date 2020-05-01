@@ -40,6 +40,6 @@ ENV PATH ${PATH}:/opt/javacc/scripts
 RUN mkdir /opt/build && chmod 777 /opt/build
 WORKDIR /opt/build
 
-CMD [ "ant" ]
+ENTRYPOINT [ "/opt/ant/bin/ant" ]
 
 
