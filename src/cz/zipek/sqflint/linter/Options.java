@@ -33,6 +33,7 @@ import cz.zipek.sqflint.sqf.operators.IfOperator;
 import cz.zipek.sqflint.sqf.operators.Operator;
 import cz.zipek.sqflint.sqf.operators.ParamsOperator;
 import cz.zipek.sqflint.sqf.operators.PathLoader;
+import cz.zipek.sqflint.sqf.operators.SetVariableOperator;
 import cz.zipek.sqflint.sqf.operators.ThenOperator;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -80,6 +81,7 @@ public final class Options {
 		}));
 		
 		operators.put("params", new ParamsOperator());
+		operators.put("setvariable", new SetVariableOperator());
 		operators.put("execvm", new PathLoader());
 		operators.put("preprocessfile", new PathLoader());
 		operators.put("preprocessfilelinenumbers", new PathLoader());
