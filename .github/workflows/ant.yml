@@ -15,3 +15,13 @@ jobs:
     - uses: actions/checkout@v2
     - name: Build with Docker image
       uses: ./.github/actions/sqflint-build-action
+    - name: Store jar
+      uses: actions/upload-artifact@v2
+      with:
+        name: dist
+        path: dist/SQFLint.jar
+    - name: Store lib
+      uses: actions/upload-artifact@v2
+      with:
+        name: dist
+        path: lib/*.jar
