@@ -76,15 +76,29 @@
 			<fileset dir="src/cz/zipek/sqflint/parser/" includes="**/*.java"/>
 		</delete>
 	</target>
-	
-	<target name="-pre-compile">
+    
+    <condition property="windowsos">
+        <os family="windows" />
+    </condition>
+    
+    <condition property="linuxos">
+        <os family="unix" />
+    </condition>
+
+	<target name="-pre-compile" if="windowsos">
 		<exec executable="javacc.bat">
-			<arg value="-OUTPUT_DIRECTORY=src/cz/zipek/sqflint/parser" />
+			<arg value="&quot;-OUTPUT_DIRECTORY=src/cz/zipek/sqflint/parser&quot;" />
 			<arg file="src/cz/zipek/sqflint/parser/SQFParser.jj" />
 		</exec>
-	</target>
+    </target>
+    <target name="-pre-pre-compile" if="linuxos">
+        <exec executable="javacc">
+            <arg value="-OUTPUT_DIRECTORY=src/cz/zipek/sqflint/parser" />
+            <arg file="src/cz/zipek/sqflint/parser/SQFParser.jj" />
+        </exec>
+    </target>
 	
-	<target name="-post-jar">
+	<target name="-post-jar" if="windowsos">
 		<copy todir="${dist.dir}">
 			<fileset dir="dist-src/">
 				<include name="*" />
