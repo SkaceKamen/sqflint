@@ -111,5 +111,19 @@
 		<exec executable="iscc">
 			<arg file="build-installer.iss" />
 		</exec>
+    </target>
+    <target name="-pre-deploy" if="linuxos">
+        <mkdir dir="${dist.dir}/github"/>
+        <copy todir="${dist.dir}/github">
+			<fileset dir="dist/">
+				<include name="SQFLint.jar" />
+            </fileset>
+        </copy>
+        <mkdir dir="${dist.dir}/github/lib"/>
+        <copy todir="${dist.dir}/github/lib">
+			<fileset dir="lib/">
+                <include name="*.jar" />
+            </fileset>
+        </copy>
 	</target>
 </project>

@@ -19,9 +19,4 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: dist
-        path: dist/SQFLint.jar
-    - name: Store lib
-      uses: actions/upload-artifact@v2
-      with:
-        name: dist
-        path: lib/
+        path: dist/github
