@@ -2,4 +2,4 @@ name: 'sqflint-build-action'
 description: 'builds sqflint'
 runs:
   using: 'docker'
-  image: '../../../Dockerfile'
+  image: 'docker://senfo/sqflint-builder'
