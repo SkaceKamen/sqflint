@@ -4,7 +4,7 @@ import cz.zipek.sqflint.parser.Token;
 
 /**
  *
- * @author Jan Zípek <jan at zipek.cz>
+ * @author Jan Zípek (jan at zipek.cz)
  */
 public class Warning extends SQFParseException {
 	private final Token token;

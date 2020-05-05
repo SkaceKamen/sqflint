@@ -14,7 +14,7 @@ import org.json.JSONObject;
 
 /**
  *
- * @author Jan Zípek <jan at zipek.cz>
+ * @author Jan Zípek (jan at zipek.cz)
  */
 public class JSONOutput implements OutputFormatter {	
 	protected List<JSONObject> build(Linter linter) {

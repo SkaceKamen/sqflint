@@ -18,7 +18,7 @@ import java.util.Map;
 
 /**
  *
- * @author Jan Zípek <jan at zipek.cz>
+ * @author Jan Zípek (jan at zipek.cz)
  */
 public class Linter extends SQFParser {
 	public static final int CODE_OK = 0;

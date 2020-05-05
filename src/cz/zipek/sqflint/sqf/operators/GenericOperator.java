@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2016 Jan Zípek <jan at zipek.cz>.
+ * Copyright 2016 Jan Zípek (jan at zipek.cz).
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,7 +36,7 @@ import java.util.List;
  * Generic operator which has its definition loaded from commands dump.
  * Only checks if left/right side exists and has correct type.
  * 
- * @author Jan Zípek <jan at zipek.cz>
+ * @author Jan Zípek (jan at zipek.cz)
  */
 public class GenericOperator extends Operator {
 	public enum Type {

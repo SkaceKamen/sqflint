@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2016 Jan Zípek <jan at zipek.cz>.
+ * Copyright 2016 Jan Zípek (jan at zipek.cz).
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
 
 /**
  *
- * @author Jan Zípek <jan at zipek.cz>
+ * @author Jan Zípek (jan at zipek.cz)
  */
 public class SQFPreprocessor {
 	private final Map<String, SQFMacro> macros = new HashMap<>();

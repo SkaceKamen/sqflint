@@ -17,7 +17,7 @@ import org.apache.commons.cli.Options;
 
 /**
  *
- * @author Jan Zípek <jan at zipek.cz>
+ * @author Jan Zípek (jan at zipek.cz)
  */
 public class SQFLint {	
 	/**

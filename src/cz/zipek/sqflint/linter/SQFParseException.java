@@ -6,7 +6,7 @@ import cz.zipek.sqflint.parser.TokenMgrError;
 
 /**
  *
- * @author Jan Zípek <jan at zipek.cz>
+ * @author Jan Zípek (jan at zipek.cz)
  */
 public class SQFParseException extends ParseException {
 

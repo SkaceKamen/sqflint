@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2018 Jan Zípek <jan at zipek.cz>.
+ * Copyright 2018 Jan Zípek (jan at zipek.cz).
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,7 @@ import org.junit.Test;
 
 /**
  *
- * @author Jan Zípek <jan at zipek.cz>
+ * @author Jan Zípek (jan at zipek.cz)
  */
 public class PreprocessorTest {
 		/**

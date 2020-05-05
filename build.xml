@@ -85,21 +85,23 @@
         <os family="unix" />
     </condition>
 
-	<target name="-pre-compile" if="windowsos">
-		<exec executable="javacc.bat">
-			<arg value="&quot;-OUTPUT_DIRECTORY=src/cz/zipek/sqflint/parser&quot;" />
-			<arg file="src/cz/zipek/sqflint/parser/SQFParser.jj" />
-		</exec>
+    <target name="-pre-compile-windows" if="windowsos">
+        <exec executable="javacc.bat">
+            <arg value="&quot;-OUTPUT_DIRECTORY=src/cz/zipek/sqflint/parser&quot;" />
+            <arg file="src/cz/zipek/sqflint/parser/SQFParser.jj" />
+        </exec>
     </target>
-    <target name="-pre-pre-compile" if="linuxos">
+    <target name="-pre-compile-linux" if="linuxos">
         <exec executable="javacc">
             <arg value="-OUTPUT_DIRECTORY=src/cz/zipek/sqflint/parser" />
             <arg file="src/cz/zipek/sqflint/parser/SQFParser.jj" />
         </exec>
     </target>
+
+    <target name="-pre-compile" depends="-pre-compile-windows,-pre-compile-linux" />
 	
-	<target name="-post-jar" if="windowsos">
-		<copy todir="${dist.dir}">
+	<target name="-post-jar-windows" if="windowsos">
+        <copy todir="${dist.dir}">
 			<fileset dir="dist-src/">
 				<include name="*" />
 			</fileset>
@@ -107,12 +109,12 @@
 		<exec executable="launch4jc">
 			<arg file="build-exe.xml" />
 		</exec>
-		<zip destfile="${dist.dir}/packages/sqflint.zip" basedir="${dist.dir}" />
+		<zip destfile="package/sqflint.zip" basedir="${dist.dir}" />
 		<exec executable="iscc">
 			<arg file="build-installer.iss" />
 		</exec>
     </target>
-    <target name="-pre-deploy" if="linuxos">
+    <target name="-post-jar-linux" if="linuxos">
         <mkdir dir="${dist.dir}/github"/>
         <copy todir="${dist.dir}/github">
 			<fileset dir="dist/">
@@ -125,5 +127,7 @@
                 <include name="*.jar" />
             </fileset>
         </copy>
-	</target>
+    </target>
+    
+    <target name="-post-jar" depends="-post-jar-windows,-post-jar-linux" />
 </project>

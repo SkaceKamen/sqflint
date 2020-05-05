@@ -4,7 +4,7 @@ import cz.zipek.sqflint.linter.Linter;
 
 /**
  *
- * @author Jan Zípek <jan at zipek.cz>
+ * @author Jan Zípek (jan at zipek.cz)
  */
 public class TextOutput implements OutputFormatter {
 	
