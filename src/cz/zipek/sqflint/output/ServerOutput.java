@@ -24,6 +24,8 @@
 package cz.zipek.sqflint.output;
 
 import cz.zipek.sqflint.linter.Linter;
+
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.json.JSONException;
@@ -50,6 +52,8 @@ public class ServerOutput extends JSONOutput {
 						.value(this.filename)
 						.key("messages")
 						.value(build(linter))
+						.key("timeneeded")
+						.value(new Date().getTime() - linter.getStartTime().getTime())
 					.endObject()
 			);
 			System.out.flush();

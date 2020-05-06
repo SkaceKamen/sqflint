@@ -12,6 +12,7 @@ import cz.zipek.sqflint.sqf.SQFContext;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,8 @@ public class Linter extends SQFParser {
 	private SQFPreprocessor preprocessor;
 	private final Options options;
 	
+	private Date startTime;
+
 	public Linter(InputStream stream, Options options) {
 		super(stream);
 		
@@ -43,6 +46,8 @@ public class Linter extends SQFParser {
 		setTabSize(1);
 		
 		SQFBlock block = null;
+
+		startTime = new Date();
 		
 		try {
 			block = CompilationUnit();
@@ -70,6 +75,10 @@ public class Linter extends SQFParser {
 		
 		// Return ERR code when any error was encountered
 		return (getErrors().size() > 0) ? CODE_ERR : CODE_OK;
+	}
+
+	public Date getStartTime() {
+		return startTime;
 	}
 		
 	/**
