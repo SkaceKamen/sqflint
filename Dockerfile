@@ -40,6 +40,13 @@ ENV PATH ${PATH}:/opt/javacc/scripts
 RUN mkdir /opt/build && chmod 777 /opt/build
 WORKDIR /opt/build
 
-ENTRYPOINT [ "/opt/ant/bin/ant" ]
+ENV ANT_BUILD_DIR "/opt/build"
+
+RUN echo '#!/bin/bash' > /opt/buildsqflint.sh && \
+    echo 'cd $ANT_BUILD_DIR' >> /opt/buildsqflint.sh && \
+    echo '/opt/ant/bin/ant' >> /opt/buildsqflint.sh && \
+    chmod +x /opt/buildsqflint.sh
+
+ENTRYPOINT [ "/opt/buildsqflint.sh" ]
 
 
