@@ -74,7 +74,7 @@ public class LinterTest {
 			input,
 			"file",
 			true
-		)), new Options());
+		)), new Options(), "test.sqf");
 		
 		// Assign preprocessor for futher usage
 		linter.setPreprocessor(preprocessor);

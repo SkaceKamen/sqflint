@@ -25,7 +25,9 @@ package cz.zipek.sqflint;
 
 import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.linter.Options;
+import cz.zipek.sqflint.output.LogUtil;
 import cz.zipek.sqflint.output.ServerOutput;
+import cz.zipek.sqflint.output.StreamUtil;
 import cz.zipek.sqflint.preprocessor.SQFPreprocessor;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -35,6 +37,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -65,6 +68,7 @@ public class SQFLintServer {
 					}
 				} catch (JSONException ex) {
 					Logger.getLogger(SQFLintServer.class.getName()).log(Level.SEVERE, null, ex);
+					System.err.println("Error parsing client message");
 				}
 			}
 		}  catch (IOException ex) {
@@ -73,8 +77,8 @@ public class SQFLintServer {
 	}
 	
 	private boolean processMessage(JSONObject message) {
+		LogUtil.benchLog(options, this, "/ClientMessage", "Client message received");
 		String filePath = "";
-		
 		try {
 			if (message.has("type") && "exit".equals(message.getString("type"))) {
 				return false;
@@ -83,10 +87,12 @@ public class SQFLintServer {
 			filePath = message.getString("file");
 			Linter linter;
 
+			LogUtil.benchLog(options, this, filePath, "Starting");
+
 			if (message.has("contents")) {
 				linter = parse(message.getString("contents"), filePath);
 			} else {
-				linter = parseFile(filePath);
+				linter = parse(StreamUtil.streamToString(new FileInputStream(filePath)), filePath);
 			}
 			
 			if (message.has("options")) {
@@ -143,9 +149,9 @@ public class SQFLintServer {
 		}
 	}
 	
-	public Linter parseFile(String path) throws Exception {
-		return parse(new BufferedReader(new InputStreamReader(new FileInputStream(path))).lines().collect(Collectors.joining("\n")), path);
-	}
+	// public Linter parseFile(String path) throws Exception {
+	// 	return parse(new BufferedReader(new InputStreamReader(new FileInputStream(path))).lines().collect(Collectors.joining("\n")), path);
+	// }
 	
 	public Linter parse(String fileContents, String filePath) throws Exception {
 		// Apply file specific options
@@ -157,22 +163,16 @@ public class SQFLintServer {
 		SQFPreprocessor preprocessor = new SQFPreprocessor(options);
 		
 		// Create linter from preprocessed input
-		Linter linter = new Linter(stringToStream(preprocessor.process(
+		LogUtil.benchLog(options, this, filePath, "Preproc");
+		InputStream stream = StreamUtil.stringToStream(preprocessor.process(
 			fileContents,
 			filePath,
 			true
-		)), options);
+		));
+		LogUtil.benchLog(options, this, filePath, "Preproc done");
+		Linter linter = new Linter(stream, options, filePath);
 		linter.setPreprocessor(preprocessor);
 		
 		return linter;
-	}
-	
-	/**
-	 * Creates input stream (with UTF-8 encoding) from input string.
-	 * @param input
-	 * @return 
-	 */
-	private InputStream stringToStream(String input) {
-		return new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8));
 	}
 }

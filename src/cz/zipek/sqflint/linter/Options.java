@@ -62,6 +62,7 @@ public final class Options {
 	private boolean warningAsError = false;
 	private boolean checkPaths = false;
 	private boolean contextSeparationEnabled = true;
+	private boolean benchLogs = false;
 	private String rootPath = null;
 	
 	private final Map<String, String> includePaths = new HashMap<>();
@@ -98,6 +99,35 @@ public final class Options {
 		operators.put("||", operators.get("or"));
 	}
 	
+	/**
+	 * Creates a copy of the options
+	 */
+	public Options(Options old) {
+		this.stopOnError = old.stopOnError;
+		this.skipWarnings = old.skipWarnings;
+		this.jsonOutput = old.jsonOutput;
+		this.outputVariables = old.outputVariables;
+		this.exitCodeEnabled = old.exitCodeEnabled;
+		this.warningAsError = old.warningAsError;
+		this.checkPaths = old.checkPaths;
+		this.contextSeparationEnabled = old.contextSeparationEnabled;
+		this.benchLogs = old.benchLogs;
+		this.rootPath = old.rootPath;
+		
+		this.outputFormatter = new TextOutput();
+		for (String key : old.includePaths.keySet()) {
+			this.includePaths.put(key, old.includePaths.get(key));
+		}
+		
+		this.ignoredVariables = new HashSet<String>();
+		this.ignoredVariables.addAll(old.ignoredVariables);
+		this.skippedVariables = new HashSet<String>();
+		this.skippedVariables.addAll(old.skippedVariables);
+		
+		// TODO
+		this.operators = new HashMap<String, Operator>();
+	}
+
 	/**
 	 * Loads commands list from resources.
 	 * 
@@ -394,5 +424,13 @@ public final class Options {
 		}
 		
 		return false;
+	}
+
+	public boolean isBenchLogs() {
+		return benchLogs;
+	}
+
+	public void setBenchLogs(boolean benchLogs) {
+		this.benchLogs = benchLogs;
 	}
 }

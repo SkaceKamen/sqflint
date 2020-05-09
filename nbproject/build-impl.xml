@@ -1193,7 +1193,8 @@ is divided into following sections:
                 JAVADOC SECTION
                 ===============
             -->
-    <target depends="init" if="have.sources" name="-javadoc-build">
+            <!--if="have.sources"-->
+    <target depends="init" if="do.jdoc" name="-javadoc-build">
         <mkdir dir="${dist.javadoc.dir}"/>
         <condition else="" property="javadoc.endorsed.classpath.cmd.line.arg" value="-J${endorsed.classpath.cmd.line.arg}">
             <and>

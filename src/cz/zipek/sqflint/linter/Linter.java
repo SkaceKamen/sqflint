@@ -1,6 +1,7 @@
 package cz.zipek.sqflint.linter;
 
 import cz.zipek.sqflint.sqf.SQFBlock;
+import cz.zipek.sqflint.output.LogUtil;
 import cz.zipek.sqflint.parser.ParseException;
 import cz.zipek.sqflint.parser.SQFParser;
 import cz.zipek.sqflint.parser.Token;
@@ -35,11 +36,17 @@ public class Linter extends SQFParser {
 	private final Options options;
 	
 	private Date startTime;
+	private String filePath;
 
-	public Linter(InputStream stream, Options options) {
+	public Linter(
+		Options options,
+		InputStream stream,
+		String filePath
+	) {
 		super(stream);
 		
 		this.options = options;
+		this.filePath = filePath;
 	}
 	
 	public int start() throws IOException {
@@ -48,7 +55,7 @@ public class Linter extends SQFParser {
 		SQFBlock block = null;
 
 		startTime = new Date();
-		
+		LogUtil.benchLog(options, this, filePath, "Linter (1) ");
 		try {
 			block = CompilationUnit();
 		} catch (ParseException | TokenMgrError  e) {
@@ -61,12 +68,15 @@ public class Linter extends SQFParser {
 			}
 		} finally {
 			if (block != null) {
+				LogUtil.benchLog(options, this, filePath, "Linter (2)");
 				block.analyze(this, null);
+				LogUtil.benchLog(options, this, filePath, "Linter (3)");
 			}
 			
 			// postParse();
 			options.getOutputFormatter().print(this);
 		}
+		LogUtil.benchLog(options, this, filePath, "Linter (4)");
 		
 		// Always return OK if exit code is disabled
 		if (!options.isExitCodeEnabled()) {
@@ -226,13 +236,6 @@ public class Linter extends SQFParser {
 	 */
 	public List<SQFMacro> getMacros() {
 		return macros;
-	}
-
-	/**
-	 * @param preprocessor 
-	 */
-	public void setPreprocessor(SQFPreprocessor preprocessor) {
-		this.preprocessor = preprocessor;
 	}
 
 	/**

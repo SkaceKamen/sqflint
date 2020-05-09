@@ -27,6 +27,8 @@ import cz.zipek.sqflint.SQFLint;
 import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.linter.Options;
 import cz.zipek.sqflint.linter.Warning;
+import cz.zipek.sqflint.output.LogUtil;
+import cz.zipek.sqflint.output.StreamUtil;
 import cz.zipek.sqflint.parser.Token;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -38,6 +40,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,14 +68,16 @@ public class SQFPreprocessor {
 		this.options = options;
 	}
 	
-	public String process(InputStream stream, String source, boolean include_filename) throws Exception {
-		return process(new BufferedReader(new InputStreamReader(stream)).lines().collect(Collectors.joining("\n")), source, include_filename);
-	}
+	// public String process(InputStream stream, String source, boolean include_filename) throws Exception {
+	// 	return process(new BufferedReader(new InputStreamReader(stream)).lines().collect(Collectors.joining("\n")), source, include_filename);
+	// }
 	
 	
 	public String process(String input, String source, boolean include_filename) throws Exception {
 		Path root = Paths.get(source).toAbsolutePath().getParent();
 		
+		LogUtil.benchLog(options, this, source, "Process Starting");
+
 		// Fixes escaped newlines
 		int index = 0;
 		while (index + 2 < input.length()) {
@@ -98,13 +103,11 @@ public class SQFPreprocessor {
 			
 			index++;
 		}
+
+		LogUtil.benchLog(options, this, source, "Linefix done");
 		
 		String[] lines = input
 			.replaceAll("\r", "")
-			// Join all lines with trailing backslash. 
-			// This isn't perfect: it would join a comment line with a trailing \ as well.
-			// ? Also it messes with line numbers maybe ?
-			.replaceAll("\\\\\n", "")
 			.split("\n");
 		
 		String output = input;
@@ -115,22 +118,52 @@ public class SQFPreprocessor {
 		Pattern comments = Pattern.compile("(\\/\\*.*?\\*\\/)|(\\/\\/.*)");
 		
 		boolean inComment = false;
+
+		int parsedLines = 0;
                 
-		for (String line : lines) {	
+		for (String line : lines) {
+
+			LogUtil.benchLog(
+				options,
+				this,
+				source,
+				"Line: " + Integer.toString(++parsedLines)
+					+ " "
+					+ (line != null ?
+						line // .substring(0, Math.min(20, Math.max(0, line.length() - 1)))
+						:
+						""
+					)
+			);
+
+			String lineUpdated = line;
+			
+			// @TODO: Escapes in comments?
+			if (inComment) {
+				if (lineUpdated.contains("*/")) {
+					lineUpdated = lineUpdated
+						.substring(lineUpdated.indexOf("*/") + 2);
+					inComment = false;
+				} else {
+					lines[lineIndex++] = ""; // empty line
+					continue;
+				}
+			}
+
 			// Remove whitespaces at beginning
-			String lineUpdated = whitespaceAtStart
-					.matcher(line)
-					.replaceAll("");
+			lineUpdated = whitespaceAtStart
+				.matcher(lineUpdated)
+				.replaceAll("");
 			
 			// Remove doubled whitespaces
 			lineUpdated = doubleWhitespace
-					.matcher(lineUpdated)
-					.replaceAll(" ");
+				.matcher(lineUpdated)
+				.replaceAll(" ");
 			
 			// Remove comments
 			lineUpdated = comments
-					.matcher(lineUpdated)
-					.replaceAll("");
+				.matcher(lineUpdated)
+				.replaceAll("");
 			
 			// Handle multiline comments
 			// @TODO: Escapes in comments?
@@ -143,35 +176,43 @@ public class SQFPreprocessor {
 				inComment = true;
 			}
 			
-			boolean replaceInComment = false;
-			// @TODO: Escapes in comments?
-			if (inComment) {
-				// Make sure the macro replacer knows it is starting in a comment.
-				replaceInComment = true;
-				if (lineUpdated.contains("*/")) {
-					lineUpdated = lineUpdated
-						.substring(lineUpdated.indexOf("*/") + 2);
-					inComment = false;
-				} else {
-					lines[lineIndex++] = line;
-					continue;
-				}
-			}
-			
 			// Remove tabs
 			lineUpdated = lineUpdated.replaceAll("\t", " ");
+
+			// replace escaped line ends
+			if (!inComment && (lineUpdated.endsWith("\\") || lineUpdated.endsWith("\\\n"))) {
+				lines[lineIndex] = "***?***"; // marker to filter later
+				lines[lineIndex + 1] = lineUpdated + " " + lines[lineIndex + 1];
+				continue;
+			}
 		
 			if (lineUpdated.length() > 0 && lineUpdated.charAt(0) == '#') {
 				// Remove line for grammar parser
 				line = "";
-
+				
 				// Parse the line
 				String word = readUntil(lineUpdated, 1, ' ', false, false);
 				String values = readUntil(lineUpdated, 2 + word.length(), '\n', true, false);
-					
+
+				LogUtil.benchLog(
+					options,
+					this,
+					source,
+					"Line: " + Integer.toString(parsedLines) + " = preProcToken"
+				);
+
 				switch(word.toLowerCase()) {
 					case "define":
 						String ident = readUntil(values, 0, new char[] { ' ', '\t' }, true, true);
+						
+						if (ident.length() > 0) {
+							ident = ident.trim();
+						}
+
+						if (ident.length() == 0) {
+							throw new SQFPreproccessException(source, lineIndex, "Empty macro definition");
+						}
+						
 						String value = null;
 						String arguments = null;
 						
@@ -220,7 +261,11 @@ public class SQFPreprocessor {
 							);
 
 							if (Files.exists(path) && !Files.isDirectory(path)) {
-								process(new FileInputStream(path.toString()), path.toString(), true);
+								process(
+									StreamUtil.streamToString(new FileInputStream(path.toString())),
+									path.toString(),
+									true
+								);
 							} else if (options.isCheckPaths()) {
 								warnings.add(
 									new Warning(
@@ -246,7 +291,21 @@ public class SQFPreprocessor {
 					case "undef": break;
 					case "else": break;
 				}
+
+				LogUtil.benchLog(
+					options,	
+					this,
+					source,
+					"Line: " + Integer.toString(parsedLines) + " = preProcToken done"
+				);
 			} else if (!inComment) {
+
+				LogUtil.benchLog(
+					options,
+					this,
+					source,
+					"Line: " + Integer.toString(parsedLines) + " = !inComment " + Integer.toString(line.length())
+				);
 				try {
 					sortedMacros.sort((a, b) -> b.getName().length() - a.getName().length());
 					
@@ -254,6 +313,14 @@ public class SQFPreprocessor {
 					boolean replaceInString = false;
 					String stringLimiter = "\"";
 					while (replaceIndex < line.length()) {
+
+						LogUtil.benchLog(
+							options,
+							this,
+							source,
+							"Line: " + Integer.toString(parsedLines) + " index run"
+						);
+
 						if (replaceInString) {
 							if (replaceIndex < line.length() - 2 && line.substring(replaceIndex, replaceIndex + 2).equals(stringLimiter + stringLimiter)) {
 								replaceIndex += 2;
@@ -261,16 +328,6 @@ public class SQFPreprocessor {
 								replaceInString = false;
 							}
 							replaceIndex++;
-						} else if (replaceInComment) {
-							if (replaceIndex < line.length() - 2 && line.substring(replaceIndex, replaceIndex + 2).equals("*/")) {
-								replaceIndex += 2;
-								replaceInComment = false;
-							} else {
-								replaceIndex++;
-							}
-						} else if (replaceIndex < line.length() - 2 && line.substring(replaceIndex, replaceIndex + 2).equals("/*")) {
-							replaceIndex += 2;
-							replaceInComment = true;
 						} else if (line.substring(replaceIndex, replaceIndex + 1).equals("\"")) {
 							stringLimiter = "\"";
 							replaceIndex++;
@@ -291,10 +348,54 @@ public class SQFPreprocessor {
 								replaced = false;
 								for (SQFMacro macro : sortedMacros) {
 									if (macro.matchAt(line, replaceIndex)) {
+										
+										String before = line;
+										
 										line = line.substring(0, replaceIndex) +
 											replaceMacro(line.substring(replaceIndex), macro);
 										replaced = true;
 										depth++;
+
+										LogUtil.benchLog(
+											options,
+											this,
+											source,
+											"Line: " + Integer.toString(parsedLines)
+												+ " macro replaced: "
+												+ "before: " + before + "\n"
+												+ "after: " + line
+										);
+
+										if (before.equals(line)) {
+											
+											String macroList = "";
+											for (SQFMacro macro2 : sortedMacros) {
+												macroList += 
+													macro2.getName() + "( "
+														+ macro2.getSource() + ","
+														+ macro2.getLine()
+													+ ")\n";
+											}
+											LogUtil.benchLog(
+												options,
+												this,
+												source,
+												"Line: " + Integer.toString(parsedLines)
+													+ " macro replaced by same: "
+													+ macroList
+											);
+											
+											throw new SQFPreproccessException(
+												source,
+												lineIndex,
+												"Macro infinite loop detected by macro: "
+													+ macro.getName() + "( "
+													+ macro.getSource() + ","
+													+ macro.getLine()
+													+ ")"
+											);
+										}
+
 										break;
 									}
 								}
@@ -307,22 +408,55 @@ public class SQFPreprocessor {
 							}
 						}
 					}
-					
+
 
 					// System.out.println("#" + lineIndex + "\t" + line);
 					
+				} catch (SQFPreproccessException e) {
+					throw e;
 				} catch (Exception ex) {
 					Logger.getLogger(SQFLint.class.getName()).log(Level.SEVERE, "Failed to parse line " + lineIndex + " of " + source, ex);
-					System.exit(1);
+					LogUtil.benchLog(
+						options,
+						this,
+						source,
+						"Failed to parse line: " + Integer.toString(parsedLines) + " = !inComment"
+					);
+					// System.exit(1);
+					throw new SQFPreproccessException(source, parsedLines, ex.getMessage());
 				}
 				
 				// System.out.println("#" + lineIndex + "\t" + line);
 			}
+
+			LogUtil.benchLog(
+				options,
+				this,
+				source,
+				"Done line: " + Integer.toString(parsedLines)
+			);
 			
 			lines[lineIndex++] = line;
 		}
 		
+		LogUtil.benchLog(options, this, source, "Preproc done");
 		
+		List<String> finalLines = new ArrayList<String>();
+		int extraLinesAfter = 0;
+		for (String line : lines) {
+			if (line.equals("***?***")) {
+				extraLinesAfter++;
+			} else {
+				finalLines.add(line);
+				if (extraLinesAfter > 0) {
+					for (int i = 0; i < extraLinesAfter; i++) {
+						finalLines.add("");
+					}
+					extraLinesAfter = 0;
+				}
+			}
+		}
+
 		return String.join("\n", lines);
 	}
 	

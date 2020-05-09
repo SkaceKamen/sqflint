@@ -2,9 +2,12 @@ package cz.zipek.sqflint;
 
 import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.output.JSONOutput;
+import cz.zipek.sqflint.output.StreamUtil;
 import cz.zipek.sqflint.preprocessor.SQFPreprocessor;
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.logging.Level;
@@ -41,6 +44,7 @@ public class SQFLint {
 		options.addOption("s", "server", false, "run as server");
 		options.addOption("ip", "include-prefix", true, "adds include prefix override, format: prefix,path_to_use");
 		options.addOption("ncs", "no-context-separation", true, "disable context separation");
+		options.addOption("bl", "bench-logs", false, "output benchlog to stderr");
 		
 		try {
 			cmd = cmdParser.parse(options, args);
@@ -55,9 +59,6 @@ public class SQFLint {
 			return;
 		}
 		
-		SQFPreprocessor preprocessor;
-		Linter linter;
-		String contents = null;
 		String root = null;
 		String[] ignoredVariables = new String[0];
 
@@ -90,6 +91,8 @@ public class SQFLint {
 			}
 		}
 
+		linterOptions.setBenchLogs(cmd.hasOption("bl"));
+
 		linterOptions.setRootPath(root);
 		linterOptions.addIgnoredVariables(ignoredVariables);
 
@@ -104,44 +107,51 @@ public class SQFLint {
 		linterOptions.setWarningAsError(cmd.hasOption("we"));
 		linterOptions.setCheckPaths(cmd.hasOption("cp"));
 		
-		preprocessor = new SQFPreprocessor(linterOptions);
+		SQFPreprocessor preprocessor = new SQFPreprocessor(linterOptions);
 		
 		if (!cmd.hasOption("s")) {
+			
+			InputStream contents = null;
+			boolean includeFilename = true;
+			String filename = null;
 			if (cmd.getArgs().length == 0) {
 				try {
-					String filename = null;
 					if (root != null) {
 						filename = Paths.get(root).resolve("file.sqf").toString();
 					}
-
-					contents = preprocessor.process(System.in, filename, false);
+					contents = System.in;
+					includeFilename = false;
 				} catch (Exception ex) {
 					Logger.getLogger(SQFLint.class.getName()).log(Level.SEVERE, null, ex);
 					return;
 				}
 			} else if (cmd.getArgs().length == 1) {
-				String filename = cmd.getArgs()[0];
-
+				filename = cmd.getArgs()[0];
 				if (root == null) {
 					root = Paths.get(filename).toAbsolutePath().getParent().toString();
 				}
-
-				try {
-					contents = preprocessor.process(new java.io.FileInputStream(filename), filename, true);
-				} catch (Exception ex) {
-					Logger.getLogger(SQFLint.class.getName()).log(Level.SEVERE, null, ex);
-					return;
-				}
+				contents = new FileInputStream(filename);
 			}
 			
 			linterOptions.setRootPath(root);
+			try {
+				contents = preprocessor.process(
+					StreamUtil.streamToString(),
+					filename,
+					includeFilename
+				);
+			} catch (Exception ex) {
+				Logger.getLogger(SQFLint.class.getName()).log(Level.SEVERE, null, ex);
+				return;
+			}
 
 			if (contents != null) {
-				linter = new Linter(
+				Linter linter = new Linter(
 					new ByteArrayInputStream(
 						contents.getBytes(StandardCharsets.UTF_8)
 					),
-					linterOptions
+					linterOptions,
+					""
 				);
 
 				linter.setPreprocessor(preprocessor);
