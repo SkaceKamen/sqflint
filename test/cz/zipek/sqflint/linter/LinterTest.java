@@ -23,6 +23,9 @@
  */
 package cz.zipek.sqflint.linter;
 
+import cz.zipek.sqflint.linter.Linter;
+import cz.zipek.sqflint.linter.Options;
+import cz.zipek.sqflint.linter.SqfFile;
 import cz.zipek.sqflint.output.VoidOutput;
 import cz.zipek.sqflint.preprocessor.SQFPreprocessor;
 import java.io.ByteArrayInputStream;
@@ -61,38 +64,26 @@ public class LinterTest {
 	}
 	
 	/**
-	 * Helper method that creates linter with correct parameters and input.
+	 * Helper method that creates sqf file with correct parameters and input.
 	 * @param input
-	 * @return initialized linter
+	 * @return initialized sqf file
 	 * @throws Exception 
 	 */
-	private Linter parse(String input) throws Exception {
-		// Preprocessor may be required
-		SQFPreprocessor preprocessor = new SQFPreprocessor(new Options());
-		// Create linter from preprocessed input
-		Linter linter = new Linter(stringToStream(preprocessor.process(
-			input,
-			"file",
-			true
-		)), new Options(), "test.sqf");
+	private SqfFile parse(String input) throws Exception {
 		
-		// Assign preprocessor for futher usage
-		linter.setPreprocessor(preprocessor);
+		Options options = new Options();
 		// No stdout output should be created
-		linter.getOptions().setOutputFormatter(new VoidOutput());
+		options.setOutputFormatter(new VoidOutput());
 		// Some empty data
-		linter.getOptions().setRootPath("./");
+		options.setRootPath("./");
 		
-		return linter;
-	}
-	
-	/**
-	 * Creates input stream (with UTF-8 encoding) from input string.
-	 * @param input
-	 * @return 
-	 */
-	private InputStream stringToStream(String input) {
-		return new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8));
+		SqfFile sqfFile = new SqfFile(
+			options,
+			input,
+			"test.sqf"
+		);
+
+		return sqfFile;
 	}
 
 	/**
@@ -101,15 +92,15 @@ public class LinterTest {
 	 */
 	@Test
 	public void testSwitch() throws Exception {
-		Linter linter = parse(
+		SqfFile sqfFile = parse(
 			"switch (A) do {\n" +
 			"  case B: { X };\n" +
 			"  case C: { Y };\n" +
 			"};\n" +
 			"_somethig = true;"
 		);
-		assertEquals(Linter.CODE_OK, linter.start());
-		assertTrue("Shouldn't return any errors", linter.getErrors().isEmpty());
+		assertEquals(Linter.CODE_OK, sqfFile.process());
+		assertTrue("Shouldn't return any errors", sqfFile.getLinter().getErrors().isEmpty());
 	}
 	
 	/**
@@ -118,13 +109,13 @@ public class LinterTest {
 	 */
 	@Test
 	public void testDefinitionsOrder() throws Exception {
-		Linter linter = parse(
+		SqfFile sqfFile = parse(
 			"diag_log _defined;\n" +
 			"_defined = true;"
 		);
-		assertEquals(Linter.CODE_OK, linter.start());
-		assertTrue("Shouldn't return any errors", linter.getErrors().isEmpty());
-		assertFalse("Should yield warning", linter.getWarnings().isEmpty());
+		assertEquals(Linter.CODE_OK, sqfFile.process());
+		assertTrue("Shouldn't return any errors", sqfFile.getLinter().getErrors().isEmpty());
+		assertFalse("Should yield warning", sqfFile.getLinter().getWarnings().isEmpty());
 	}
 	
 	/**
@@ -133,14 +124,14 @@ public class LinterTest {
 	 */
 	@Test
 	public void testDefinitionsOrderInParams() throws Exception {
-		Linter linter = parse(
+		SqfFile sqfFile = parse(
 			"params [\"_side\", \"_group\", \"_className\"];\n" +
 			"diag_log _side;\n" +
 			"_side = 1;"
 		);
-		assertEquals(Linter.CODE_OK, linter.start());
-		assertTrue("Shouldn't return any errors", linter.getErrors().isEmpty());
-		assertTrue("Shouldn't yield warning", linter.getWarnings().isEmpty());
+		assertEquals(Linter.CODE_OK, sqfFile.process());
+		assertTrue("Shouldn't return any errors", sqfFile.getLinter().getErrors().isEmpty());
+		assertTrue("Shouldn't yield warning", sqfFile.getLinter().getWarnings().isEmpty());
 	}
 	
 	/**
@@ -149,13 +140,13 @@ public class LinterTest {
 	 */
 	@Test
 	public void testIfAssigment() throws Exception {
-		Linter linter = parse(
+		SqfFile sqfFile = parse(
 			"_foo = (if (true) then { false; } else { true; });"
 		);
 		
-		assertEquals(Linter.CODE_OK, linter.start());
-		assertTrue("Shouldn't return any errors", linter.getErrors().isEmpty());
-		assertTrue("Shouldn't return any warnings", linter.getWarnings().isEmpty());
+		assertEquals(Linter.CODE_OK, sqfFile.process());
+		assertTrue("Shouldn't return any errors", sqfFile.getLinter().getErrors().isEmpty());
+		assertTrue("Shouldn't return any warnings", sqfFile.getLinter().getWarnings().isEmpty());
 	}
 	
 	/**
@@ -164,12 +155,12 @@ public class LinterTest {
 	 */
 	@Test
 	public void testUndefinedWarning() throws Exception {
-		Linter linter = parse("\t_foo = _kamen;");
+		SqfFile sqfFile = parse("\t_foo = _kamen;");
 		
-		assertEquals(Linter.CODE_OK, linter.start());
-		assertEquals("Should throw warning", 1, linter.getWarnings().size());
+		assertEquals(Linter.CODE_OK, sqfFile.process());
+		assertEquals("Should throw warning", 1, sqfFile.getLinter().getWarnings().size());
 		
-		Warning warning = linter.getWarnings().get(0);
+		Warning warning = sqfFile.getLinter().getWarnings().get(0);
 		
 		assertEquals("Should report correct position", 9, warning.getToken().beginColumn);
 		assertEquals("Should report correct position", 14, warning.getToken().endColumn);
@@ -177,42 +168,42 @@ public class LinterTest {
 	
 	@Test
 	public void testEmptyFile() throws Exception {
-		Linter linter = parse("/* NOTHING \nNOTHING */");
+		SqfFile sqfFile = parse("/* NOTHING \nNOTHING */");
 		
-		assertEquals(Linter.CODE_OK, linter.start());
-		assertTrue("Should not throw warnings", linter.getWarnings().isEmpty());
-		assertTrue("Should not throw errors", linter.getErrors().isEmpty());
+		assertEquals(Linter.CODE_OK, sqfFile.process());
+		assertTrue("Should not throw warnings", sqfFile.getLinter().getWarnings().isEmpty());
+		assertTrue("Should not throw errors", sqfFile.getLinter().getErrors().isEmpty());
 	}
 	
 	@Test
 	public void testEmptyBlock() throws Exception {
-		Linter linter = parse(";");
+		SqfFile sqfFile = parse(";");
 		
-		assertEquals(Linter.CODE_OK, linter.start());
-		assertTrue("Should not throw warnings", linter.getWarnings().isEmpty());
-		assertTrue("Should not throw errors", linter.getErrors().isEmpty());
+		assertEquals(Linter.CODE_OK, sqfFile.process());
+		assertTrue("Should not throw warnings", sqfFile.getLinter().getWarnings().isEmpty());
+		assertTrue("Should not throw errors", sqfFile.getLinter().getErrors().isEmpty());
 	}
 	
 	@Test
 	public void testEmptyBlockContents() throws Exception {
-		Linter linter = parse("_test = { ; }");
+		SqfFile sqfFile = parse("_test = { ; }");
 		
-		assertEquals(Linter.CODE_OK, linter.start());
-		assertTrue("Should not throw warnings", linter.getWarnings().isEmpty());
-		assertTrue("Should not throw errors", linter.getErrors().isEmpty());
+		assertEquals(Linter.CODE_OK, sqfFile.process());
+		assertTrue("Should not throw warnings", sqfFile.getLinter().getWarnings().isEmpty());
+		assertTrue("Should not throw errors", sqfFile.getLinter().getErrors().isEmpty());
 	}
 	
 	@Test
 	public void testNewSelectOperator() throws Exception {
-		Linter linter = parse(
+		SqfFile sqfFile = parse(
 			"(disconnectCache # 2) params [\"_uid\", \"_group\"];\n" +
 			"	\n" +
 			"[player] joinSilent _group;"
 		);
 		
-		assertEquals(Linter.CODE_OK, linter.start());
-		assertTrue("Should not throw warnings", linter.getWarnings().isEmpty());
-		assertTrue("Should not throw errors", linter.getErrors().isEmpty());
+		assertEquals(Linter.CODE_OK, sqfFile.process());
+		assertTrue("Should not throw warnings", sqfFile.getLinter().getWarnings().isEmpty());
+		assertTrue("Should not throw errors", sqfFile.getLinter().getErrors().isEmpty());
 	}
 	
 	@Test
@@ -221,11 +212,11 @@ public class LinterTest {
 			"_func = { _i = 10; };",
 			"diag_log _i;"
 		};
-		Linter linter = parse(String.join("\n", lines));
+		SqfFile sqfFile = parse(String.join("\n", lines));
 		
-		assertEquals(Linter.CODE_OK, linter.start());
-		assertEquals("Should throw warnings", 1, linter.getWarnings().size());
-		assertTrue("Should not throw errors", linter.getErrors().isEmpty());
+		assertEquals(Linter.CODE_OK, sqfFile.process());
+		assertEquals("Should throw warnings", 1, sqfFile.getLinter().getWarnings().size());
+		assertTrue("Should not throw errors", sqfFile.getLinter().getErrors().isEmpty());
 	}
 	
 	@Test
@@ -235,11 +226,11 @@ public class LinterTest {
 			"_fnc = { diag_log _i; }",
 			"diag_log _i;"
 		};
-		Linter linter = parse(String.join("\n", lines));
+		SqfFile sqfFile = parse(String.join("\n", lines));
 		
-		assertEquals(Linter.CODE_OK, linter.start());
-		assertEquals("Should throw warnings", 1, linter.getWarnings().size());
-		assertTrue("Should not throw errors", linter.getErrors().isEmpty());
+		assertEquals(Linter.CODE_OK, sqfFile.process());
+		assertEquals("Should throw warnings", 1, sqfFile.getLinter().getWarnings().size());
+		assertTrue("Should not throw errors", sqfFile.getLinter().getErrors().isEmpty());
 	}
 	
 	@Test
@@ -248,11 +239,11 @@ public class LinterTest {
 			"0 spawn { _i = 10; };",
 			"diag_log _i;"
 		};
-		Linter linter = parse(String.join("\n", lines));
+		SqfFile sqfFile = parse(String.join("\n", lines));
 		
-		assertEquals(Linter.CODE_OK, linter.start());
-		assertEquals("Should throw warnings", 1, linter.getWarnings().size());
-		assertTrue("Should not throw errors", linter.getErrors().isEmpty());
+		assertEquals(Linter.CODE_OK, sqfFile.process());
+		assertEquals("Should throw warnings", 1, sqfFile.getLinter().getWarnings().size());
+		assertTrue("Should not throw errors", sqfFile.getLinter().getErrors().isEmpty());
 	}
 	
 	@Test
@@ -261,11 +252,11 @@ public class LinterTest {
 			"player addEventHandler [\"Killed\", { _i = 10; }];",
 			"diag_log _i;"
 		};
-		Linter linter = parse(String.join("\n", lines));
+		SqfFile sqfFile = parse(String.join("\n", lines));
 		
-		assertEquals(Linter.CODE_OK, linter.start());
-		assertEquals("Should throw warnings", 1, linter.getWarnings().size());
-		assertTrue("Should not throw errors", linter.getErrors().isEmpty());
+		assertEquals(Linter.CODE_OK, sqfFile.process());
+		assertEquals("Should throw warnings", 1, sqfFile.getLinter().getWarnings().size());
+		assertTrue("Should not throw errors", sqfFile.getLinter().getErrors().isEmpty());
 	}
 	
 	@Test
@@ -274,11 +265,11 @@ public class LinterTest {
 			"if (true) then { private _i = 10; };",
 			"diag_log _i;"
 		};
-		Linter linter = parse(String.join("\n", lines));
+		SqfFile sqfFile = parse(String.join("\n", lines));
 		
-		assertEquals(Linter.CODE_OK, linter.start());
-		assertEquals("Should throw warnings", 1, linter.getWarnings().size());
-		assertTrue("Should not throw errors", linter.getErrors().isEmpty());
+		assertEquals(Linter.CODE_OK, sqfFile.process());
+		assertEquals("Should throw warnings", 1, sqfFile.getLinter().getWarnings().size());
+		assertTrue("Should not throw errors", sqfFile.getLinter().getErrors().isEmpty());
 	}
 
 	@Test
@@ -287,11 +278,11 @@ public class LinterTest {
 			"if (true) then { _i = 10; };",
 			"diag_log _i;"
 		};
-		Linter linter = parse(String.join("\n", lines));
+		SqfFile sqfFile = parse(String.join("\n", lines));
 		
-		assertEquals(Linter.CODE_OK, linter.start());
-		assertTrue("Should not throw warnings", linter.getWarnings().isEmpty());
-		assertTrue("Should not throw errors", linter.getErrors().isEmpty());
+		assertEquals(Linter.CODE_OK, sqfFile.process());
+		assertTrue("Should not throw warnings", sqfFile.getLinter().getWarnings().isEmpty());
+		assertTrue("Should not throw errors", sqfFile.getLinter().getErrors().isEmpty());
 	}
 	
 	@Test
@@ -301,11 +292,11 @@ public class LinterTest {
 			"if (true) then { diag_log _i; };",
 			"diag_log _i;"
 		};
-		Linter linter = parse(String.join("\n", lines));
+		SqfFile sqfFile = parse(String.join("\n", lines));
 		
-		assertEquals(Linter.CODE_OK, linter.start());
-		assertTrue("Should not throw warnings", linter.getWarnings().isEmpty());
-		assertTrue("Should not throw errors", linter.getErrors().isEmpty());
+		assertEquals(Linter.CODE_OK, sqfFile.process());
+		assertTrue("Should not throw warnings", sqfFile.getLinter().getWarnings().isEmpty());
+		assertTrue("Should not throw errors", sqfFile.getLinter().getErrors().isEmpty());
 	}
 	
 	@Test
@@ -318,10 +309,10 @@ public class LinterTest {
 			"allUnits select { damage _x == _i };",
 			"diag_log _i;"
 		};
-		Linter linter = parse(String.join("\n", lines));
+		SqfFile sqfFile = parse(String.join("\n", lines));
 		
-		assertEquals(Linter.CODE_OK, linter.start());
-		assertTrue("Should not throw warnings", linter.getWarnings().isEmpty());
-		assertTrue("Should not throw errors", linter.getErrors().isEmpty());
+		assertEquals(Linter.CODE_OK, sqfFile.process());
+		assertTrue("Should not throw warnings", sqfFile.getLinter().getWarnings().isEmpty());
+		assertTrue("Should not throw errors", sqfFile.getLinter().getErrors().isEmpty());
 	}
 }

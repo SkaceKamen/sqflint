@@ -40,12 +40,14 @@ public class Linter extends SQFParser {
 
 	public Linter(
 		Options options,
+		SQFPreprocessor preprocessor,
 		InputStream stream,
 		String filePath
 	) {
 		super(stream);
 		
 		this.options = options;
+		this.preprocessor = preprocessor;
 		this.filePath = filePath;
 	}
 	
@@ -72,9 +74,6 @@ public class Linter extends SQFParser {
 				block.analyze(this, null);
 				LogUtil.benchLog(options, this, filePath, "Linter (3)");
 			}
-			
-			// postParse();
-			options.getOutputFormatter().print(this);
 		}
 		LogUtil.benchLog(options, this, filePath, "Linter (4)");
 		
@@ -95,11 +94,11 @@ public class Linter extends SQFParser {
 	 * Post parse checks, mainly for warnings.
 	 * Currently checks if every used local variable is actually defined.
 	 */
-	protected void postParse() {
-		if (options.isSkipWarnings()) return;
+	// protected void postParse() {
+	// 	if (options.isSkipWarnings()) return;
 
-		getWarnings().addAll(preprocessor.getWarnings());
-	}
+	// 	getWarnings().addAll(preprocessor.getWarnings());
+	// }
 	
 	@Override
 	protected void pushContext(boolean newThread) {

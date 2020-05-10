@@ -25,6 +25,7 @@ package cz.zipek.sqflint;
 
 import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.linter.Options;
+import cz.zipek.sqflint.linter.SqfFile;
 import cz.zipek.sqflint.output.LogUtil;
 import cz.zipek.sqflint.output.ServerOutput;
 import cz.zipek.sqflint.output.StreamUtil;
@@ -89,17 +90,28 @@ public class SQFLintServer {
 
 			LogUtil.benchLog(options, this, filePath, "Starting");
 
-			if (message.has("contents")) {
-				linter = parse(message.getString("contents"), filePath);
-			} else {
-				linter = parse(StreamUtil.streamToString(new FileInputStream(filePath)), filePath);
-			}
-			
+			// Apply file specific options
+			Options fileOptions = new Options(options);
+			fileOptions.setOutputFormatter(new ServerOutput(filePath));
+			fileOptions.setRootPath(Paths.get(filePath).toAbsolutePath().getParent().toString());
+			fileOptions.getSkippedVariables().clear();
+
 			if (message.has("options")) {
-				this.applyOptions(message.getJSONObject("options"));
+				this.applyOptions(message.getJSONObject("options"), fileOptions);
 			}
-			
-			linter.start();			
+
+			SqfFile sqfFile = new SqfFile(
+				fileOptions,
+				message.has("contents") ?
+					message.getString("contents")
+					:
+					StreamUtil.streamToString(new FileInputStream(filePath)),
+				filePath
+			);
+			sqfFile.process();
+
+			fileOptions.getOutputFormatter().print(sqfFile);
+
 		} catch (JSONException ex) {
 			Logger.getLogger(SQFLintServer.class.getName()).log(Level.SEVERE, null, ex);
 		} catch (Exception ex) {
@@ -110,38 +122,38 @@ public class SQFLintServer {
 		return true;
 	}
 	
-	private void applyOptions(JSONObject data) {
+	private void applyOptions(JSONObject data, Options fileOptions) {
 		try {
 			// @TODO: Clear options?
 			
 			if (data.has("checkPaths")) {
-				options.setCheckPaths(data.getBoolean("checkPaths"));
+				fileOptions.setCheckPaths(data.getBoolean("checkPaths"));
 			}
 			
 			if (data.has("pathsRoot")) {
-				options.setRootPath(data.getString("pathsRoot"));
+				fileOptions.setRootPath(data.getString("pathsRoot"));
 			}
 			
 			if (data.has("ignoredVariables")) {
 				JSONArray vars = data.getJSONArray("ignoredVariables");
 				for (int i = 0; i < vars.length(); i++) {
-					options.getSkippedVariables().add(vars.getString(i));
+					fileOptions.getSkippedVariables().add(vars.getString(i));
 				}
 			}
 						
 			if (data.has("includePrefixes")) {
-				options.getIncludePaths().clear();
+				fileOptions.getIncludePaths().clear();
 				
 				JSONObject paths = data.getJSONObject("includePrefixes");
 				Iterator keys = paths.keys();
 				while (keys.hasNext()) {
 					String key = (String)keys.next();
-					options.getIncludePaths().put(key, paths.getString(key));
+					fileOptions.getIncludePaths().put(key, paths.getString(key));
 				}
 			}
 			
 			if (data.has("contextSeparation")) {
-				options.setContextSeparationEnabled(data.getBoolean("contextSeparation"));
+				fileOptions.setContextSeparationEnabled(data.getBoolean("contextSeparation"));
 			}
 			
 		} catch (JSONException ex) {
@@ -149,30 +161,4 @@ public class SQFLintServer {
 		}
 	}
 	
-	// public Linter parseFile(String path) throws Exception {
-	// 	return parse(new BufferedReader(new InputStreamReader(new FileInputStream(path))).lines().collect(Collectors.joining("\n")), path);
-	// }
-	
-	public Linter parse(String fileContents, String filePath) throws Exception {
-		// Apply file specific options
-		options.setOutputFormatter(new ServerOutput(filePath));
-		options.setRootPath(Paths.get(filePath).toAbsolutePath().getParent().toString());
-		options.getSkippedVariables().clear();
-
-		// Preprocessor may be required
-		SQFPreprocessor preprocessor = new SQFPreprocessor(options);
-		
-		// Create linter from preprocessed input
-		LogUtil.benchLog(options, this, filePath, "Preproc");
-		InputStream stream = StreamUtil.stringToStream(preprocessor.process(
-			fileContents,
-			filePath,
-			true
-		));
-		LogUtil.benchLog(options, this, filePath, "Preproc done");
-		Linter linter = new Linter(stream, options, filePath);
-		linter.setPreprocessor(preprocessor);
-		
-		return linter;
-	}
 }

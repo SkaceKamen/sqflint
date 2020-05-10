@@ -24,6 +24,7 @@
 package cz.zipek.sqflint.output;
 
 import cz.zipek.sqflint.linter.Linter;
+import cz.zipek.sqflint.linter.SqfFile;
 
 import java.util.Date;
 import java.util.logging.Level;
@@ -43,7 +44,7 @@ public class ServerOutput extends JSONOutput {
 	}
 	
 	@Override
-	public void print(Linter linter) {
+	public void print(SqfFile sqfFile) {
 		try {
 			System.out.println(
 				new JSONStringer()
@@ -51,9 +52,9 @@ public class ServerOutput extends JSONOutput {
 						.key("file")
 						.value(this.filename)
 						.key("messages")
-						.value(build(linter))
+						.value(build(sqfFile))
 						.key("timeneeded")
-						.value(new Date().getTime() - linter.getStartTime().getTime())
+						.value(new Date().getTime() - sqfFile.getLinter().getStartTime().getTime())
 					.endObject()
 			);
 			System.out.flush();

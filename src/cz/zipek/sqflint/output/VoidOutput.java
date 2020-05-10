@@ -24,6 +24,7 @@
 package cz.zipek.sqflint.output;
 
 import cz.zipek.sqflint.linter.Linter;
+import cz.zipek.sqflint.linter.SqfFile;
 
 /**
  * Void output formatter for testing purposes.
@@ -31,7 +32,7 @@ import cz.zipek.sqflint.linter.Linter;
  */
 public class VoidOutput implements OutputFormatter {
 	@Override
-	public void print(Linter linter) {
+	public void print(SqfFile sqfFile) {
 		
 	}
 }

@@ -124,8 +124,9 @@ public final class Options {
 		this.skippedVariables = new HashSet<String>();
 		this.skippedVariables.addAll(old.skippedVariables);
 		
-		// TODO
-		this.operators = new HashMap<String, Operator>();
+		for (String key : old.operators.keySet()) {
+			this.operators.put(key, old.operators.get(key));
+		}
 	}
 
 	/**

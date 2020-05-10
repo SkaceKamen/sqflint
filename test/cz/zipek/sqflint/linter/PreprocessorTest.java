@@ -23,6 +23,7 @@
  */
 package cz.zipek.sqflint.linter;
 
+import cz.zipek.sqflint.linter.Options;
 import cz.zipek.sqflint.preprocessor.SQFPreprocessor;
 import org.junit.Assert;
 import org.junit.Test;

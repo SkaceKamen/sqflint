@@ -1,11 +1,13 @@
 package cz.zipek.sqflint;
 
 import cz.zipek.sqflint.linter.Linter;
+import cz.zipek.sqflint.linter.SqfFile;
 import cz.zipek.sqflint.output.JSONOutput;
 import cz.zipek.sqflint.output.StreamUtil;
 import cz.zipek.sqflint.preprocessor.SQFPreprocessor;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -107,8 +109,6 @@ public class SQFLint {
 		linterOptions.setWarningAsError(cmd.hasOption("we"));
 		linterOptions.setCheckPaths(cmd.hasOption("cp"));
 		
-		SQFPreprocessor preprocessor = new SQFPreprocessor(linterOptions);
-		
 		if (!cmd.hasOption("s")) {
 			
 			InputStream contents = null;
@@ -130,38 +130,24 @@ public class SQFLint {
 				if (root == null) {
 					root = Paths.get(filename).toAbsolutePath().getParent().toString();
 				}
-				contents = new FileInputStream(filename);
+
+				try {
+					contents = new FileInputStream(filename);
+				} catch (FileNotFoundException e) {
+					Logger.getLogger(SQFLint.class.getName()).log(Level.SEVERE, filename + " not found", e);
+					System.exit(1);
+				}
 			}
 			
 			linterOptions.setRootPath(root);
-			try {
-				contents = preprocessor.process(
-					StreamUtil.streamToString(),
-					filename,
-					includeFilename
-				);
-			} catch (Exception ex) {
-				Logger.getLogger(SQFLint.class.getName()).log(Level.SEVERE, null, ex);
-				return;
-			}
 
-			if (contents != null) {
-				Linter linter = new Linter(
-					new ByteArrayInputStream(
-						contents.getBytes(StandardCharsets.UTF_8)
-					),
-					linterOptions,
-					""
-				);
+			SqfFile sqfFile = new SqfFile(
+				linterOptions,
+				StreamUtil.streamToString(contents),
+				filename
+			);
 
-				linter.setPreprocessor(preprocessor);
-
-				try {
-					System.exit(linter.start());
-				} catch (IOException ex) {
-					Logger.getLogger(SQFLint.class.getName()).log(Level.SEVERE, null, ex);
-				}
-			}
+			System.exit(sqfFile.process());
 		} else {
 			SQFLintServer server = new SQFLintServer(linterOptions);
 			server.start();

@@ -2,6 +2,7 @@ package cz.zipek.sqflint.output;
 
 import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.linter.SQFVariable;
+import cz.zipek.sqflint.linter.SqfFile;
 import cz.zipek.sqflint.parser.Token;
 import cz.zipek.sqflint.preprocessor.SQFMacro;
 import java.util.ArrayList;
@@ -17,7 +18,10 @@ import org.json.JSONObject;
  * @author Jan Zípek (jan at zipek.cz)
  */
 public class JSONOutput implements OutputFormatter {	
-	protected List<JSONObject> build(Linter linter) {
+	protected List<JSONObject> build(SqfFile sqfFile) {
+
+		Linter linter = sqfFile.getLinter();
+
 		List<JSONObject> result = new ArrayList<>();
 		
 		// Print errors
@@ -101,7 +105,7 @@ public class JSONOutput implements OutputFormatter {
 			});
 			
 			// Print includes
-			linter.getPreprocessor().getIncludes().stream().forEach((entry) -> {
+			sqfFile.getPreprocessor().getIncludes().stream().forEach((entry) -> {
 				try {
 					JSONObject info = new JSONObject();
 					info.put("type", "include");
@@ -116,7 +120,7 @@ public class JSONOutput implements OutputFormatter {
 			});
 			
 			// Print macros info
-			linter.getPreprocessor().getMacros().entrySet().stream().forEach((entry) -> {
+			sqfFile.getPreprocessor().getMacros().entrySet().stream().forEach((entry) -> {
 				try {
 					SQFMacro macro = entry.getValue();
 					
@@ -150,8 +154,8 @@ public class JSONOutput implements OutputFormatter {
 	}
 	
 	@Override
-	public void print(Linter linter) {		
-		build(linter).stream().forEach((item) -> {
+	public void print(SqfFile sqfFile) {		
+		build(sqfFile).stream().forEach((item) -> {
 			System.out.println(item.toString());
 		});
 	}
