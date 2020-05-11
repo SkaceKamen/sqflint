@@ -23,26 +23,18 @@
  */
 package cz.zipek.sqflint;
 
-import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.linter.Options;
 import cz.zipek.sqflint.linter.SqfFile;
 import cz.zipek.sqflint.output.LogUtil;
 import cz.zipek.sqflint.output.ServerOutput;
 import cz.zipek.sqflint.output.StreamUtil;
-import cz.zipek.sqflint.preprocessor.SQFPreprocessor;
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import java.util.Date;
-import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -79,17 +71,18 @@ public class SQFLintServer {
 	
 	private boolean processMessage(JSONObject message) {
 		LogUtil.benchLog(options, this, "/ClientMessage", "Client message received");
-		String filePath = "";
+		
+		String filePath = null; // declare here to use in catch block
 		try {
 			if (message.has("type") && "exit".equals(message.getString("type"))) {
 				return false;
 			}
-			
+
+			// read filepath
 			filePath = message.getString("file");
-			Linter linter;
-
+			
 			LogUtil.benchLog(options, this, filePath, "Starting");
-
+			
 			// Apply file specific options
 			Options fileOptions = new Options(options);
 			fileOptions.setOutputFormatter(new ServerOutput(filePath));
@@ -108,9 +101,12 @@ public class SQFLintServer {
 					StreamUtil.streamToString(new FileInputStream(filePath)),
 				filePath
 			);
+
 			sqfFile.process();
 
 			fileOptions.getOutputFormatter().print(sqfFile);
+
+			LogUtil.benchLog(options, this, filePath, "Done");
 
 		} catch (JSONException ex) {
 			Logger.getLogger(SQFLintServer.class.getName()).log(Level.SEVERE, null, ex);
@@ -143,11 +139,8 @@ public class SQFLintServer {
 						
 			if (data.has("includePrefixes")) {
 				fileOptions.getIncludePaths().clear();
-				
 				JSONObject paths = data.getJSONObject("includePrefixes");
-				Iterator keys = paths.keys();
-				while (keys.hasNext()) {
-					String key = (String)keys.next();
+				for (String key : paths.keySet()) {
 					fileOptions.getIncludePaths().put(key, paths.getString(key));
 				}
 			}

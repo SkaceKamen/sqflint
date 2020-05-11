@@ -1,6 +1,7 @@
 package cz.zipek.sqflint.output;
 
 import cz.zipek.sqflint.linter.Linter;
+import cz.zipek.sqflint.linter.PreProcessorError;
 import cz.zipek.sqflint.linter.SQFVariable;
 import cz.zipek.sqflint.linter.SqfFile;
 import cz.zipek.sqflint.parser.Token;
@@ -24,6 +25,28 @@ public class JSONOutput implements OutputFormatter {
 
 		List<JSONObject> result = new ArrayList<>();
 		
+		if (sqfFile.getPreProcessorError() != null) {
+			PreProcessorError preProcError = sqfFile.getPreProcessorError();
+			try {
+
+				JSONObject error = new JSONObject();
+				error.put("line", new JSONArray(new int[] {
+					preProcError.getLine(), preProcError.getLine()
+				}));
+				error.put("column", new JSONArray(new int[] {
+					0, 0
+				}));
+				
+				error.put("type", "error");
+				error.put("message", preProcError.getMessage());
+
+				result.add(error);
+			} catch (JSONException ex) {
+				Logger.getLogger(JSONOutput.class.getName()).log(Level.SEVERE, null, ex);
+			}
+			return result;
+		}
+
 		// Print errors
 		linter.getErrors().stream().forEach((e) -> {
 			try {

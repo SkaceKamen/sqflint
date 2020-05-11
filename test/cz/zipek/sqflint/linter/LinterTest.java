@@ -23,9 +23,6 @@
  */
 package cz.zipek.sqflint.linter;
 
-import cz.zipek.sqflint.linter.Linter;
-import cz.zipek.sqflint.linter.Options;
-import cz.zipek.sqflint.linter.SqfFile;
 import cz.zipek.sqflint.output.VoidOutput;
 import cz.zipek.sqflint.preprocessor.SQFPreprocessor;
 import java.io.ByteArrayInputStream;

@@ -54,7 +54,12 @@ public class ServerOutput extends JSONOutput {
 						.key("messages")
 						.value(build(sqfFile))
 						.key("timeneeded")
-						.value(new Date().getTime() - sqfFile.getLinter().getStartTime().getTime())
+						.value(
+							sqfFile.getLinter() != null && sqfFile.getLinter().getStartTime() != null ?
+								new Date().getTime() - sqfFile.getLinter().getStartTime().getTime()
+								:
+								0
+						)
 					.endObject()
 			);
 			System.out.flush();

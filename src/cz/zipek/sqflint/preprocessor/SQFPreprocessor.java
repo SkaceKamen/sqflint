@@ -26,28 +26,24 @@ package cz.zipek.sqflint.preprocessor;
 import cz.zipek.sqflint.SQFLint;
 import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.linter.Options;
+import cz.zipek.sqflint.linter.PreProcessorError;
 import cz.zipek.sqflint.linter.Warning;
 import cz.zipek.sqflint.output.LogUtil;
 import cz.zipek.sqflint.output.StreamUtil;
 import cz.zipek.sqflint.parser.Token;
-import java.io.BufferedReader;
 import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  *
@@ -59,7 +55,6 @@ public class SQFPreprocessor {
 	private final List<SQFMacro> sortedMacros = new ArrayList<>();
 	
 	private final List<Warning> warnings = new ArrayList<>();
-	
 	private final Options options;
 	
 	private int readUntilIndex;
@@ -68,12 +63,13 @@ public class SQFPreprocessor {
 		this.options = options;
 	}
 	
-	// public String process(InputStream stream, String source, boolean include_filename) throws Exception {
-	// 	return process(new BufferedReader(new InputStreamReader(stream)).lines().collect(Collectors.joining("\n")), source, include_filename);
-	// }
-	
-	
-	public String process(String input, String source, boolean include_filename) throws Exception {
+	public String process(
+		String input,
+		String source,
+		boolean include_filename
+	)
+		throws SQFPreproccessException
+	{
 		Path root = Paths.get(source).toAbsolutePath().getParent();
 		
 		LogUtil.benchLog(options, this, source, "Process Starting");
@@ -110,7 +106,6 @@ public class SQFPreprocessor {
 			.replaceAll("\r", "")
 			.split("\n");
 		
-		String output = input;
 		int lineIndex = 0;
 		
 		Pattern whitespaceAtStart = Pattern.compile("^\\s*");
@@ -261,8 +256,18 @@ public class SQFPreprocessor {
 							);
 
 							if (Files.exists(path) && !Files.isDirectory(path)) {
+								String includeContent;
+								try {
+									includeContent = StreamUtil.streamToString(new FileInputStream(path.toString()));
+								} catch (FileNotFoundException e) {
+									throw new SQFPreproccessException(
+										source,
+										lineIndex,
+										"Include file not found"
+									);
+								}
 								process(
-									StreamUtil.streamToString(new FileInputStream(path.toString())),
+									includeContent,
 									path.toString(),
 									true
 								);
@@ -422,7 +427,6 @@ public class SQFPreprocessor {
 						source,
 						"Failed to parse line: " + Integer.toString(parsedLines) + " = !inComment"
 					);
-					// System.exit(1);
 					throw new SQFPreproccessException(source, parsedLines, ex.getMessage());
 				}
 				

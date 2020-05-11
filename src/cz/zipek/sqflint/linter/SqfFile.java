@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 
 import cz.zipek.sqflint.output.LogUtil;
 import cz.zipek.sqflint.output.StreamUtil;
+import cz.zipek.sqflint.preprocessor.SQFPreproccessException;
 import cz.zipek.sqflint.preprocessor.SQFPreprocessor;
 
 public class SqfFile {
@@ -14,6 +15,7 @@ public class SqfFile {
     private String filePath;
     private String fileContent;
     private Options options;
+    private PreProcessorError preProcessorError;
 
     public SqfFile(Options options, String fileContent, String filePath) {
         this.options = options;
@@ -33,8 +35,13 @@ public class SqfFile {
                 this.filePath != null
             );
             LogUtil.benchLog(options, this, filePath, "Preproc done");
-        } catch (Exception ex) {
-            Logger.getLogger(SqfFile.class.getName()).log(Level.SEVERE, "Preprocessor Error", ex);
+        } catch (SQFPreproccessException ex) {
+            System.err.println("Preprocessor Error" + ex.getMessage());
+            preProcessorError = new PreProcessorError(
+                ex.getFile(),
+                ex.getLine(),
+                ex.getMessage()
+            );
             return 1;
         }
 
@@ -89,4 +96,22 @@ public class SqfFile {
     public void setFileContent(String fileContent) {
         this.fileContent = fileContent;
     }
+
+    public Options getOptions() {
+        return options;
+    }
+
+    public void setOptions(Options options) {
+        this.options = options;
+    }
+
+    public PreProcessorError getPreProcessorError() {
+        return preProcessorError;
+    }
+
+    public void setPreProcessorError(PreProcessorError preProcessorError) {
+        this.preProcessorError = preProcessorError;
+    }
+
+    
 }

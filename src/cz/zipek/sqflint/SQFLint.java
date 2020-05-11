@@ -1,16 +1,12 @@
 package cz.zipek.sqflint;
 
-import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.linter.SqfFile;
 import cz.zipek.sqflint.output.JSONOutput;
 import cz.zipek.sqflint.output.StreamUtil;
-import cz.zipek.sqflint.preprocessor.SQFPreprocessor;
-import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -112,7 +108,6 @@ public class SQFLint {
 		if (!cmd.hasOption("s")) {
 			
 			InputStream contents = null;
-			boolean includeFilename = true;
 			String filename = null;
 			if (cmd.getArgs().length == 0) {
 				try {
@@ -120,7 +115,6 @@ public class SQFLint {
 						filename = Paths.get(root).resolve("file.sqf").toString();
 					}
 					contents = System.in;
-					includeFilename = false;
 				} catch (Exception ex) {
 					Logger.getLogger(SQFLint.class.getName()).log(Level.SEVERE, null, ex);
 					return;

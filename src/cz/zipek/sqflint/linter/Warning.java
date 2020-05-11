@@ -7,6 +7,10 @@ import cz.zipek.sqflint.parser.Token;
  * @author Jan Zípek (jan at zipek.cz)
  */
 public class Warning extends SQFParseException {
+	/**
+	 * serial
+	 */
+	private static final long serialVersionUID = -2839703922860891312L;
 	private final Token token;
 	private final String message;
 	private final String filename;
