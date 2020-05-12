@@ -70,12 +70,12 @@
     nbproject/build-impl.xml file. 
 
     -->
-	
-	<target name="-post-clean">
-		<delete>
-			<fileset dir="src/cz/zipek/sqflint/parser/" includes="**/*.java"/>
-		</delete>
-	</target>
+    
+    <target name="-post-clean">
+        <delete>
+            <fileset dir="src/cz/zipek/sqflint/parser/" includes="**/*.java"/>
+        </delete>
+    </target>
     
     <condition property="windowsos">
         <os family="windows" />
@@ -99,31 +99,31 @@
     </target>
 
     <target name="-pre-compile" depends="-pre-compile-windows,-pre-compile-linux" />
-	
-	<target name="-post-jar-windows" if="windowsos">
+    
+    <target name="-post-jar-windows" if="windowsos">
         <copy todir="${dist.dir}">
-			<fileset dir="dist-src/">
-				<include name="*" />
-			</fileset>
-		</copy>
-		<exec executable="launch4jc">
-			<arg file="build-exe.xml" />
-		</exec>
-		<zip destfile="package/sqflint.zip" basedir="${dist.dir}" />
-		<exec executable="iscc">
-			<arg file="build-installer.iss" />
-		</exec>
+            <fileset dir="dist-src/">
+                <include name="*" />
+            </fileset>
+        </copy>
+        <exec executable="launch4jc">
+            <arg file="build-exe.xml" />
+        </exec>
+        <zip destfile="package/sqflint.zip" basedir="${dist.dir}" />
+        <exec executable="iscc">
+            <arg file="build-installer.iss" />
+        </exec>
     </target>
     <target name="-post-jar-linux" if="linuxos">
         <mkdir dir="${dist.dir}/github"/>
         <copy todir="${dist.dir}/github">
-			<fileset dir="dist/">
-				<include name="SQFLint.jar" />
+            <fileset dir="dist/">
+                <include name="SQFLint.jar" />
             </fileset>
         </copy>
         <mkdir dir="${dist.dir}/github/lib"/>
         <copy todir="${dist.dir}/github/lib">
-			<fileset dir="lib/">
+            <fileset dir="lib/">
                 <include name="*.jar" />
             </fileset>
         </copy>
