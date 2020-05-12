@@ -84,8 +84,7 @@ public class SQFLintServer {
 			LogUtil.benchLog(options, this, filePath, "Starting");
 			
 			// Apply file specific options
-			Options fileOptions = new Options(options);
-			fileOptions.setOutputFormatter(new ServerOutput(filePath));
+			Options fileOptions = new Options(options, new ServerOutput(filePath));
 			fileOptions.setRootPath(Paths.get(filePath).toAbsolutePath().getParent().toString());
 			fileOptions.getSkippedVariables().clear();
 

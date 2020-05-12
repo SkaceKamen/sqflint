@@ -100,9 +100,10 @@ public final class Options {
 	}
 	
 	/**
-	 * Creates a copy of the options
+	 * Creates a copy of the options with a new output formatter
+     *  (they cannot be copied and have to be provided on a per file basis i.e. serveroutput)
 	 */
-	public Options(Options old) {
+	public Options(Options old, OutputFormatter output) {
 		this.stopOnError = old.stopOnError;
 		this.skipWarnings = old.skipWarnings;
 		this.jsonOutput = old.jsonOutput;
@@ -114,8 +115,7 @@ public final class Options {
 		this.benchLogs = old.benchLogs;
 		this.rootPath = old.rootPath;
 		
-		this.outputFormatter = new TextOutput();
-		for (String key : old.includePaths.keySet()) {
+        for (String key : old.includePaths.keySet()) {
 			this.includePaths.put(key, old.includePaths.get(key));
 		}
 		
@@ -126,7 +126,9 @@ public final class Options {
 		
 		for (String key : old.operators.keySet()) {
 			this.operators.put(key, old.operators.get(key));
-		}
+        }
+        
+        this.outputFormatter = output;
 	}
 
 	/**
@@ -199,7 +201,13 @@ public final class Options {
 				}
 			}
 		}
-	}
+        
+        try {
+            reader.close();
+        } catch (Exception e) {
+            // log?
+        }
+    }
 	
 	/**
 	 * Converts string type definitions to enums.
