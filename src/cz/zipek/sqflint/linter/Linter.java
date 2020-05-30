@@ -1,6 +1,7 @@
 package cz.zipek.sqflint.linter;
 
 import cz.zipek.sqflint.sqf.SQFBlock;
+import cz.zipek.sqflint.output.LogUtil;
 import cz.zipek.sqflint.parser.ParseException;
 import cz.zipek.sqflint.parser.SQFParser;
 import cz.zipek.sqflint.parser.Token;
@@ -12,13 +13,14 @@ import cz.zipek.sqflint.sqf.SQFContext;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
  *
- * @author Jan Zípek <jan at zipek.cz>
+ * @author Jan Zípek (jan at zipek.cz)
  */
 public class Linter extends SQFParser {
 	public static final int CODE_OK = 0;
@@ -33,17 +35,29 @@ public class Linter extends SQFParser {
 	private SQFPreprocessor preprocessor;
 	private final Options options;
 	
-	public Linter(InputStream stream, Options options) {
+	private Date startTime;
+	private String filePath;
+
+	public Linter(
+		Options options,
+		SQFPreprocessor preprocessor,
+		InputStream stream,
+		String filePath
+	) {
 		super(stream);
 		
 		this.options = options;
+		this.preprocessor = preprocessor;
+		this.filePath = filePath;
 	}
 	
 	public int start() throws IOException {
 		setTabSize(1);
 		
 		SQFBlock block = null;
-		
+
+		startTime = new Date();
+		LogUtil.benchLog(options, this, filePath, "Linter (1) ");
 		try {
 			block = CompilationUnit();
 		} catch (ParseException | TokenMgrError  e) {
@@ -56,12 +70,12 @@ public class Linter extends SQFParser {
 			}
 		} finally {
 			if (block != null) {
+				LogUtil.benchLog(options, this, filePath, "Linter (2)");
 				block.analyze(this, null);
+				LogUtil.benchLog(options, this, filePath, "Linter (3)");
 			}
-			
-			// postParse();
-			options.getOutputFormatter().print(this);
 		}
+		LogUtil.benchLog(options, this, filePath, "Linter (4)");
 		
 		// Always return OK if exit code is disabled
 		if (!options.isExitCodeEnabled()) {
@@ -71,16 +85,20 @@ public class Linter extends SQFParser {
 		// Return ERR code when any error was encountered
 		return (getErrors().size() > 0) ? CODE_ERR : CODE_OK;
 	}
+
+	public Date getStartTime() {
+		return startTime;
+	}
 		
 	/**
 	 * Post parse checks, mainly for warnings.
 	 * Currently checks if every used local variable is actually defined.
 	 */
-	protected void postParse() {
-		if (options.isSkipWarnings()) return;
+	// protected void postParse() {
+	// 	if (options.isSkipWarnings()) return;
 
-		getWarnings().addAll(preprocessor.getWarnings());
-	}
+	// 	getWarnings().addAll(preprocessor.getWarnings());
+	// }
 	
 	@Override
 	protected void pushContext(boolean newThread) {
@@ -217,13 +235,6 @@ public class Linter extends SQFParser {
 	 */
 	public List<SQFMacro> getMacros() {
 		return macros;
-	}
-
-	/**
-	 * @param preprocessor 
-	 */
-	public void setPreprocessor(SQFPreprocessor preprocessor) {
-		this.preprocessor = preprocessor;
 	}
 
 	/**

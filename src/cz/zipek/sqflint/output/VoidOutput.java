@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2017 Jan Zípek <jan at zipek.cz>.
+ * Copyright 2017 Jan Zípek (jan at zipek.cz).
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,14 +24,15 @@
 package cz.zipek.sqflint.output;
 
 import cz.zipek.sqflint.linter.Linter;
+import cz.zipek.sqflint.linter.SqfFile;
 
 /**
  * Void output formatter for testing purposes.
- * @author Jan Zípek <jan at zipek.cz>
+ * @author Jan Zípek (jan at zipek.cz)
  */
 public class VoidOutput implements OutputFormatter {
 	@Override
-	public void print(Linter linter) {
+	public void print(SqfFile sqfFile) {
 		
 	}
 }

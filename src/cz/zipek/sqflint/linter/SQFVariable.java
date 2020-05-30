@@ -6,7 +6,7 @@ import java.util.List;
 
 /**
  *
- * @author Jan Zípek <jan at zipek.cz>
+ * @author Jan Zípek (jan at zipek.cz)
  */
 public class SQFVariable {
 	public String name;

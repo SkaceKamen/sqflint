@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2017 Jan Zípek <jan at zipek.cz>.
+ * Copyright 2017 Jan Zípek (jan at zipek.cz).
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,6 +33,7 @@ import cz.zipek.sqflint.sqf.operators.IfOperator;
 import cz.zipek.sqflint.sqf.operators.Operator;
 import cz.zipek.sqflint.sqf.operators.ParamsOperator;
 import cz.zipek.sqflint.sqf.operators.PathLoader;
+import cz.zipek.sqflint.sqf.operators.SetVariableOperator;
 import cz.zipek.sqflint.sqf.operators.ThenOperator;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -49,7 +50,7 @@ import java.util.regex.Pattern;
 
 /**
  *
- * @author Jan Zípek <jan at zipek.cz>
+ * @author Jan Zípek (jan at zipek.cz)
  */
 public final class Options {
 	private OutputFormatter outputFormatter = new TextOutput();
@@ -61,6 +62,7 @@ public final class Options {
 	private boolean warningAsError = false;
 	private boolean checkPaths = false;
 	private boolean contextSeparationEnabled = true;
+	private boolean benchLogs = false;
 	private String rootPath = null;
 	
 	private final Map<String, String> includePaths = new HashMap<>();
@@ -80,6 +82,7 @@ public final class Options {
 		}));
 		
 		operators.put("params", new ParamsOperator());
+		operators.put("setvariable", new SetVariableOperator());
 		operators.put("execvm", new PathLoader());
 		operators.put("preprocessfile", new PathLoader());
 		operators.put("preprocessfilelinenumbers", new PathLoader());
@@ -96,6 +99,38 @@ public final class Options {
 		operators.put("||", operators.get("or"));
 	}
 	
+	/**
+	 * Creates a copy of the options with a new output formatter
+     *  (they cannot be copied and have to be provided on a per file basis i.e. serveroutput)
+	 */
+	public Options(Options old, OutputFormatter output) {
+		this.stopOnError = old.stopOnError;
+		this.skipWarnings = old.skipWarnings;
+		this.jsonOutput = old.jsonOutput;
+		this.outputVariables = old.outputVariables;
+		this.exitCodeEnabled = old.exitCodeEnabled;
+		this.warningAsError = old.warningAsError;
+		this.checkPaths = old.checkPaths;
+		this.contextSeparationEnabled = old.contextSeparationEnabled;
+		this.benchLogs = old.benchLogs;
+		this.rootPath = old.rootPath;
+		
+        for (String key : old.includePaths.keySet()) {
+			this.includePaths.put(key, old.includePaths.get(key));
+		}
+		
+		this.ignoredVariables = new HashSet<String>();
+		this.ignoredVariables.addAll(old.ignoredVariables);
+		this.skippedVariables = new HashSet<String>();
+		this.skippedVariables.addAll(old.skippedVariables);
+		
+		for (String key : old.operators.keySet()) {
+			this.operators.put(key, old.operators.get(key));
+        }
+        
+        this.outputFormatter = output;
+	}
+
 	/**
 	 * Loads commands list from resources.
 	 * 
@@ -166,7 +201,13 @@ public final class Options {
 				}
 			}
 		}
-	}
+        
+        try {
+            reader.close();
+        } catch (Exception e) {
+            // log?
+        }
+    }
 	
 	/**
 	 * Converts string type definitions to enums.
@@ -392,5 +433,13 @@ public final class Options {
 		}
 		
 		return false;
+	}
+
+	public boolean isBenchLogs() {
+		return benchLogs;
+	}
+
+	public void setBenchLogs(boolean benchLogs) {
+		this.benchLogs = benchLogs;
 	}
 }

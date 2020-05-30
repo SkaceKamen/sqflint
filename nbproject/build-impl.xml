@@ -2,10 +2,8 @@
 <!--
 *** GENERATED FROM project.xml - DO NOT EDIT  ***
 ***         EDIT ../build.xml INSTEAD         ***
-
 For the purpose of easier reading the script
 is divided into following sections:
-
   - initialization
   - compilation
   - jar
@@ -17,7 +15,6 @@ is divided into following sections:
   - test debugging
   - applet
   - cleanup
-
         -->
 <project xmlns:j2seproject1="http://www.netbeans.org/ns/j2se-project/1" xmlns:j2seproject3="http://www.netbeans.org/ns/j2se-project/3" xmlns:jaxrpc="http://www.netbeans.org/ns/j2se-project/jax-rpc" basedir=".." default="default" name="SQFLint-impl">
     <fail message="Please build using Ant 1.8.0 or higher.">
@@ -848,6 +845,10 @@ is divided into following sections:
         <presetdef name="jar" uri="http://www.netbeans.org/ns/j2se-project/1">
             <jar compress="${jar.compress}" index="${jar.index}" jarfile="${dist.jar}">
                 <j2seproject1:fileset dir="${build.classes.dir}" excludes="${dist.archive.excludes}"/>
+                <manifest>
+                    <attribute name="Main-Class" value="${main.class}"/>
+                    <attribute name="Class-Path" value="${jar.classpath}"/>
+                </manifest>
             </jar>
         </presetdef>
     </target>
@@ -1192,7 +1193,8 @@ is divided into following sections:
                 JAVADOC SECTION
                 ===============
             -->
-    <target depends="init" if="have.sources" name="-javadoc-build">
+            <!--if="have.sources"-->
+    <target depends="init" if="do.jdoc" name="-javadoc-build">
         <mkdir dir="${dist.javadoc.dir}"/>
         <condition else="" property="javadoc.endorsed.classpath.cmd.line.arg" value="-J${endorsed.classpath.cmd.line.arg}">
             <and>
@@ -1285,7 +1287,7 @@ is divided into following sections:
     <target depends="init,compile-test,-pre-test-run" if="have.tests" name="-do-test-run">
         <j2seproject3:test includes="${includes}" testincludes="**/*Test.java"/>
     </target>
-    <target depends="init,compile-test,-pre-test-run,-do-test-run" if="have.tests" name="-post-test-run">
+    <target depends="init,compile-test,-pre-test-run,-do-test-run" if="do.tests" name="-post-test-run">
         <fail if="tests.failed" unless="ignore.failing.tests">Some tests failed; see details above.</fail>
     </target>
     <target depends="init" if="have.tests" name="test-report"/>

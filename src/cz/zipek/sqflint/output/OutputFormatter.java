@@ -1,11 +1,11 @@
 package cz.zipek.sqflint.output;
 
-import cz.zipek.sqflint.linter.Linter;
+import cz.zipek.sqflint.linter.SqfFile;
 
 /**
  *
- * @author Jan Zípek <jan at zipek.cz>
+ * @author Jan Zípek (jan at zipek.cz)
  */
 public interface OutputFormatter {
-	public void print(Linter linter);
+	public void print(SqfFile sqfFile);
 }

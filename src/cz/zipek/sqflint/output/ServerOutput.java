@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2017 Jan Zípek <jan at zipek.cz>.
+ * Copyright 2017 Jan Zípek (jan at zipek.cz).
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +24,9 @@
 package cz.zipek.sqflint.output;
 
 import cz.zipek.sqflint.linter.Linter;
+import cz.zipek.sqflint.linter.SqfFile;
+
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.json.JSONException;
@@ -31,7 +34,7 @@ import org.json.JSONStringer;
 
 /**
  *
- * @author Jan Zípek <jan at zipek.cz>
+ * @author Jan Zípek (jan at zipek.cz)
  */
 public class ServerOutput extends JSONOutput {
 	private final String filename;
@@ -41,7 +44,7 @@ public class ServerOutput extends JSONOutput {
 	}
 	
 	@Override
-	public void print(Linter linter) {
+	public void print(SqfFile sqfFile) {
 		try {
 			System.out.println(
 				new JSONStringer()
@@ -49,7 +52,14 @@ public class ServerOutput extends JSONOutput {
 						.key("file")
 						.value(this.filename)
 						.key("messages")
-						.value(build(linter))
+						.value(build(sqfFile))
+						.key("timeneeded")
+						.value(
+							sqfFile.getLinter() != null && sqfFile.getLinter().getStartTime() != null ?
+								new Date().getTime() - sqfFile.getLinter().getStartTime().getTime()
+								:
+								0
+						)
 					.endObject()
 			);
 			System.out.flush();

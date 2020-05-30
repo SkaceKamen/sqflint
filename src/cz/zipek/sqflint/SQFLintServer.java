@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2017 Jan Zípek <jan at zipek.cz>.
+ * Copyright 2017 Jan Zípek (jan at zipek.cz).
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,29 +23,25 @@
  */
 package cz.zipek.sqflint;
 
-import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.linter.Options;
+import cz.zipek.sqflint.linter.SqfFile;
+import cz.zipek.sqflint.output.LogUtil;
 import cz.zipek.sqflint.output.ServerOutput;
-import cz.zipek.sqflint.preprocessor.SQFPreprocessor;
+import cz.zipek.sqflint.output.StreamUtil;
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
  * Language server allowing to feed single process with multiple files.
- * @author Jan Zípek <jan at zipek.cz>
+ * @author Jan Zípek (jan at zipek.cz)
  */
 public class SQFLintServer {
 	private final Options options;
@@ -65,6 +61,7 @@ public class SQFLintServer {
 					}
 				} catch (JSONException ex) {
 					Logger.getLogger(SQFLintServer.class.getName()).log(Level.SEVERE, null, ex);
+					System.err.println("Error parsing client message");
 				}
 			}
 		}  catch (IOException ex) {
@@ -73,27 +70,43 @@ public class SQFLintServer {
 	}
 	
 	private boolean processMessage(JSONObject message) {
-		String filePath = "";
+		LogUtil.benchLog(options, this, "/ClientMessage", "Client message received");
 		
+		String filePath = null; // declare here to use in catch block
 		try {
 			if (message.has("type") && "exit".equals(message.getString("type"))) {
 				return false;
 			}
-			
-			filePath = message.getString("file");
-			Linter linter;
 
-			if (message.has("contents")) {
-				linter = parse(message.getString("contents"), filePath);
-			} else {
-				linter = parseFile(filePath);
-			}
+			// read filepath
+			filePath = message.getString("file");
 			
+			LogUtil.benchLog(options, this, filePath, "Starting");
+			
+			// Apply file specific options
+			Options fileOptions = new Options(options, new ServerOutput(filePath));
+			fileOptions.setRootPath(Paths.get(filePath).toAbsolutePath().getParent().toString());
+			fileOptions.getSkippedVariables().clear();
+
 			if (message.has("options")) {
-				this.applyOptions(message.getJSONObject("options"));
+				this.applyOptions(message.getJSONObject("options"), fileOptions);
 			}
-			
-			linter.start();			
+
+			SqfFile sqfFile = new SqfFile(
+				fileOptions,
+				message.has("contents") ?
+					message.getString("contents")
+					:
+					StreamUtil.streamToString(new FileInputStream(filePath)),
+				filePath
+			);
+
+			sqfFile.process();
+
+			fileOptions.getOutputFormatter().print(sqfFile);
+
+			LogUtil.benchLog(options, this, filePath, "Done");
+
 		} catch (JSONException ex) {
 			Logger.getLogger(SQFLintServer.class.getName()).log(Level.SEVERE, null, ex);
 		} catch (Exception ex) {
@@ -104,38 +117,35 @@ public class SQFLintServer {
 		return true;
 	}
 	
-	private void applyOptions(JSONObject data) {
+	private void applyOptions(JSONObject data, Options fileOptions) {
 		try {
 			// @TODO: Clear options?
 			
 			if (data.has("checkPaths")) {
-				options.setCheckPaths(data.getBoolean("checkPaths"));
+				fileOptions.setCheckPaths(data.getBoolean("checkPaths"));
 			}
 			
 			if (data.has("pathsRoot")) {
-				options.setRootPath(data.getString("pathsRoot"));
+				fileOptions.setRootPath(data.getString("pathsRoot"));
 			}
 			
 			if (data.has("ignoredVariables")) {
 				JSONArray vars = data.getJSONArray("ignoredVariables");
 				for (int i = 0; i < vars.length(); i++) {
-					options.getSkippedVariables().add(vars.getString(i));
+					fileOptions.getSkippedVariables().add(vars.getString(i));
 				}
 			}
 						
 			if (data.has("includePrefixes")) {
-				options.getIncludePaths().clear();
-				
+				fileOptions.getIncludePaths().clear();
 				JSONObject paths = data.getJSONObject("includePrefixes");
-				Iterator keys = paths.keys();
-				while (keys.hasNext()) {
-					String key = (String)keys.next();
-					options.getIncludePaths().put(key, paths.getString(key));
+				for (String key : paths.keySet()) {
+					fileOptions.getIncludePaths().put(key, paths.getString(key));
 				}
 			}
 			
 			if (data.has("contextSeparation")) {
-				options.setContextSeparationEnabled(data.getBoolean("contextSeparation"));
+				fileOptions.setContextSeparationEnabled(data.getBoolean("contextSeparation"));
 			}
 			
 		} catch (JSONException ex) {
@@ -143,36 +153,4 @@ public class SQFLintServer {
 		}
 	}
 	
-	public Linter parseFile(String path) throws Exception {
-		return parse(new BufferedReader(new InputStreamReader(new FileInputStream(path))).lines().collect(Collectors.joining("\n")), path);
-	}
-	
-	public Linter parse(String fileContents, String filePath) throws Exception {
-		// Apply file specific options
-		options.setOutputFormatter(new ServerOutput(filePath));
-		options.setRootPath(Paths.get(filePath).toAbsolutePath().getParent().toString());
-		options.getSkippedVariables().clear();
-
-		// Preprocessor may be required
-		SQFPreprocessor preprocessor = new SQFPreprocessor(options);
-		
-		// Create linter from preprocessed input
-		Linter linter = new Linter(stringToStream(preprocessor.process(
-			fileContents,
-			filePath,
-			true
-		)), options);
-		linter.setPreprocessor(preprocessor);
-		
-		return linter;
-	}
-	
-	/**
-	 * Creates input stream (with UTF-8 encoding) from input string.
-	 * @param input
-	 * @return 
-	 */
-	private InputStream stringToStream(String input) {
-		return new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8));
-	}
 }

@@ -12,3 +12,9 @@ Provides basic syntax error checking for SQF language.
 
 * java-json library
 * commons-cli library
+
+
+## extract commandlist
+* run in debug console: `supportInfo '' joinString endl`
+* copy the output and paste it into commands.txt
+* remove the leading and trailing quotemarks

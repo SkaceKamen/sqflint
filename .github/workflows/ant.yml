@@ -1,0 +1,22 @@
+name: SQFLint CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build with Docker image
+      uses: ./.github/actions/sqflint-build-action
+    - name: Store jar
+      uses: actions/upload-artifact@v2
+      with:
+        name: dist
+        path: dist/github

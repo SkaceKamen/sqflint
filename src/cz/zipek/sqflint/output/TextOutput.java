@@ -1,26 +1,27 @@
 package cz.zipek.sqflint.output;
 
 import cz.zipek.sqflint.linter.Linter;
+import cz.zipek.sqflint.linter.SqfFile;
 
 /**
  *
- * @author Jan Zípek <jan at zipek.cz>
+ * @author Jan Zípek (jan at zipek.cz)
  */
 public class TextOutput implements OutputFormatter {
 	
 	@Override
-	public void print(Linter linter) {		
-		if (linter.getOptions().isOutputVariables()) {
+	public void print(SqfFile sqfFile) {		
+		if (sqfFile.getLinter().getOptions().isOutputVariables()) {
 			System.err.println("You can't output variables info in text mode.");
 		}
 		
 		// Print errors
-		linter.getErrors().stream().forEach((e) -> {
+		sqfFile.getLinter().getErrors().stream().forEach((e) -> {
 			System.err.println(e.getMessage());
 		});
 		
 		// Print warnings
-		linter.getWarnings().stream().forEach((e) -> {
+		sqfFile.getLinter().getWarnings().stream().forEach((e) -> {
 			System.err.println(e.toString());
 		});
 	}
