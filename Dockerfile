@@ -39,10 +39,8 @@ ENV PATH ${PATH}:/opt/javacc/scripts
 
 RUN mkdir /opt/build && chmod 777 /opt/build
 
-ENV GITHUB_WORKSPACE "/opt/build"
-
 RUN echo '#!/bin/bash' > /opt/buildsqflint.sh && \
-    echo 'cd $GITHUB_WORKSPACE' >> /opt/buildsqflint.sh && \
+    echo 'if [ "$ANT_BUILD_DIR" != "" ]; then cd $ANT_BUILD_DIR; fi' >> /opt/buildsqflint.sh && \
     echo '/opt/ant/bin/ant' >> /opt/buildsqflint.sh && \
     chmod +x /opt/buildsqflint.sh
 
