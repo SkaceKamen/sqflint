@@ -1,12 +1,12 @@
 # Dockerfile to build this thing
 # Usage:
 #   docker build -t sqflint_builder .
-#   docker run -v ./:/opt/build sqflint_builder
+#   docker run -e "GITHUB_WORKSPACE=/opt/build" -v ./:/opt/build sqflint_builder
 # Artifacts will be stored in dist
 FROM openjdk:8
 
 # Installs Ant
-ENV ANT_VERSION 1.10.6
+ENV ANT_VERSION 1.10.9
 RUN cd /opt && \
     wget -q https://downloads.apache.org/ant/binaries/apache-ant-${ANT_VERSION}-bin.tar.gz && \
     tar -xzf apache-ant-${ANT_VERSION}-bin.tar.gz && \
@@ -38,15 +38,12 @@ RUN cd /opt && \
 ENV PATH ${PATH}:/opt/javacc/scripts
 
 RUN mkdir /opt/build && chmod 777 /opt/build
-WORKDIR /opt/build
 
-ENV ANT_BUILD_DIR "/opt/build"
+ENV GITHUB_WORKSPACE "/opt/build"
 
 RUN echo '#!/bin/bash' > /opt/buildsqflint.sh && \
-    echo 'cd $ANT_BUILD_DIR' >> /opt/buildsqflint.sh && \
+    echo 'cd $GITHUB_WORKSPACE' >> /opt/buildsqflint.sh && \
     echo '/opt/ant/bin/ant' >> /opt/buildsqflint.sh && \
     chmod +x /opt/buildsqflint.sh
 
 ENTRYPOINT [ "/opt/buildsqflint.sh" ]
-
-
