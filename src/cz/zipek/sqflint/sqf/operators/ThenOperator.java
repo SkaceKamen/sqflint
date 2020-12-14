@@ -25,9 +25,11 @@ package cz.zipek.sqflint.sqf.operators;
 
 import cz.zipek.sqflint.linter.Linter;
 import cz.zipek.sqflint.linter.SQFParseException;
+import cz.zipek.sqflint.sqf.SQFArray;
 import cz.zipek.sqflint.sqf.SQFBlock;
 import cz.zipek.sqflint.sqf.SQFContext;
 import cz.zipek.sqflint.sqf.SQFExpression;
+import cz.zipek.sqflint.sqf.SQFUnit;
 
 /**
  *
@@ -42,9 +44,13 @@ public class ThenOperator extends Operator {
 			source.getErrors().add(new SQFParseException(expression.getToken(), "Expected block after then."));
 		}
 		
-		// Expect only block
-		if (!(expression.getRight().getMain() instanceof SQFBlock)) {
-			source.getErrors().add(new SQFParseException(expression.getRight().getToken(), "Expected block after then."));
+		if (expression.getRight().getMain() instanceof SQFArray) {
+			SQFArray right = (SQFArray)expression.getRight().getMain();
+			if (right.getItems().size() != 2) {
+				source.getErrors().add(new SQFParseException(expression.getRight().getToken(), "Then only accepts array of 2 blocks."));
+			}
+		} else if (!(expression.getRight().getMain() instanceof SQFBlock)) {
+			source.getErrors().add(new SQFParseException(expression.getRight().getToken(), "Expected block or array of blocks after then."));
 		}
 		
 		// Expect else or nothing after block

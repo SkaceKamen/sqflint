@@ -312,4 +312,28 @@ public class LinterTest {
 		assertTrue("Should not throw warnings", sqfFile.getLinter().getWarnings().isEmpty());
 		assertTrue("Should not throw errors", sqfFile.getLinter().getErrors().isEmpty());
 	}
+	
+	@Test
+	public void testThenWithArray() throws Exception {
+		String[] lines = {
+			"private _result = if (true) then [1,0];",
+		};
+		SqfFile sqfFile = parse(String.join("\n", lines));
+		
+		assertEquals(Linter.CODE_OK, sqfFile.process());
+		assertTrue("Should not throw warnings", sqfFile.getLinter().getWarnings().isEmpty());
+		assertTrue("Should not throw errors", sqfFile.getLinter().getErrors().isEmpty());
+	}
+	
+	@Test
+	public void testThenWithIncorrectArray() throws Exception {
+		String[] lines = {
+			"private _result = if (true) then [1,0,6];",
+		};
+		SqfFile sqfFile = parse(String.join("\n", lines));
+		
+		assertEquals(Linter.CODE_OK, sqfFile.process());
+		assertTrue("Should not throw warnings", sqfFile.getLinter().getWarnings().isEmpty());
+		assertEquals("Should throw one error", 1, sqfFile.getLinter().getErrors().size());
+	}
 }
